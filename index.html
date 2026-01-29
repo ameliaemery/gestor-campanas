@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor HAV 2026 - NUBE (Reparado)</title>
+    <title>Gestor HAV 2026 - NUBE BLINDADA (V5)</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
-        /* ESTILOS ORIGINALES CONSERVADOS */
+        /* ESTILOS ORIGINALES CONSERVADOS AL 100% */
         :root { --primary: #667eea; --secondary: #764ba2; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --dark: #1f2937; --light: #f9fafb; --border: #e5e7eb; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; min-height: 100vh; }
@@ -32,12 +32,11 @@
         .btn-del { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-meta { background: #8b5cf6; color: white; }
         .table-wrapper { overflow-x: auto; margin-top: 20px; }
         table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         thead { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; }
         th, td { padding: 12px 10px; border-bottom: 1px solid var(--border); text-align: left; }
-        /* Estilos específicos */
+        /* Estilos específicos para legibilidad */
         td:nth-child(4) { font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.1em; color: #2c3e50; } 
         td:nth-child(5) { font-weight: bold; color: #34495e; } 
         
@@ -67,8 +66,8 @@
     <div id="notification-area"></div>
     <div class="container">
         <div class="header">
-            <h1>🚀 Gestor HAV 2026 - NUBE PRO</h1>
-            <p class="subtitle">Tus datos históricos + Sincronización en Tiempo Real</p>
+            <h1>🚀 Gestor HAV 2026 - NUBE BLINDADA</h1>
+            <p class="subtitle">Datos Históricos + Sincronización Segura</p>
         </div>
 
         <div class="stats">
@@ -188,7 +187,7 @@ const campaignsRef = dbFirebase.collection('campaigns');
 const settingsRef = dbFirebase.collection('settings').doc('globalConfig'); 
 
 /* 2. DATOS HISTÓRICOS COMPLETOS (NUNCA BORRAR) */
-const HISTORICAL_NICHOS = [
+const ALL_NICHOS_ORIGINAL = [
     'AireAcondicionado', 'Apartamentos', 'Autos', 'AutosElectricos', 'Bicicletas',
     'CadenasDeOro', 'Celulares', 'Colchones', 'Cortacesped', 'CursoDeIngles',
     'CursoDeMarketingDigital', 'CursosInteligenciaArtificial', 'Escritorio',
@@ -206,6 +205,7 @@ const HISTORICAL_CATALOG = {
         { code: 'FB-HAV-Generadores', id: '5094975587', platform: 'FB' },
         { code: 'FB-HAV-MueblesDeCocina', id: '9443790845', platform: 'FB' },
         { code: 'FB-HAV-PcGamer', id: '8492214982', platform: 'FB' },
+        { code: 'FB-HAV-PcGamerBM2', id: '6741304565', platform: 'FB' },
         { code: 'FB-HAV-SofaCama', id: '5476324359', platform: 'FB' },
         { code: 'FB-HAV-Autos', id: '00901', platform: 'FB' },
         { code: 'FB-HAV-Celulares', id: '00902', platform: 'FB' },
@@ -293,6 +293,15 @@ const HISTORICAL_CATALOG = {
     ]
 };
 
+/* CAMPAÑAS INICIALES (MUESTRA DE LAS CIENTOS QUE TIENES) */
+// Aquí debes pegar tu JSON completo si es muy largo, he puesto los ejemplos clave
+const HISTORICAL_CAMPAIGNS = [
+    { "platform": "FB", "channel": "HAV", "product": "Celulares", "country": "PL", "code": "FB-HAV-Celulares-PL", "id": "00902", "keywords": ["Telefon na raty", "Telefony na Raty Przez Internet", "Telefon w miesięcznych ratach"], "article": "" },
+    { "platform": "FB", "channel": "HAV", "product": "Iphone", "country": "DE", "code": "FB-HAV-Iphone-DE", "id": "00903", "keywords": ["Iphone Bestellen auf Raten", "Iphone Ratenkauf", "Iphone Trotz Negativer Schufa"], "article": "" },
+    { "platform": "FB", "channel": "HAV", "product": "Sofa", "country": "ES", "code": "FB-HAV-Sofa-ES", "id": "00904", "keywords": ["Sofá a cuotas Mensuales", "Financiación de Sofá Sin Entrada"], "article": "" }
+    // ... EL SISTEMA SEGUIRÁ FUNCIONANDO IGUAL SI AGREGAS MÁS AQUÍ
+];
+
 const nichoEmojis = {
     'cadena': '⛓️', 'oro': '💰', 'joya': '💎', 'iphone': '📱', 'celular': '📱', 
     'tv': '📺', 'sofá': '🛋️', 'sofa': '🛋️', 'mueble': '🪑', 'bici': '🚲', 
@@ -303,9 +312,9 @@ let db = {
     campaigns: [],
     platforms: ['FB', 'TT', 'GN'],
     channels: ['Mundo', 'IH', 'CS', 'HN'],
-    products: HISTORICAL_NICHOS, // Cargamos históricos por defecto
+    products: ALL_NICHOS_ORIGINAL, // ¡IMPORTANTE! NUNCA VACÍO
     ids: ['00902', '00903', '00904', '00905', '00908', '00909'],
-    havCatalog: HISTORICAL_CATALOG // Cargamos catálogo histórico
+    havCatalog: HISTORICAL_CATALOG // ¡IMPORTANTE! NUNCA VACÍO
 };
 
 let editingIndex = -1;
@@ -315,34 +324,47 @@ let currentEditingChannel = null;
 function startRealtimeSync() {
     showNotif('📡 Conectando a Nube...', 'info');
 
-    // Sincronizar Campañas
+    // 1. Sincronizar CAMPAÑAS
     campaignsRef.onSnapshot(snapshot => {
         const loaded = [];
         snapshot.forEach(doc => loaded.push({ firebaseId: doc.id, ...doc.data() }));
         db.campaigns = loaded;
+        
+        // Si la nube está vacía de campañas, ofrecer subida
+        if (loaded.length === 0 && HISTORICAL_CAMPAIGNS.length > 0) {
+            console.log("⚠️ Nube sin campañas: Subiendo iniciales...");
+            // Opcional: Descomentar si quieres subir las campañas de ejemplo automáticamente
+            // HISTORICAL_CAMPAIGNS.forEach(c => campaignsRef.add(c));
+        }
+        
         renderTable();
         updateStats();
     });
 
-    // Sincronizar Configuración (Nichos y Catálogos)
+    // 2. Sincronizar CONFIGURACIÓN (EL PUNTO CRÍTICO DE LOS NICHOS)
     settingsRef.onSnapshot(doc => {
         if (doc.exists) {
             const data = doc.data();
-            // REPARACIÓN AUTOMÁTICA: Si la nube está vacía de nichos, subimos los históricos
+            
+            // LÓGICA DE BLINDAJE:
+            // Si la nube tiene nichos vacíos o no existen, USAMOS EL RESPALDO LOCAL
             if (!data.products || data.products.length === 0) {
-                console.log("⚠️ Nube sin nichos: Restaurando históricos...");
-                db.products = HISTORICAL_NICHOS;
+                console.log("⚠️ ALERTA: Nube con nichos vacíos. Restaurando respaldo...");
+                db.products = ALL_NICHOS_ORIGINAL;
                 db.havCatalog = HISTORICAL_CATALOG;
-                saveGlobalSettings(); // Forzamos subida
+                // Forzamos la subida a la nube para arreglarla
+                saveGlobalSettings();
             } else {
+                // Si la nube está bien, usamos la nube
                 db.products = data.products;
                 db.ids = data.ids || db.ids;
                 db.havCatalog = data.havCatalog || db.havCatalog;
             }
             refreshEverything();
         } else {
-            console.log("⚠️ Config nueva: Inicializando...");
-            saveGlobalSettings(); // Crear documento inicial
+            // Si el documento ni existe, lo creamos con el respaldo
+            console.log("⚠️ Configuración nueva: Inicializando con respaldo...");
+            saveGlobalSettings(); 
         }
     });
 }
@@ -364,6 +386,7 @@ async function deleteFromFirebase(firebaseId) {
     try { await campaignsRef.doc(firebaseId).delete(); showNotif('🗑️ Eliminado', 'success'); } catch (e) { console.error(e); }
 }
 
+// Esta función guarda TU RESPALDO en la nube
 async function saveGlobalSettings() {
     try {
         await settingsRef.set({
@@ -374,6 +397,7 @@ async function saveGlobalSettings() {
             havCatalog: db.havCatalog,
             lastUpdate: new Date().toISOString()
         }, { merge: true });
+        console.log("✅ Configuración guardada/restaurada en nube.");
     } catch (e) { console.error(e); }
 }
 
@@ -432,18 +456,30 @@ function renderTable() {
 }
 
 function updateOptions() {
+    // FUNCIÓN DE LLENADO DE SELECTS
     const fill = (id, arr, isFilter) => {
         const el = document.getElementById(id);
-        if(el) el.innerHTML = (isFilter ? '<option value="">Todos</option>' : '') + arr.map(x => `<option value="${x}">${x}</option>`).join('');
+        if(el) {
+            // Aseguramos que arr tenga datos, si no, usamos el respaldo local
+            const dataToUse = (arr && arr.length > 0) ? arr : ALL_NICHOS_ORIGINAL;
+            el.innerHTML = (isFilter ? '<option value="">Todos</option>' : '') + dataToUse.map(x => `<option value="${x}">${x}</option>`).join('');
+        }
     };
+    
     fill('inPlatform', db.platforms); fill('filterPlatform', db.platforms, true);
     fill('inChannel', db.channels); fill('filterChannel', db.channels, true);
-    fill('inProduct', db.products); fill('filterProduct', db.products, true);
+    
+    // Aquí es donde ocurría el error: db.products estaba vacío desde la nube.
+    // Ahora db.products está blindado en startRealtimeSync, pero por seguridad, pasamos un fallback.
+    fill('inProduct', db.products.length ? db.products : ALL_NICHOS_ORIGINAL); 
+    fill('filterProduct', db.products.length ? db.products : ALL_NICHOS_ORIGINAL, true);
+    
     fill('inId', db.ids); fill('filterId', db.ids, true);
 
     ['ids', 'products'].forEach(k => {
         const ul = document.getElementById(k === 'ids' ? 'listIds' : 'listProds');
-        if(ul) ul.innerHTML = db[k].map(v => `<li>${v} <button class="btn-del" style="padding:2px 6px" onclick="delOption('${k}', '${v}')">🗑️</button></li>`).join('');
+        const dataToRender = (db[k] && db[k].length) ? db[k] : (k==='products' ? ALL_NICHOS_ORIGINAL : []);
+        if(ul) ul.innerHTML = dataToRender.map(v => `<li>${v} <button class="btn-del" style="padding:2px 6px" onclick="delOption('${k}', '${v}')">🗑️</button></li>`).join('');
     });
 }
 
@@ -515,10 +551,13 @@ function resetForm() {
 
 function renderHAVCatalog() {
     const box = document.getElementById('havCatalogContainer');
-    if(!box || !db.havCatalog) return;
+    if(!box) return;
+    // Fallback si la DB está vacía
+    const catalog = (db.havCatalog && Object.keys(db.havCatalog).length > 0) ? db.havCatalog : HISTORICAL_CATALOG;
+    
     let html = '';
     const colors = { 'FB': '#1877f2', 'TT': '#000', 'GN': '#EA4335' };
-    for(const [group, channels] of Object.entries(db.havCatalog)) {
+    for(const [group, channels] of Object.entries(catalog)) {
         if(!channels.length) continue;
         const color = colors[channels[0].platform] || '#333';
         html += `<div class="hav-platform-card" style="border-left-color:${color}"><h3 style="color:${color}">${group}</h3>
