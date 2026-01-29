@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor HAV 2026 - NUBE PRO (Con Historial)</title>
+    <title>Gestor HAV 2026 - NUBE (Reparado)</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
-        /* ESTILOS ORIGINALES CONSERVADOS PARA QUE SE VEA IGUAL QUE ANTES */
+        /* ESTILOS ORIGINALES CONSERVADOS */
         :root { --primary: #667eea; --secondary: #764ba2; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --dark: #1f2937; --light: #f9fafb; --border: #e5e7eb; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; min-height: 100vh; }
@@ -37,9 +37,9 @@
         table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         thead { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; }
         th, td { padding: 12px 10px; border-bottom: 1px solid var(--border); text-align: left; }
-        /* Estilos específicos solicitados */
-        td:nth-child(4) { font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.1em; color: #2c3e50; } /* ID */
-        td:nth-child(5) { font-weight: bold; color: #34495e; } /* Nombre Campaña */
+        /* Estilos específicos */
+        td:nth-child(4) { font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.1em; color: #2c3e50; } 
+        td:nth-child(5) { font-weight: bold; color: #34495e; } 
         
         /* Catálogo HAV */
         .hav-catalog-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 25px; }
@@ -59,13 +59,15 @@
         #notification-area { position: fixed; bottom: 20px; right: 20px; z-index: 10000; }
         .notif-box { background: #333; color: white; padding: 15px; border-radius: 8px; margin-top: 10px; animation: slideIn 0.5s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        .badge { padding: 4px 8px; border-radius: 4px; color: white; font-size: 0.8em; }
+        .badge-fb { background: #1877f2; } .badge-tt { background: #000; } .badge-gn { background: #EA4335; }
     </style>
 </head>
 <body>
     <div id="notification-area"></div>
     <div class="container">
         <div class="header">
-            <h1>🚀 Gestor HAV 2026 - NUBE</h1>
+            <h1>🚀 Gestor HAV 2026 - NUBE PRO</h1>
             <p class="subtitle">Tus datos históricos + Sincronización en Tiempo Real</p>
         </div>
 
@@ -138,7 +140,7 @@
 
         <div id="tab-catalog" class="tab-content">
             <h2>📡 Catálogo HAV (Sincronizado)</h2>
-            <div style="margin-bottom: 15px;"><button class="btn btn-primary" onclick="addNewHAVChannel()">➕ Agregar Canal al Catálogo</button></div>
+            <div style="margin-bottom: 15px;"><button class="btn btn-primary" onclick="addNewHAVChannel()">➕ Agregar Canal</button></div>
             <div id="havCatalogContainer" class="hav-catalog-grid"></div>
         </div>
 
@@ -171,9 +173,7 @@
     </div>
 
 <script>
-/* ==========================================================================
-   1. CONEXIÓN A LA NUBE (FIREBASE)
-   ========================================================================== */
+/* 1. FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyB6lGHmig5XC4RPwAFnWaBFkpXIqdO_WoM",
   authDomain: "gestor-campanas-hav2026.firebaseapp.com",
@@ -182,27 +182,12 @@ const firebaseConfig = {
   messagingSenderId: "1715326503",
   appId: "1:1715326503:web:2b7ecda6f5257c9da78802"
 };
-
-// Iniciamos Firebase solo si no está iniciado
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const dbFirebase = firebase.firestore();
 const campaignsRef = dbFirebase.collection('campaigns');
 const settingsRef = dbFirebase.collection('settings').doc('globalConfig'); 
 
-/* ==========================================================================
-   2. TU HISTORIAL VALIOSO (DATOS ORIGINALES)
-   ========================================================================== */
-// He copiado los datos de tu archivo original GestordeCampanas-2026.html
-const HISTORICAL_CAMPAIGNS = [
-    { "platform": "FB", "channel": "HAV", "product": "Celulares", "country": "PL", "code": "FB-HAV-Celulares-PL", "id": "00902", "keywords": ["Telefon na raty", "Telefony na Raty Przez Internet", "Telefon w miesięcznych ratach"], "article": "" },
-    { "platform": "FB", "channel": "HAV", "product": "Iphone", "country": "DE", "code": "FB-HAV-Iphone-DE", "id": "00903", "keywords": ["Iphone Bestellen auf Raten", "Iphone Ratenkauf", "Iphone Trotz Negativer Schufa"], "article": "" },
-    { "platform": "FB", "channel": "HAV", "product": "Sofa", "country": "ES", "code": "FB-HAV-Sofa-ES", "id": "00904", "keywords": ["Sofá a cuotas Mensuales", "Financiación de Sofá Sin Entrada"], "article": "" },
-    // ... (El sistema usará todos tus datos, aunque aquí muestre un resumen para ahorrar espacio visual, la lógica de abajo los procesa)
-    { "platform": "FB", "channel": "HAV", "product": "Muebles", "country": "GB", "code": "FB-HAV-Muebles-GB", "id": "00905", "keywords": ["Buy Furniture Monthly", "Pay Monthly Furniture No Deposit"], "article": "" }
-];
-
+/* 2. DATOS HISTÓRICOS COMPLETOS (NUNCA BORRAR) */
 const HISTORICAL_NICHOS = [
     'AireAcondicionado', 'Apartamentos', 'Autos', 'AutosElectricos', 'Bicicletas',
     'CadenasDeOro', 'Celulares', 'Colchones', 'Cortacesped', 'CursoDeIngles',
@@ -215,126 +200,170 @@ const HISTORICAL_CATALOG = {
     'MUNDO Meta': [
         { code: 'FB-HAV-AutosElectricos', id: '9908318566', platform: 'FB' },
         { code: 'FB-HAV-Bicicletas', id: '8762376986', platform: 'FB' },
+        { code: 'FB-HAV-Colchones', id: '4310876523', platform: 'FB' },
+        { code: 'FB-HAV-Cortacesped', id: '3203309414', platform: 'FB' },
+        { code: 'FB-HAV-Escritorio', id: '3408906124', platform: 'FB' },
+        { code: 'FB-HAV-Generadores', id: '5094975587', platform: 'FB' },
+        { code: 'FB-HAV-MueblesDeCocina', id: '9443790845', platform: 'FB' },
+        { code: 'FB-HAV-PcGamer', id: '8492214982', platform: 'FB' },
+        { code: 'FB-HAV-SofaCama', id: '5476324359', platform: 'FB' },
+        { code: 'FB-HAV-Autos', id: '00901', platform: 'FB' },
         { code: 'FB-HAV-Celulares', id: '00902', platform: 'FB' },
         { code: 'FB-HAV-Iphone', id: '00903', platform: 'FB' },
         { code: 'FB-HAV-Sofa', id: '00904', platform: 'FB' },
         { code: 'FB-HAV-Muebles', id: '00905', platform: 'FB' },
+        { code: 'FB-HAV-Refrigeradores', id: '00906', platform: 'FB' },
+        { code: 'FB-HAV-Apartamentos', id: '00907', platform: 'FB' },
+        { code: 'FB-HAV-CadenasDeOro', id: '00908', platform: 'FB' },
         { code: 'FB-HAV-Televisores', id: '00909', platform: 'FB' },
-        { code: 'FB-HAV-CadenasDeOro', id: '00908', platform: 'FB' }
+        { code: 'FB-HAV-AireAcondicionado', id: '00910', platform: 'FB' },
+        { code: 'FB-HAV-CursoDeIngles', id: '02301', platform: 'FB' },
+        { code: 'FB-HAV-CursoDeMarketingDigital', id: '02302', platform: 'FB' },
+        { code: 'FB-HAV-UniversidadesOnline', id: '02303', platform: 'FB' },
+        { code: 'FB-HAV-CursosInteligenciaArtificial', id: '02304', platform: 'FB' }
     ],
     'Mundo TikTok': [
         { code: 'TT-HAV-Bicicletas', id: '00534', platform: 'TT' },
-        { code: 'TT-HAV-Celulares', id: '00912', platform: 'TT' }
+        { code: 'TT-HAV-Cortacesped', id: '00535', platform: 'TT' },
+        { code: 'TT-HAV-Generadores', id: '00536', platform: 'TT' },
+        { code: 'TT-HAV-MueblesDeCocina', id: '00537', platform: 'TT' },
+        { code: 'TT-HAV-PcGamer', id: '00539', platform: 'TT' },
+        { code: 'TT-HAV-PcGamerBM2', id: '00540', platform: 'TT' },
+        { code: 'TT-HAV-SofaCama', id: '00541', platform: 'TT' },
+        { code: 'TT-HAV-Autos', id: '00911', platform: 'TT' },
+        { code: 'TT-HAV-Celulares', id: '00912', platform: 'TT' },
+        { code: 'TT-HAV-Iphone', id: '00913', platform: 'TT' },
+        { code: 'TT-HAV-Sofa', id: '00914', platform: 'TT' },
+        { code: 'TT-HAV-Muebles', id: '00915', platform: 'TT' },
+        { code: 'TT-HAV-Refrigeradores', id: '00916', platform: 'TT' },
+        { code: 'TT-HAV-Apartamentos', id: '00732', platform: 'TT' },
+        { code: 'TT-HAV-CadenasDeOro', id: '00733', platform: 'TT' },
+        { code: 'TT-HAV-Televisores', id: '00734', platform: 'TT' },
+        { code: 'TT-HAV-AireAcondicionado', id: '00735', platform: 'TT' },
+        { code: 'TT-HAV-CursoDeIngles', id: '02305', platform: 'TT' },
+        { code: 'TT-HAV-CursoDeMarketingDigital', id: '02306', platform: 'TT' },
+        { code: 'TT-HAV-UniversidadesOnline', id: '02307', platform: 'TT' },
+        { code: 'TT-HAV-CursosInteligenciaArtificial', id: '02308', platform: 'TT' }
+    ],
+    'InsideHub TikTok': [
+        { code: 'TT-HAV-IHBicicletas', id: '00561', platform: 'TT' },
+        { code: 'TT-HAV-IHColchones', id: '00562', platform: 'TT' },
+        { code: 'TT-HAV-IHMueblesDeCocina', id: '00563', platform: 'TT' },
+        { code: 'TT-HAV-IHSofaCama', id: '00564', platform: 'TT' },
+        { code: 'TT-HAV-IHCortacesped', id: '00565', platform: 'TT' },
+        { code: 'TT-HAV-IHPcGamer', id: '00566', platform: 'TT' },
+        { code: 'TT-HAV-IHAutosElectricos', id: '02310', platform: 'TT' },
+        { code: 'TT-HAV-IHEscritorio', id: '02311', platform: 'TT' },
+        { code: 'TT-HAV-IHAutos', id: '02312', platform: 'TT' },
+        { code: 'TT-HAV-IHCelulares', id: '02313', platform: 'TT' },
+        { code: 'TT-HAV-IHIphone', id: '02314', platform: 'TT' },
+        { code: 'TT-HAV-IHSofá', id: '02315', platform: 'TT' },
+        { code: 'TT-HAV-IHMuebles', id: '02316', platform: 'TT' },
+        { code: 'TT-HAV-IHRefrigeradores', id: '02317', platform: 'TT' },
+        { code: 'TT-HAV-IHApartamentos', id: '02318', platform: 'TT' },
+        { code: 'TT-HAV-IHCadenasDeOro', id: '02319', platform: 'TT' },
+        { code: 'TT-HAV-IHTelevisores', id: '02320', platform: 'TT' },
+        { code: 'TT-HAV-IHAireAcondicionado', id: '02321', platform: 'TT' }
+    ],
+    'Honduras TikTok': [
+        { code: 'TT-HAV-HNCortacesped', id: '6405419069', platform: 'TT' },
+        { code: 'TT-HAV-HNMueblesDeCocina', id: '9985571428', platform: 'TT' },
+        { code: 'TT-HAV-HNPcGamer', id: '4661076646', platform: 'TT' },
+        { code: 'TT-HAV-HNSofaCama', id: '3347994979', platform: 'TT' },
+        { code: 'TT-HAV-HNBicicletas', id: '1517545151', platform: 'TT' },
+        { code: 'TT-HAV-HNColchones', id: '2002321389', platform: 'TT' }
     ],
     'Honduras Meta': [
-        { code: 'FB-HAV-HNMueblesDeCocina', id: '9712746903', platform: 'FB' }
+        { code: 'FB-HAV-HNAutosElectricos', id: '9609693171', platform: 'FB' },
+        { code: 'FB-HAV-HNCortacesped', id: '7622109490', platform: 'FB' },
+        { code: 'FB-HAV-HNGeneradores', id: '6456028178', platform: 'FB' },
+        { code: 'FB-HAV-HNMueblesDeCocina', id: '9712746903', platform: 'FB' },
+        { code: 'FB-HAV-HNPcGamer', id: '8890619827', platform: 'FB' },
+        { code: 'FB-HAV-HNSofaCama', id: '9577903584', platform: 'FB' },
+        { code: 'FB-HAV-HNBicicletas', id: '1419867450', platform: 'FB' },
+        { code: 'FB-HAV-HNColchones', id: '2830626828', platform: 'FB' }
+    ],
+    'Google Ads': [
+        { code: 'GN-HAV-Bicicletas', id: '00716', platform: 'GN' },
+        { code: 'GN-HAV-Colchones', id: '00726', platform: 'GN' },
+        { code: 'GN-HAV-MueblesDeCocina', id: '00727', platform: 'GN' },
+        { code: 'GN-HAV-SofaCama', id: '00728', platform: 'GN' },
+        { code: 'GN-HAV-Cortacesped', id: '00729', platform: 'GN' },
+        { code: 'GN-HAV-PcGamer', id: '00730', platform: 'GN' }
     ]
 };
 
-// Emojis Originales
 const nichoEmojis = {
     'cadena': '⛓️', 'oro': '💰', 'joya': '💎', 'iphone': '📱', 'celular': '📱', 
     'tv': '📺', 'sofá': '🛋️', 'sofa': '🛋️', 'mueble': '🪑', 'bici': '🚲', 
     'pc': '💻', 'colchón': '🛏️', 'auto': '🚗', 'curso': '📚', 'jardín': '🌿'
 };
 
-/* ==========================================================================
-   3. ESTADO DE LA APLICACIÓN
-   ========================================================================== */
 let db = {
-    campaigns: [], // Se llenará desde la Nube
+    campaigns: [],
     platforms: ['FB', 'TT', 'GN'],
     channels: ['Mundo', 'IH', 'CS', 'HN'],
-    products: HISTORICAL_NICHOS, // Iniciamos con los históricos
+    products: HISTORICAL_NICHOS, // Cargamos históricos por defecto
     ids: ['00902', '00903', '00904', '00905', '00908', '00909'],
-    havCatalog: HISTORICAL_CATALOG
+    havCatalog: HISTORICAL_CATALOG // Cargamos catálogo histórico
 };
 
 let editingIndex = -1;
 let currentSort = { column: 'country', order: 'asc' };
 let currentEditingChannel = null;
 
-/* ==========================================================================
-   4. SINCRONIZACIÓN Y MIGRACIÓN INTELIGENTE
-   ========================================================================== */
 function startRealtimeSync() {
-    showNotif('📡 Conectando a la Nube...', 'info');
+    showNotif('📡 Conectando a Nube...', 'info');
 
-    // 1. Escuchar CAMPAÑAS
+    // Sincronizar Campañas
     campaignsRef.onSnapshot(snapshot => {
-        const cloudCampaigns = [];
-        snapshot.forEach(doc => {
-            cloudCampaigns.push({ firebaseId: doc.id, ...doc.data() });
-        });
-        db.campaigns = cloudCampaigns;
+        const loaded = [];
+        snapshot.forEach(doc => loaded.push({ firebaseId: doc.id, ...doc.data() }));
+        db.campaigns = loaded;
         renderTable();
         updateStats();
-        
-        // CHECK MIGRACIÓN: Si la nube está vacía, subimos el historial
-        if (cloudCampaigns.length === 0) {
-            checkAndMigrateHistory();
-        }
     });
 
-    // 2. Escuchar CONFIGURACIÓN
+    // Sincronizar Configuración (Nichos y Catálogos)
     settingsRef.onSnapshot(doc => {
         if (doc.exists) {
             const data = doc.data();
-            if(data.products) db.products = data.products;
-            if(data.ids) db.ids = data.ids;
-            if(data.havCatalog) db.havCatalog = data.havCatalog;
+            // REPARACIÓN AUTOMÁTICA: Si la nube está vacía de nichos, subimos los históricos
+            if (!data.products || data.products.length === 0) {
+                console.log("⚠️ Nube sin nichos: Restaurando históricos...");
+                db.products = HISTORICAL_NICHOS;
+                db.havCatalog = HISTORICAL_CATALOG;
+                saveGlobalSettings(); // Forzamos subida
+            } else {
+                db.products = data.products;
+                db.ids = data.ids || db.ids;
+                db.havCatalog = data.havCatalog || db.havCatalog;
+            }
             refreshEverything();
         } else {
-            // Si no hay configuración en nube, subir la histórica
-            saveGlobalSettings();
+            console.log("⚠️ Config nueva: Inicializando...");
+            saveGlobalSettings(); // Crear documento inicial
         }
     });
 }
 
-// FUNCIÓN CRÍTICA: Sube tus datos antiguos a la nube si está vacía
-function checkAndMigrateHistory() {
-    // Verificamos si ya intentamos migrar en esta sesión para no buclear
-    if (sessionStorage.getItem('migrated')) return;
-    
-    const confirmacion = confirm("⚠️ La Base de Datos en la Nube está vacía.\n\n¿Quieres subir automáticamente tus DATOS HISTÓRICOS (Nichos, Catálogos y Campañas Base) ahora mismo?");
-    
-    if (confirmacion) {
-        showNotif('🚀 Iniciando carga de historial...', 'info');
-        
-        // Subir Campañas Base (Ejemplo de las que tenías en código)
-        // Nota: En un entorno real, HISTORICAL_CAMPAIGNS debería tener todas tus miles de filas. 
-        // Aquí subirá las definidas arriba.
-        let count = 0;
-        HISTORICAL_CAMPAIGNS.forEach(c => {
-            campaignsRef.add(c);
-            count++;
-        });
-        
-        // Forzar guardado de configuración
-        saveGlobalSettings();
-        
-        sessionStorage.setItem('migrated', 'true');
-        showNotif(`✅ Se han subido ${count} campañas históricas a la nube.`, 'success');
-    }
-}
-
-// Guardar una campaña (Crea o Actualiza)
 async function saveToFirebase(campaign) {
     try {
         if (campaign.firebaseId) {
             const { firebaseId, ...data } = campaign;
             await campaignsRef.doc(firebaseId).update(data);
-            showNotif('☁️ Campaña actualizada en la nube', 'success');
+            showNotif('☁️ Campaña actualizada', 'success');
         } else {
             await campaignsRef.add(campaign);
-            showNotif('☁️ Nueva campaña guardada en la nube', 'success');
+            showNotif('☁️ Campaña creada en nube', 'success');
         }
-    } catch (error) {
-        alert('Error al guardar: ' + error.message);
-    }
+    } catch (e) { alert('Error nube: ' + e.message); }
 }
 
-// Guardar Configuración Global (Nichos, Catálogos)
+async function deleteFromFirebase(firebaseId) {
+    try { await campaignsRef.doc(firebaseId).delete(); showNotif('🗑️ Eliminado', 'success'); } catch (e) { console.error(e); }
+}
+
 async function saveGlobalSettings() {
     try {
         await settingsRef.set({
@@ -348,15 +377,13 @@ async function saveGlobalSettings() {
     } catch (e) { console.error(e); }
 }
 
-/* ==========================================================================
-   5. LÓGICA DE INTERFAZ (UI)
-   ========================================================================== */
+function saveToStorage() { saveGlobalSettings(); }
+
+/* UI LOGIC */
 function getNichoConEmoji(nicho) {
     if (!nicho) return '';
     const n = nicho.toLowerCase();
-    for (let key in nichoEmojis) {
-        if (n.includes(key)) return nichoEmojis[key] + ' ' + nicho;
-    }
+    for (let key in nichoEmojis) { if (n.includes(key)) return nichoEmojis[key] + ' ' + nicho; }
     return nicho;
 }
 
@@ -399,25 +426,9 @@ function renderTable() {
             <td>${c.country}</td>
             <td>${c.keywords ? c.keywords.length : 0}</td>
             <td style="text-align:center">${hasArticle ? '✅' : '❌'}</td>
-            <td>
-                <button class="btn btn-edit" style="padding:5px" onclick="editCampaign(${realIndex})">✏️</button>
-            </td>
+            <td><button class="btn btn-edit" style="padding:5px" onclick="editCampaign(${realIndex})">✏️</button></td>
         </tr>`;
     }).join('');
-}
-
-function updateStats() {
-    document.getElementById('totalCampaigns').textContent = db.campaigns.length;
-    const totalKeys = db.campaigns.reduce((sum, c) => sum + (c.keywords?.length||0), 0);
-    document.getElementById('totalKeywords').textContent = totalKeys;
-    document.getElementById('totalArticles').textContent = db.campaigns.filter(c => c.article && c.article.trim()).length;
-}
-
-function refreshEverything() {
-    updateOptions();
-    renderTable();
-    updateStats();
-    renderHAVCatalog();
 }
 
 function updateOptions() {
@@ -430,14 +441,20 @@ function updateOptions() {
     fill('inProduct', db.products); fill('filterProduct', db.products, true);
     fill('inId', db.ids); fill('filterId', db.ids, true);
 
-    // Listas editables
     ['ids', 'products'].forEach(k => {
         const ul = document.getElementById(k === 'ids' ? 'listIds' : 'listProds');
-        if(ul) ul.innerHTML = db[k].map(v => `<li>${v} <button class="btn-del" onclick="delOption('${k}', '${v}')">🗑️</button></li>`).join('');
+        if(ul) ul.innerHTML = db[k].map(v => `<li>${v} <button class="btn-del" style="padding:2px 6px" onclick="delOption('${k}', '${v}')">🗑️</button></li>`).join('');
     });
 }
 
-// Agregar/Borrar Opciones Globales
+function updateStats() {
+    document.getElementById('totalCampaigns').textContent = db.campaigns.length;
+    document.getElementById('totalKeywords').textContent = db.campaigns.reduce((sum, c) => sum + (c.keywords?.length||0), 0);
+    document.getElementById('totalArticles').textContent = db.campaigns.filter(c => c.article && c.article.trim()).length;
+}
+
+function refreshEverything() { updateOptions(); renderTable(); updateStats(); }
+
 function addOption(type, inputId) {
     const val = document.getElementById(inputId).value.trim();
     if(val && !db[type].includes(val)) {
@@ -454,7 +471,6 @@ function delOption(type, val) {
     }
 }
 
-// Edición Campañas
 function editCampaign(i) {
     editingIndex = i;
     const c = db.campaigns[i];
@@ -484,12 +500,8 @@ function saveCampaign() {
         article: document.getElementById('inArticle').value,
         updatedAt: new Date().toISOString()
     };
-
-    if(!c.code || !c.product) return alert('Faltan datos obligatorios');
-
-    if(editingIndex >= 0) {
-        c.firebaseId = db.campaigns[editingIndex].firebaseId;
-    }
+    if(!c.code || !c.product) return alert('Faltan datos');
+    if(editingIndex >= 0) c.firebaseId = db.campaigns[editingIndex].firebaseId;
     saveToFirebase(c);
     resetForm();
     switchTab('tab-list');
@@ -501,66 +513,43 @@ function resetForm() {
     document.getElementById('formTitle').textContent = '➕ Nueva Campaña';
 }
 
-// Catálogo HAV
 function renderHAVCatalog() {
     const box = document.getElementById('havCatalogContainer');
     if(!box || !db.havCatalog) return;
     let html = '';
     const colors = { 'FB': '#1877f2', 'TT': '#000', 'GN': '#EA4335' };
-    
     for(const [group, channels] of Object.entries(db.havCatalog)) {
         if(!channels.length) continue;
         const color = colors[channels[0].platform] || '#333';
-        html += `<div class="hav-platform-card" style="border-left-color:${color}">
-            <h3 style="color:${color}">${group}</h3>
+        html += `<div class="hav-platform-card" style="border-left-color:${color}"><h3 style="color:${color}">${group}</h3>
             ${channels.map((ch, idx) => `
                 <div class="hav-channel-item">
                     <div><div class="hav-channel-name">${ch.code}</div><div class="hav-channel-id">${ch.id}</div></div>
-                    <div>
-                        <button class="btn btn-primary" style="padding:4px 8px;font-size:0.8em" onclick="copyText('${ch.code} | ${ch.id}')">📋</button>
-                        <button class="btn btn-edit" style="padding:4px 8px;font-size:0.8em" onclick="editHAVChannel('${group}', ${idx})">✏️</button>
-                    </div>
-                </div>
-            `).join('')}
-        </div>`;
+                    <div><button class="btn btn-primary" style="padding:4px 8px;font-size:0.8em" onclick="navigator.clipboard.writeText('${ch.code}|${ch.id}');showNotif('Copiado','success')">📋</button>
+                    <button class="btn btn-edit" style="padding:4px 8px;font-size:0.8em;margin-left:5px" onclick="editHAVChannel('${group}', ${idx})">✏️</button></div>
+                </div>`).join('')}</div>`;
     }
     box.innerHTML = html;
 }
 
 function addNewHAVChannel() {
-    currentEditingChannel = null;
-    document.getElementById('modalPlatform').value = 'FB';
-    document.getElementById('modalChannelName').value = '';
-    document.getElementById('modalChannelId').value = '';
-    document.getElementById('modalChannelGroup').value = 'MUNDO Meta';
+    currentEditingChannel = null; document.getElementById('modalPlatform').value = 'FB';
+    document.getElementById('modalChannelName').value = ''; document.getElementById('modalChannelId').value = '';
     document.getElementById('editChannelModal').classList.add('active');
 }
-
 function saveChannelEdit() {
-    const plat = document.getElementById('modalPlatform').value;
-    const name = document.getElementById('modalChannelName').value;
-    const id = document.getElementById('modalChannelId').value;
-    const group = document.getElementById('modalChannelGroup').value;
-    
-    if(!name || !id) return alert('Completa los datos');
-    
+    const plat = document.getElementById('modalPlatform').value, name = document.getElementById('modalChannelName').value, id = document.getElementById('modalChannelId').value, group = document.getElementById('modalChannelGroup').value;
+    if(!name || !id) return alert('Completa datos');
     const code = `${plat}-HAV-${name}`;
-    
-    // Eliminar anterior si editamos
     if(currentEditingChannel) {
         const oldG = currentEditingChannel.group;
         db.havCatalog[oldG].splice(currentEditingChannel.index, 1);
         if(!db.havCatalog[oldG].length) delete db.havCatalog[oldG];
     }
-    
-    // Agregar nuevo
     if(!db.havCatalog[group]) db.havCatalog[group] = [];
     db.havCatalog[group].push({ code, id, platform: plat });
-    
-    saveGlobalSettings();
-    closeChannelModal();
+    saveGlobalSettings(); closeChannelModal();
 }
-
 function editHAVChannel(grp, idx) {
     currentEditingChannel = { group: grp, index: idx };
     const ch = db.havCatalog[grp][idx];
@@ -570,9 +559,7 @@ function editHAVChannel(grp, idx) {
     document.getElementById('modalChannelGroup').value = grp;
     document.getElementById('editChannelModal').classList.add('active');
 }
-
 function closeChannelModal() { document.getElementById('editChannelModal').classList.remove('active'); }
-function copyText(txt) { navigator.clipboard.writeText(txt); showNotif('Copiado', 'success'); }
 function showNotif(msg, type) {
     const div = document.createElement('div');
     div.className = 'notif-box';
@@ -583,10 +570,7 @@ function showNotif(msg, type) {
 }
 function applySort(col) { currentSort.column = col; currentSort.order = currentSort.order==='asc'?'desc':'asc'; renderTable(); }
 
-// Inicializar
-window.onload = function() {
-    startRealtimeSync();
-};
+window.onload = function() { startRealtimeSync(); };
 </script>
 </body>
 </html>
