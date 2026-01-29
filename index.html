@@ -672,7 +672,7 @@
     </div>
 
 <script>
-// ==================== CONFIGURACIÓN FIREBASE ====================
+// ==================== FIREBASE TIEMPO REAL ====================
 const firebaseConfig = {
   apiKey: "AIzaSyB6lGHmig5XC4RPwAFnWaBFkpXIqdO_WoM",
   authDomain: "gestor-campanas-hav2026.firebaseapp.com",
@@ -682,47 +682,48 @@ const firebaseConfig = {
   appId: "1:1715326503:web:2b7ecda6f5257c9da78802"
 };
 
-// Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
 const dbFirebase = firebase.firestore();
 const campaignsRef = dbFirebase.collection('campaigns');
 
-console.log('✓ Firebase inicializado');
+console.log('🔥 Firebase inicializado');
 
-// ==================== FUNCIONES FIREBASE ====================
+// ==================== SINCRONIZACIÓN EN TIEMPO REAL ====================
 
-// Cargar todas las campañas desde Firebase
-async function loadFromFirebase() {
-  try {
-    console.log('Cargando campañas desde Firebase...');
-    const snapshot = await campaignsRef.get();
-    const loadedCampaigns = [];
+function startRealtimeSync() {
+  console.log('👂 Escuchando cambios en tiempo real...');
+
+  campaignsRef.onSnapshot(snapshot => {
+    const updatedCampaigns = [];
 
     snapshot.forEach(doc => {
-      loadedCampaigns.push({ 
+      updatedCampaigns.push({ 
         firebaseId: doc.id, 
         ...doc.data() 
       });
     });
 
-    console.log(`✓ ${loadedCampaigns.length} campañas cargadas`);
+    console.log(`🔄 ${updatedCampaigns.length} campañas actualizadas en tiempo real`);
 
-    // Si no hay campañas, usar las iniciales
-    if (loadedCampaigns.length === 0) {
-      console.log('No hay datos. Cargando campañas iniciales...');
-      for (const camp of initialCampaigns) {
-        const docRef = await campaignsRef.add(camp);
-        loadedCampaigns.push({ firebaseId: docRef.id, ...camp });
-      }
-      console.log(`✓ ${loadedCampaigns.length} campañas iniciales guardadas`);
+    // Si no hay campañas, cargar las iniciales
+    if (updatedCampaigns.length === 0 && !window.initialDataLoaded) {
+      console.log('📦 Cargando datos iniciales...');
+      window.initialDataLoaded = true;
+
+      initialCampaigns.forEach(camp => {
+        campaignsRef.add(camp);
+      });
+    } else {
+      // Actualizar el array global de campañas
+      db.campaigns = updatedCampaigns;
+
+      // Re-renderizar la tabla automáticamente
+      renderTable();
+      updateStats();
     }
-
-    return loadedCampaigns;
-  } catch (error) {
-    console.error('Error Firebase:', error);
-    alert('Error al conectar con Firebase. Verifica tu conexión.');
-    return initialCampaigns;
-  }
+  }, error => {
+    console.error('❌ Error Firebase:', error);
+  });
 }
 
 // Guardar/actualizar campaña
@@ -739,7 +740,7 @@ async function saveToFirebase(campaign) {
     }
     return true;
   } catch (error) {
-    console.error('Error al guardar:', error);
+    console.error('Error:', error);
     return false;
   }
 }
@@ -751,7 +752,7 @@ async function deleteFromFirebase(firebaseId) {
     console.log('✓ Campaña eliminada');
     return true;
   } catch (error) {
-    console.error('Error al eliminar:', error);
+    console.error('Error:', error);
     return false;
   }
 }
@@ -869,7 +870,7 @@ async function deleteFromFirebase(firebaseId) {
     };
 
     // Base de datos principal
-    let db = { // Datos de Firebase
+    let db = { // Datos en tiempo real desde Firebase
         campaigns: initialCampaigns,
         platforms: ['FB', 'TT', 'GN'],
         channels: ['Mundo', 'IH', 'CS', 'HN'],
@@ -933,7 +934,7 @@ function updateCampPlatform(index, newPlatform) {
 }
 
 function saveToStorage() { 
-        // Guardado automático en Firebase 
+        // Sincronización automática en tiempo real 
     }
 
     function switchTab(id) {
@@ -1221,10 +1222,8 @@ function saveToStorage() {
         switchTab('tab-list');
     
 
-        // Guardar en Firebase
-        saveToFirebase(campaign).then(() => {
-            console.log('Campaña guardada en Firebase');
-        });
+    // Guardar en Firebase (se sincroniza automáticamente)
+    saveToFirebase(campaign);
     }
 
     function saveMetadataOnly() {
@@ -1250,11 +1249,11 @@ function saveToStorage() {
         if (confirm(`¿Eliminar "${db.campaigns[index].code}"?`)) {
             
 
-        // Eliminar de Firebase
+        // Eliminar de Firebase (se sincroniza automáticamente)
         if (db.campaigns[idx].firebaseId) {
             deleteFromFirebase(db.campaigns[idx].firebaseId);
         }
-            db.campaigns.splice(index, 1);
+                db.campaigns.splice(index, 1);
             saveToStorage();
             refreshEverything();
         }
@@ -1573,21 +1572,15 @@ function saveToStorage() {
 
 
 
-// ==================== INICIALIZACIÓN ====================
-window.addEventListener('DOMContentLoaded', async () => {
-  console.log('Iniciando aplicación...');
+// ==================== INICIAR SINCRONIZACIÓN ====================
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('🚀 Iniciando aplicación con sincronización en tiempo real...');
 
-  // Cargar datos desde Firebase
-  const firebaseCampaigns = await loadFromFirebase();
-  db.campaigns = firebaseCampaigns;
+  // Iniciar escucha de cambios en tiempo real
+  startRealtimeSync();
 
-  // Renderizar
-  renderTable();
-  updateStats();
-
-  console.log('✓ Aplicación lista');
+  console.log('✅ Aplicación lista - Actualizaciones automáticas activadas');
 });
 </script>
 </body>
 </html>
-Integración con Firebase
