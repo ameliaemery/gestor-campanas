@@ -182,7 +182,10 @@
             <div class="control-group"><label>Nombre</label><input type="text" id="modalChannelName"></div>
             <div class="control-group"><label>ID</label><input type="text" id="modalChannelId"></div>
             <div class="control-group"><label>Grupo</label><input type="text" id="modalChannelGroup"></div>
-            <div class="modal-buttons"><button class="btn btn-del" onclick="closeChannelModal()">Cancelar</button><button class="btn btn-success" onclick="saveChannelEdit()">Guardar</button></div>
+            <div style="margin-top: 15px; text-align: right;">
+                <button class="btn btn-del" onclick="closeChannelModal()">Cancelar</button>
+                <button class="btn btn-success" onclick="saveChannelEdit()">Guardar</button>
+            </div>
         </div>
     </div>
 
@@ -322,496 +325,628 @@ const initialCampaigns = [
     { "platform": "FB", "channel": "HAV", "product": "Muebles", "country": "NO", "code": "FB-HAV-Muebles-NO", "id": "00905", "keywords": ["Kjøp Møbler På Avbetaling", "Møbler På Avbetaling Uten Forskuddsbetaling", "Billige Møbler På Avbetaling Uten Forskudd", "Kjøp Møbler Nå Og Betal Senere", "Møbler På Delbetaling Lave Månedlige Avdrag", "MøblerPå Avbetaling Uten Kredittsjekk Østfold", "Møbler På Avbetaling Uten Rente", "Møbler På Avbetaling Uten Kredittsjekk"], "article": "" },
     { "platform": "FB", "channel": "HAV", "product": "Sofa", "country": "NO", "code": "FB-HAV-Sofa-NO", "id": "00904", "keywords": ["Sofaer På Avbetaling Uten Forskuddsbetaling", "Kjøp Sofa På Avbetaling", "Billige Sofaer På Avbetaling Uten Forskudd", "Sofa På Avbetaling", "Kjøp Sofa Nå Og Betal Senere", "Sofa På Delbetaling Lave Månedlige Avdrag", "Sofa På Avbetaling Uten Kredittsjekk Østfold", "Sofa På Avbetaling Uten Rente", "Sofa På Avbetaling Uten Kredittsjekk"], "article": "" } ];
 
-    const ALL_NICHOS = [
-        'AireAcondicionado', 'Apartamentos', 'Autos', 'AutosElectricos', 'Bicicletas',
-        'CadenasDeOro', 'Celulares', 'Colchones', 'Cortacesped', 'CursoDeIngles',
-        'CursoDeMarketingDigital', 'CursosInteligenciaArtificial', 'Escritorio',
-        'Generadores', 'Iphone', 'Muebles', 'MueblesDeCocina', 'PcGamer', 'PcGamerBM2',
-        'Refrigeradores', 'Sofa', 'SofaCama', 'Televisores', 'UniversidadesOnline'
-    ];
+const ALL_NICHOS = [
+    'AireAcondicionado', 'Apartamentos', 'Autos', 'AutosElectricos', 'Bicicletas',
+    'CadenasDeOro', 'Celulares', 'Colchones', 'Cortacesped', 'CursoDeIngles',
+    'CursoDeMarketingDigital', 'CursosInteligenciaArtificial', 'Escritorio',
+    'Generadores', 'Iphone', 'Muebles', 'MueblesDeCocina', 'PcGamer', 'PcGamerBM2',
+    'Refrigeradores', 'Sofa', 'SofaCama', 'Televisores', 'UniversidadesOnline'
+];
 
-    const HAV_CATALOG_INITIAL = {
-        'MUNDO Meta': [
-            { code: 'FB-HAV-AutosElectricos', id: '9908318566', platform: 'FB' },
-            { code: 'FB-HAV-Bicicletas', id: '8762376986', platform: 'FB' },
-            { code: 'FB-HAV-Colchones', id: '4310876523', platform: 'FB' },
-            { code: 'FB-HAV-Cortacesped', id: '3203309414', platform: 'FB' },
-            { code: 'FB-HAV-Escritorio', id: '3408906124', platform: 'FB' },
-            { code: 'FB-HAV-Generadores', id: '5094975587', platform: 'FB' },
-            { code: 'FB-HAV-MueblesDeCocina', id: '9443790845', platform: 'FB' },
-            { code: 'FB-HAV-PcGamer', id: '8492214982', platform: 'FB' },
-            { code: 'FB-HAV-PcGamerBM2', id: '6741304565', platform: 'FB' },
-            { code: 'FB-HAV-SofaCama', id: '5476324359', platform: 'FB' },
-            { code: 'FB-HAV-Autos', id: '00901', platform: 'FB' },
-            { code: 'FB-HAV-Celulares', id: '00902', platform: 'FB' },
-            { code: 'FB-HAV-Iphone', id: '00903', platform: 'FB' },
-            { code: 'FB-HAV-Sofa', id: '00904', platform: 'FB' },
-            { code: 'FB-HAV-Muebles', id: '00905', platform: 'FB' },
-            { code: 'FB-HAV-Refrigeradores', id: '00906', platform: 'FB' },
-            { code: 'FB-HAV-Apartamentos', id: '00907', platform: 'FB' },
-            { code: 'FB-HAV-CadenasDeOro', id: '00908', platform: 'FB' },
-            { code: 'FB-HAV-Televisores', id: '00909', platform: 'FB' },
-            { code: 'FB-HAV-AireAcondicionado', id: '00910', platform: 'FB' },
-            { code: 'FB-HAV-CursoDeIngles', id: '02301', platform: 'FB' },
-            { code: 'FB-HAV-CursoDeMarketingDigital', id: '02302', platform: 'FB' },
-            { code: 'FB-HAV-UniversidadesOnline', id: '02303', platform: 'FB' },
-            { code: 'FB-HAV-CursosInteligenciaArtificial', id: '02304', platform: 'FB' }
-        ],
-        'Mundo TikTok': [
-            { code: 'TT-HAV-Bicicletas', id: '00534', platform: 'TT' },
-            { code: 'TT-HAV-Cortacesped', id: '00535', platform: 'TT' },
-            { code: 'TT-HAV-Generadores', id: '00536', platform: 'TT' },
-            { code: 'TT-HAV-MueblesDeCocina', id: '00537', platform: 'TT' },
-            { code: 'TT-HAV-PcGamer', id: '00539', platform: 'TT' },
-            { code: 'TT-HAV-PcGamerBM2', id: '00540', platform: 'TT' },
-            { code: 'TT-HAV-SofaCama', id: '00541', platform: 'TT' },
-            { code: 'TT-HAV-Autos', id: '00911', platform: 'TT' },
-            { code: 'TT-HAV-Celulares', id: '00912', platform: 'TT' },
-            { code: 'TT-HAV-Iphone', id: '00913', platform: 'TT' },
-            { code: 'TT-HAV-Sofa', id: '00914', platform: 'TT' },
-            { code: 'TT-HAV-Muebles', id: '00915', platform: 'TT' },
-            { code: 'TT-HAV-Refrigeradores', id: '00916', platform: 'TT' },
-            { code: 'TT-HAV-Apartamentos', id: '00732', platform: 'TT' },
-            { code: 'TT-HAV-CadenasDeOro', id: '00733', platform: 'TT' },
-            { code: 'TT-HAV-Televisores', id: '00734', platform: 'TT' },
-            { code: 'TT-HAV-AireAcondicionado', id: '00735', platform: 'TT' },
-            { code: 'TT-HAV-CursoDeIngles', id: '02305', platform: 'TT' },
-            { code: 'TT-HAV-CursoDeMarketingDigital', id: '02306', platform: 'TT' },
-            { code: 'TT-HAV-UniversidadesOnline', id: '02307', platform: 'TT' },
-            { code: 'TT-HAV-CursosInteligenciaArtificial', id: '02308', platform: 'TT' }
-        ],
-        'InsideHub TikTok': [
-            { code: 'TT-HAV-IHBicicletas', id: '00561', platform: 'TT' },
-            { code: 'TT-HAV-IHColchones', id: '00562', platform: 'TT' },
-            { code: 'TT-HAV-IHMueblesDeCocina', id: '00563', platform: 'TT' },
-            { code: 'TT-HAV-IHSofaCama', id: '00564', platform: 'TT' },
-            { code: 'TT-HAV-IHCortacesped', id: '00565', platform: 'TT' },
-            { code: 'TT-HAV-IHPcGamer', id: '00566', platform: 'TT' },
-            { code: 'TT-HAV-IHAutosElectricos', id: '02310', platform: 'TT' },
-            { code: 'TT-HAV-IHEscritorio', id: '02311', platform: 'TT' },
-            { code: 'TT-HAV-IHAutos', id: '02312', platform: 'TT' },
-            { code: 'TT-HAV-IHCelulares', id: '02313', platform: 'TT' },
-            { code: 'TT-HAV-IHIphone', id: '02314', platform: 'TT' },
-            { code: 'TT-HAV-IHSofá', id: '02315', platform: 'TT' },
-            { code: 'TT-HAV-IHMuebles', id: '02316', platform: 'TT' },
-            { code: 'TT-HAV-IHRefrigeradores', id: '02317', platform: 'TT' },
-            { code: 'TT-HAV-IHApartamentos', id: '02318', platform: 'TT' },
-            { code: 'TT-HAV-IHCadenasDeOro', id: '02319', platform: 'TT' },
-            { code: 'TT-HAV-IHTelevisores', id: '02320', platform: 'TT' },
-            { code: 'TT-HAV-IHAireAcondicionado', id: '02321', platform: 'TT' }
-        ],
-        'Honduras TikTok': [
-            { code: 'TT-HAV-HNCortacesped', id: '6405419069', platform: 'TT' },
-            { code: 'TT-HAV-HNMueblesDeCocina', id: '9985571428', platform: 'TT' },
-            { code: 'TT-HAV-HNPcGamer', id: '4661076646', platform: 'TT' },
-            { code: 'TT-HAV-HNSofaCama', id: '3347994979', platform: 'TT' },
-            { code: 'TT-HAV-HNBicicletas', id: '1517545151', platform: 'TT' },
-            { code: 'TT-HAV-HNColchones', id: '2002321389', platform: 'TT' }
-        ],
-        'Honduras Meta': [
-            { code: 'FB-HAV-HNAutosElectricos', id: '9609693171', platform: 'FB' },
-            { code: 'FB-HAV-HNCortacesped', id: '7622109490', platform: 'FB' },
-            { code: 'FB-HAV-HNGeneradores', id: '6456028178', platform: 'FB' },
-            { code: 'FB-HAV-HNMueblesDeCocina', id: '9712746903', platform: 'FB' },
-            { code: 'FB-HAV-HNPcGamer', id: '8890619827', platform: 'FB' },
-            { code: 'FB-HAV-HNSofaCama', id: '9577903584', platform: 'FB' },
-            { code: 'FB-HAV-HNBicicletas', id: '1419867450', platform: 'FB' },
-            { code: 'FB-HAV-HNColchones', id: '2830626828', platform: 'FB' }
-        ],
-        'Google Ads': [
-            { code: 'GN-HAV-Bicicletas', id: '00716', platform: 'GN' },
-            { code: 'GN-HAV-Colchones', id: '00726', platform: 'GN' },
-            { code: 'GN-HAV-MueblesDeCocina', id: '00727', platform: 'GN' },
-            { code: 'GN-HAV-SofaCama', id: '00728', platform: 'GN' },
-            { code: 'GN-HAV-Cortacesped', id: '00729', platform: 'GN' },
-            { code: 'GN-HAV-PcGamer', id: '00730', platform: 'GN' }
-        ]
-    };
+const HAV_CATALOG_INITIAL = {
+    'MUNDO Meta': [
+        { code: 'FB-HAV-AutosElectricos', id: '9908318566', platform: 'FB' },
+        { code: 'FB-HAV-Bicicletas', id: '8762376986', platform: 'FB' },
+        { code: 'FB-HAV-Colchones', id: '4310876523', platform: 'FB' },
+        { code: 'FB-HAV-Cortacesped', id: '3203309414', platform: 'FB' },
+        { code: 'FB-HAV-Escritorio', id: '3408906124', platform: 'FB' },
+        { code: 'FB-HAV-Generadores', id: '5094975587', platform: 'FB' },
+        { code: 'FB-HAV-MueblesDeCocina', id: '9443790845', platform: 'FB' },
+        { code: 'FB-HAV-PcGamer', id: '8492214982', platform: 'FB' },
+        { code: 'FB-HAV-PcGamerBM2', id: '6741304565', platform: 'FB' },
+        { code: 'FB-HAV-SofaCama', id: '5476324359', platform: 'FB' },
+        { code: 'FB-HAV-Autos', id: '00901', platform: 'FB' },
+        { code: 'FB-HAV-Celulares', id: '00902', platform: 'FB' },
+        { code: 'FB-HAV-Iphone', id: '00903', platform: 'FB' },
+        { code: 'FB-HAV-Sofa', id: '00904', platform: 'FB' },
+        { code: 'FB-HAV-Muebles', id: '00905', platform: 'FB' },
+        { code: 'FB-HAV-Refrigeradores', id: '00906', platform: 'FB' },
+        { code: 'FB-HAV-Apartamentos', id: '00907', platform: 'FB' },
+        { code: 'FB-HAV-CadenasDeOro', id: '00908', platform: 'FB' },
+        { code: 'FB-HAV-Televisores', id: '00909', platform: 'FB' },
+        { code: 'FB-HAV-AireAcondicionado', id: '00910', platform: 'FB' },
+        { code: 'FB-HAV-CursoDeIngles', id: '02301', platform: 'FB' },
+        { code: 'FB-HAV-CursoDeMarketingDigital', id: '02302', platform: 'FB' },
+        { code: 'FB-HAV-UniversidadesOnline', id: '02303', platform: 'FB' },
+        { code: 'FB-HAV-CursosInteligenciaArtificial', id: '02304', platform: 'FB' }
+    ],
+    'Mundo TikTok': [
+        { code: 'TT-HAV-Bicicletas', id: '00534', platform: 'TT' },
+        { code: 'TT-HAV-Cortacesped', id: '00535', platform: 'TT' },
+        { code: 'TT-HAV-Generadores', id: '00536', platform: 'TT' },
+        { code: 'TT-HAV-MueblesDeCocina', id: '00537', platform: 'TT' },
+        { code: 'TT-HAV-PcGamer', id: '00539', platform: 'TT' },
+        { code: 'TT-HAV-PcGamerBM2', id: '00540', platform: 'TT' },
+        { code: 'TT-HAV-SofaCama', id: '00541', platform: 'TT' },
+        { code: 'TT-HAV-Autos', id: '00911', platform: 'TT' },
+        { code: 'TT-HAV-Celulares', id: '00912', platform: 'TT' },
+        { code: 'TT-HAV-Iphone', id: '00913', platform: 'TT' },
+        { code: 'TT-HAV-Sofa', id: '00914', platform: 'TT' },
+        { code: 'TT-HAV-Muebles', id: '00915', platform: 'TT' },
+        { code: 'TT-HAV-Refrigeradores', id: '00916', platform: 'TT' },
+        { code: 'TT-HAV-Apartamentos', id: '00732', platform: 'TT' },
+        { code: 'TT-HAV-CadenasDeOro', id: '00733', platform: 'TT' },
+        { code: 'TT-HAV-Televisores', id: '00734', platform: 'TT' },
+        { code: 'TT-HAV-AireAcondicionado', id: '00735', platform: 'TT' },
+        { code: 'TT-HAV-CursoDeIngles', id: '02305', platform: 'TT' },
+        { code: 'TT-HAV-CursoDeMarketingDigital', id: '02306', platform: 'TT' },
+        { code: 'TT-HAV-UniversidadesOnline', id: '02307', platform: 'TT' },
+        { code: 'TT-HAV-CursosInteligenciaArtificial', id: '02308', platform: 'TT' }
+    ],
+    'InsideHub TikTok': [
+        { code: 'TT-HAV-IHBicicletas', id: '00561', platform: 'TT' },
+        { code: 'TT-HAV-IHColchones', id: '00562', platform: 'TT' },
+        { code: 'TT-HAV-IHMueblesDeCocina', id: '00563', platform: 'TT' },
+        { code: 'TT-HAV-IHSofaCama', id: '00564', platform: 'TT' },
+        { code: 'TT-HAV-IHCortacesped', id: '00565', platform: 'TT' },
+        { code: 'TT-HAV-IHPcGamer', id: '00566', platform: 'TT' },
+        { code: 'TT-HAV-IHAutosElectricos', id: '02310', platform: 'TT' },
+        { code: 'TT-HAV-IHEscritorio', id: '02311', platform: 'TT' },
+        { code: 'TT-HAV-IHAutos', id: '02312', platform: 'TT' },
+        { code: 'TT-HAV-IHCelulares', id: '02313', platform: 'TT' },
+        { code: 'TT-HAV-IHIphone', id: '02314', platform: 'TT' },
+        { code: 'TT-HAV-IHSofá', id: '02315', platform: 'TT' },
+        { code: 'TT-HAV-IHMuebles', id: '02316', platform: 'TT' },
+        { code: 'TT-HAV-IHRefrigeradores', id: '02317', platform: 'TT' },
+        { code: 'TT-HAV-IHApartamentos', id: '02318', platform: 'TT' },
+        { code: 'TT-HAV-IHCadenasDeOro', id: '02319', platform: 'TT' },
+        { code: 'TT-HAV-IHTelevisores', id: '02320', platform: 'TT' },
+        { code: 'TT-HAV-IHAireAcondicionado', id: '02321', platform: 'TT' }
+    ],
+    'Honduras TikTok': [
+        { code: 'TT-HAV-HNCortacesped', id: '6405419069', platform: 'TT' },
+        { code: 'TT-HAV-HNMueblesDeCocina', id: '9985571428', platform: 'TT' },
+        { code: 'TT-HAV-HNPcGamer', id: '4661076646', platform: 'TT' },
+        { code: 'TT-HAV-HNSofaCama', id: '3347994979', platform: 'TT' },
+        { code: 'TT-HAV-HNBicicletas', id: '1517545151', platform: 'TT' },
+        { code: 'TT-HAV-HNColchones', id: '2002321389', platform: 'TT' }
+    ],
+    'Honduras Meta': [
+        { code: 'FB-HAV-HNAutosElectricos', id: '9609693171', platform: 'FB' },
+        { code: 'FB-HAV-HNCortacesped', id: '7622109490', platform: 'FB' },
+        { code: 'FB-HAV-HNGeneradores', id: '6456028178', platform: 'FB' },
+        { code: 'FB-HAV-HNMueblesDeCocina', id: '9712746903', platform: 'FB' },
+        { code: 'FB-HAV-HNPcGamer', id: '8890619827', platform: 'FB' },
+        { code: 'FB-HAV-HNSofaCama', id: '9577903584', platform: 'FB' },
+        { code: 'FB-HAV-HNBicicletas', id: '1419867450', platform: 'FB' },
+        { code: 'FB-HAV-HNColchones', id: '2830626828', platform: 'FB' }
+    ],
+    'Google Ads': [
+        { code: 'GN-HAV-Bicicletas', id: '00716', platform: 'GN' },
+        { code: 'GN-HAV-Colchones', id: '00726', platform: 'GN' },
+        { code: 'GN-HAV-MueblesDeCocina', id: '00727', platform: 'GN' },
+        { code: 'GN-HAV-SofaCama', id: '00728', platform: 'GN' },
+        { code: 'GN-HAV-Cortacesped', id: '00729', platform: 'GN' },
+        { code: 'GN-HAV-PcGamer', id: '00730', platform: 'GN' }
+    ]
+};
 
-    let db = {
-        campaigns: initialCampaigns, // ¡AQUÍ ESTÁN TUS 161 CAMPAÑAS!
-        platforms: ['FB', 'TT', 'GN'],
-        channels: ['Mundo', 'IH', 'CS', 'HN'],
-        products: ALL_NICHOS,
-        ids: ['00902', '00903', '00904', '00905', '00908', '00909'],
-        havCatalog: HAV_CATALOG_INITIAL
-    };
+let db = {
+    campaigns: initialCampaigns, // ¡AQUÍ ESTÁN TUS 161 CAMPAÑAS!
+    platforms: ['FB', 'TT', 'GN'],
+    channels: ['Mundo', 'IH', 'CS', 'HN'],
+    products: ALL_NICHOS,
+    ids: ['00902', '00903', '00904', '00905', '00908', '00909'],
+    havCatalog: HAV_CATALOG_INITIAL
+};
 
-    let editingIndex = -1;
-    let currentSort = { column: 'country', order: 'asc' };
-    let currentEditingChannel = null;
+let editingIndex = -1;
+let currentSort = { column: 'country', order: 'asc' };
+let currentEditingChannel = null;
 
-    // ===== LÓGICA DE NUBE =====
+// ============================================================================
+// 4. LÓGICA DE NUBE
+// ============================================================================
 
-    function startRealtimeSync() {
-        showNotif('📡 Conectando a la Nube...', 'info');
+function startRealtimeSync() {
+    showNotif('📡 Conectando a la Nube...', 'info');
 
-        // Escuchar CAMPAÑAS
-        campaignsRef.onSnapshot(snapshot => {
-            const loaded = [];
-            snapshot.forEach(doc => loaded.push({ firebaseId: doc.id, ...doc.data() }));
-            
-            if (loaded.length > 0) {
-                // Si la nube tiene datos, los usamos
-                db.campaigns = loaded;
-            } else {
-                // Si la nube está vacía, usamos los datos históricos y los subimos
-                console.log("⚠️ Nube vacía. Subiendo historial automáticamente...");
-                initialCampaigns.forEach(c => campaignsRef.add(c));
-            }
-            
-            renderTable();
-            updateStats();
-        });
-
-        // Escuchar CONFIGURACIÓN
-        settingsRef.onSnapshot(doc => {
-            if (doc.exists) {
-                const data = doc.data();
-                if (data.products && data.products.length > 0) {
-                    db.products = data.products;
-                } else {
-                    db.products = ALL_NICHOS; 
-                    saveGlobalSettings(); 
-                }
-                db.ids = (data.ids && data.ids.length) ? data.ids : db.ids;
-                db.havCatalog = (data.havCatalog && Object.keys(data.havCatalog).length) ? data.havCatalog : HAV_CATALOG_INITIAL;
-                refreshEverything();
-            } else {
-                saveGlobalSettings();
-            }
-        });
-    }
-
-    // ===== FUNCIONES GENERALES =====
-
-    function exportarCampanas() {
-        const dataStr = JSON.stringify(db.campaigns, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `backup_campanas_${new Date().toISOString().slice(0,10)}.json`;
-        link.click();
-        showNotif('✅ Copia de seguridad descargada', 'success');
-    }
-
-    async function saveToFirebase(campaign) {
-        try {
-            if (campaign.firebaseId) {
-                const { firebaseId, ...data } = campaign;
-                await campaignsRef.doc(firebaseId).update(data);
-                showNotif('☁️ Actualizado', 'success');
-            } else {
-                await campaignsRef.add(campaign);
-                showNotif('☁️ Guardado en nube', 'success');
-            }
-        } catch (e) { alert('Error nube: ' + e.message); }
-    }
-
-    async function deleteFromFirebase(firebaseId) {
-        try { await campaignsRef.doc(firebaseId).delete(); showNotif('🗑️ Eliminado', 'success'); } catch (e) { console.error(e); }
-    }
-
-    async function saveGlobalSettings() {
-        try {
-            await settingsRef.set({
-                products: db.products,
-                ids: db.ids,
-                platforms: db.platforms,
-                channels: db.channels,
-                havCatalog: db.havCatalog,
-                lastUpdate: new Date().toISOString()
-            }, { merge: true });
-        } catch (e) { console.error(e); }
-    }
-
-    // ===== INTERFAZ (UI) =====
-
-    const nichoEmojis = {
-        'cadena': '⛓️', 'oro': '💰', 'joya': '💎', 'iphone': '📱', 'celular': '📱', 
-        'tv': '📺', 'sofá': '🛋️', 'sofa': '🛋️', 'mueble': '🪑', 'bici': '🚲', 
-        'pc': '💻', 'colchón': '🛏️', 'auto': '🚗', 'curso': '📚', 'jardín': '🌿'
-    };
-
-    function getNichoConEmoji(nicho) {
-        if (!nicho) return '';
-        const n = nicho.toLowerCase();
-        for (let key in nichoEmojis) { if (n.includes(key)) return nichoEmojis[key] + ' ' + nicho; }
-        return nicho;
-    }
-
-    function updateCampPlatform(index, newPlatform) {
-        const c = db.campaigns[index];
-        if (c) { c.platform = newPlatform; saveToFirebase(c); }
-    }
-
-    function switchTab(id) {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelector(`[onclick="switchTab('${id}')"]`).classList.add('active');
-        if(id === 'tab-comp') updateCompSelects();
-        if(id === 'tab-catalog') renderHAVCatalog();
-    }
-
-    function updateStats() {
-        document.getElementById('totalCampaigns').textContent = db.campaigns.length;
-        const totalKeys = db.campaigns.reduce((sum, c) => sum + (c.keywords?.length || 0), 0);
-        document.getElementById('totalKeywords').textContent = totalKeys;
-        document.getElementById('avgKeys').textContent = db.campaigns.length ? Math.round(totalKeys / db.campaigns.length) : 0;
-        const withArticles = db.campaigns.filter(c => c.article && c.article.trim()).length;
-        document.getElementById('totalArticles').textContent = withArticles;
-    }
-
-    function refreshEverything() { updateOptions(); renderTable(); updateStats(); }
-
-    function updateOptions() {
-        const fill = (id, arr, isFilter) => {
-            const el = document.getElementById(id);
-            if(el) {
-                const dataToUse = (arr && arr.length > 0) ? arr : ALL_NICHOS_ORIGINAL;
-                el.innerHTML = (isFilter ? '<option value="">Todos</option>' : '') + dataToUse.map(x => `<option value="${x}">${x}</option>`).join('');
-            }
-        };
+    // A) Escuchar CAMPAÑAS
+    campaignsRef.onSnapshot(snapshot => {
+        const loaded = [];
+        snapshot.forEach(doc => loaded.push({ firebaseId: doc.id, ...doc.data() }));
         
-        fill('inPlatform', db.platforms); fill('filterPlatform', db.platforms, true);
-        fill('inChannel', db.channels); fill('filterChannel', db.channels, true);
-        fill('inProduct', db.products.length ? db.products : ALL_NICHOS_ORIGINAL); 
-        fill('filterProduct', db.products.length ? db.products : ALL_NICHOS_ORIGINAL, true);
-        fill('inId', db.ids); fill('filterId', db.ids, true);
-
-        ['ids', 'products'].forEach(k => {
-            const ul = document.getElementById(k === 'ids' ? 'listIds' : 'listProds');
-            const dataToRender = (db[k] && db[k].length) ? db[k] : (k==='products' ? ALL_NICHOS_ORIGINAL : []);
-            if(ul) ul.innerHTML = dataToRender.map(v => `<li>${v} <button class="btn-del" style="padding:2px 6px" onclick="delOption('${k}', '${v}')">🗑️</button></li>`).join('');
-        });
-    }
-
-    function addOption(type, inputId) {
-        const val = document.getElementById(inputId).value.trim();
-        if(val && !db[type].includes(val)) {
-            db[type].push(val);
-            db[type].sort();
-            saveGlobalSettings();
-            document.getElementById(inputId).value = '';
-            showNotif('✅ Agregado', 'success');
+        if (loaded.length > 0) {
+            // Si la nube tiene datos, los usamos (así tus compañeros ven lo mismo)
+            db.campaigns = loaded;
+        } else {
+            // Si la nube está vacía, MANTENEMOS TUS DATOS LOCALES y los subimos silenciosamente
+            console.log("⚠️ Nube vacía. Usando datos históricos y subiéndolos...");
+            // Subida automática
+             initialCampaigns.forEach(c => campaignsRef.add(c));
         }
-    }
-
-    function delOption(type, val) {
-        if(confirm('¿Borrar?')) {
-            db[type] = db[type].filter(x => x !== val);
-            saveGlobalSettings();
-            refreshEverything();
-        }
-    }
-
-    function renderTable() {
-        const q = document.getElementById('search').value.toLowerCase();
-        const pF = document.getElementById('filterPlatform').value;
-        const prF = document.getElementById('filterProduct').value;
-        const idF = document.getElementById('filterId').value;
-        const chF = document.getElementById('filterChannel').value;
-
-        let filtered = db.campaigns.filter(c => 
-            (c.code.toLowerCase().includes(q) || c.id.includes(q) || c.country.toLowerCase().includes(q)) && 
-            (!pF || c.platform === pF) && 
-            (!prF || c.product === prF) && 
-            (!idF || c.id === idF) &&
-            (!chF || chF === 'Todos' || c.channel === chF)
-        );
-
-        filtered.sort((a, b) => {
-            let vA = a[currentSort.column], vB = b[currentSort.column];
-            if(currentSort.column === 'keys') { vA = a.keywords?.length||0; vB = b.keywords?.length||0; }
-            return currentSort.order === 'asc' ? (vA > vB ? 1 : -1) : (vA < vB ? 1 : -1);
-        });
-
-        document.getElementById('campaignList').innerHTML = filtered.map(c => {
-            const realIndex = db.campaigns.indexOf(c);
-            const hasArticle = c.article && c.article.trim();
-            const hasUrl = c.url && c.url.trim().length > 0;
-            const urlIcon = hasUrl ? '<span class="url-active" title="URL OK">🔗</span>' : '<span class="url-inactive" title="Sin URL">🔗</span>';
-            const articleIcon = hasArticle ? `<span class="article-indicator has-article" onclick="toggleArticle(${realIndex})">✅</span>` : `<span class="article-indicator no-article">❌</span>`;
-
-            return `<tr>
-                <td><span class="badge badge-${c.platform.toLowerCase()}">${c.platform}</span></td>
-                <td>${c.channel || '-'}</td>
-                <td>${getNichoConEmoji(c.product)}</td>
-                <td>${c.id}</td>
-                <td>${c.code}</td>
-                <td>${c.country}</td>
-                <td>${c.keywords ? c.keywords.length : 0}</td>
-                <td style="text-align:center">${articleIcon}</td>
-                <td style="text-align:center">${urlIcon}</td>
-                <td style="text-align:center;font-weight:bold;color:var(--primary)">${c.autor||'-'}</td>
-                <td>
-                    <button class="btn btn-edit" style="padding:5px" onclick="editCampaign(${realIndex})">✏️</button>
-                    <button class="btn btn-del" style="padding:5px; margin-left:5px" onclick="deleteCampaign(${realIndex})">🗑️</button>
-                </td>
-            </tr>`;
-        }).join('');
-    }
-
-    function applySort(col) {
-        currentSort.order = (currentSort.column === col && currentSort.order === 'asc') ? 'desc' : 'asc';
-        currentSort.column = col;
+        
         renderTable();
-    }
+        updateStats();
+    });
 
-    function toggleArticle(i) {
-        const c = db.campaigns[i];
-        if (c.article) {
-            editCampaign(i);
-            setTimeout(() => document.getElementById('inArticle').scrollIntoView(), 300);
+    // B) Escuchar CONFIGURACIÓN
+    settingsRef.onSnapshot(doc => {
+        if (doc.exists) {
+            const data = doc.data();
+            // PROTECCIÓN: Si la nube devuelve nichos vacíos, ignoramos y usamos los locales
+            if (data.products && data.products.length > 0) {
+                db.products = data.products;
+            } else {
+                db.products = ALL_NICHOS; 
+                saveGlobalSettings(); // Reparar nube
+            }
+
+            db.ids = (data.ids && data.ids.length) ? data.ids : db.ids;
+            db.havCatalog = (data.havCatalog && Object.keys(data.havCatalog).length) ? data.havCatalog : HAV_CATALOG_INITIAL;
+            
+            refreshEverything();
+        } else {
+            // Primera vez: Subimos tu configuración local a la nube
+            console.log("⚠️ Inicializando nube con tus datos...");
+            saveGlobalSettings();
         }
-    }
+    });
+}
 
-    function editCampaign(index) {
-        editingIndex = index;
-        const c = db.campaigns[index];
-        document.getElementById('inPlatform').value = c.platform;
-        document.getElementById('inChannel').value = c.channel;
-        document.getElementById('inProduct').value = c.product;
-        document.getElementById('inId').value = c.id;
-        document.getElementById('inCode').value = c.code;
-        document.getElementById('inCountry').value = c.country;
-        document.getElementById('inLanguage').value = c.language || '';
-        document.getElementById('inKeywords').value = c.keywords ? c.keywords.join('\n') : '';
-        document.getElementById('inArticle').value = c.article || '';
-        document.getElementById('inAutor').value = c.autor || '';
-        document.getElementById('inUrl').value = c.url || '';
-        
-        document.getElementById('formTitle').textContent = '✏️ Editando: ' + c.code;
-        switchTab('tab-add');
-    }
+// 4. NUEVA FUNCIÓN EXPORTAR
+function exportarCampanas() {
+    const dataStr = JSON.stringify(db.campaigns, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `backup_campanas_${new Date().toISOString().slice(0,10)}.json`;
+    link.click();
+    showNotif('✅ Copia de seguridad descargada', 'success');
+}
 
-    function saveCampaign() {
-        const c = {
-            platform: document.getElementById('inPlatform').value,
-            channel: document.getElementById('inChannel').value,
-            product: document.getElementById('inProduct').value,
-            id: document.getElementById('inId').value,
-            code: document.getElementById('inCode').value,
-            country: document.getElementById('inCountry').value.toUpperCase(),
-            language: document.getElementById('inLanguage').value,
-            keywords: document.getElementById('inKeywords').value.split('\n').filter(x=>x.trim()),
-            article: document.getElementById('inArticle').value,
-            autor: document.getElementById('inAutor').value,
-            url: document.getElementById('inUrl').value,
-            updatedAt: new Date().toISOString()
-        };
-        if(!c.code || !c.product) return alert('Faltan datos');
-        if(editingIndex >= 0) c.firebaseId = db.campaigns[editingIndex].firebaseId;
-        
-        saveToFirebase(c);
-        resetForm();
-        switchTab('tab-list');
+async function saveToFirebase(campaign) {
+  try {
+    if (campaign.firebaseId) {
+      const { firebaseId, ...data } = campaign;
+      await campaignsRef.doc(firebaseId).update(data);
+      showNotif('☁️ Actualizado en Nube', 'success');
+    } else {
+      await campaignsRef.add(campaign);
+      showNotif('☁️ Guardado en Nube', 'success');
     }
+  } catch (error) { alert('Error nube: ' + error.message); }
+}
 
-    function deleteCampaign(index) {
-        if (confirm('¿Eliminar de la nube?')) {
-            const c = db.campaigns[index];
-            if(c.firebaseId) deleteFromFirebase(c.firebaseId);
+async function deleteFromFirebase(firebaseId) {
+  try { await campaignsRef.doc(firebaseId).delete(); showNotif('🗑️ Borrado de Nube', 'success'); } catch (error) { console.error(error); }
+}
+
+async function saveGlobalSettings() {
+    try {
+        await settingsRef.set({
+            products: db.products,
+            ids: db.ids,
+            platforms: db.platforms,
+            channels: db.channels,
+            havCatalog: db.havCatalog,
+            lastUpdate: new Date().toISOString()
+        }, { merge: true });
+    } catch (error) { console.error(error); }
+}
+
+// ============================================================================
+// 5. INTERFAZ ORIGINAL (SIN CAMBIOS)
+// ============================================================================
+
+const nichoEmojis = {
+    'cadena': '⛓️', 'oro': '💰', 'joya': '💎', 'iphone': '📱', 'celular': '📱', 
+    'tv': '📺', 'sofá': '🛋️', 'sofa': '🛋️', 'mueble': '🪑', 'bici': '🚲', 
+    'pc': '💻', 'colchón': '🛏️', 'auto': '🚗', 'curso': '📚', 'jardín': '🌿'
+};
+
+function getNichoConEmoji(nicho) {
+    if (!nicho) return '';
+    const n = nicho.toLowerCase();
+    for (let key in nichoEmojis) { if (n.includes(key)) return nichoEmojis[key] + ' ' + nicho; }
+    return nicho;
+}
+
+function updateCampPlatform(index, newPlatform) {
+    const c = db.campaigns[index];
+    if (c) { c.platform = newPlatform; saveToFirebase(c); }
+}
+
+function switchTab(id) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelector(`[onclick="switchTab('${id}')"]`).classList.add('active');
+    if(id === 'tab-comp') updateCompSelects();
+    if(id === 'tab-catalog') renderHAVCatalog();
+}
+
+function updateStats() {
+    document.getElementById('totalCampaigns').textContent = db.campaigns.length;
+    const totalKeys = db.campaigns.reduce((sum, c) => sum + (c.keywords?.length || 0), 0);
+    document.getElementById('totalKeywords').textContent = totalKeys;
+    document.getElementById('avgKeys').textContent = db.campaigns.length ? Math.round(totalKeys / db.campaigns.length) : 0;
+    const withArticles = db.campaigns.filter(c => c.article && c.article.trim()).length;
+    document.getElementById('totalArticles').textContent = withArticles;
+}
+
+function refreshEverything() { updateOptions(); renderTable(); updateStats(); renderHAVCatalog(); }
+
+function updateOptions() {
+    const fill = (id, arr, isFilter) => {
+        const el = document.getElementById(id);
+        if(!el) {
+            const dataToUse = (arr && arr.length > 0) ? arr : ALL_NICHOS;
+            el.innerHTML = (isFilter ? '<option value="">Todos</option>' : '') + dataToUse.map(x => `<option value="${x}">${x}</option>`).join('');
         }
-    }
-
-    function resetForm() {
-        editingIndex = -1;
-        document.querySelectorAll('#tab-add input, #tab-add textarea, #tab-add select').forEach(e=>e.value='');
-        document.getElementById('formTitle').textContent = '➕ Nueva Campaña';
-    }
-
-    function boldSelectedText() {
-        const ta = document.getElementById('inKeywords');
-        const s = ta.selectionStart, e = ta.selectionEnd;
-        ta.value = ta.value.substring(0, s) + '<b>' + ta.value.substring(s, e) + '</b>' + ta.value.substring(e);
-    }
-    function clearAllBoldTags() { document.getElementById('inKeywords').value = document.getElementById('inKeywords').value.replace(/<\/?b>/g, ''); }
-
-    function importarCampanas(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const imported = JSON.parse(e.target.result);
-                if (confirm(`¿Subir ${imported.length} campañas a la nube?`)) {
-                    let count = 0;
-                    imported.forEach(c => { saveToFirebase(c); count++; });
-                    alert(`✅ Procesando...`);
-                }
-            } catch (err) { alert('❌ Error: ' + err.message); }
-        };
-        reader.readAsText(file);
-    }
-
-    // ===== CATÁLOGO HAV =====
-    function renderHAVCatalog() {
-        const box = document.getElementById('havCatalogContainer');
-        if(!box) return;
-        const catalog = (db.havCatalog && Object.keys(db.havCatalog).length > 0) ? db.havCatalog : HAV_CATALOG_INITIAL;
-        let html = '';
-        const colors = { 'FB': '#1877f2', 'TT': '#000', 'GN': '#EA4335' };
-        for(const [group, channels] of Object.entries(catalog)) {
-            if(!channels.length) continue;
-            const color = colors[channels[0].platform] || '#333';
-            html += `<div class="hav-platform-card" style="border-left-color:${color}"><h3 style="color:${color}">${group}</h3>
-                ${channels.map((ch, idx) => `
-                    <div class="hav-channel-item">
-                        <div><div class="hav-channel-name">${ch.code}</div><div class="hav-channel-id">${ch.id}</div></div>
-                        <div><button class="btn btn-primary" style="padding:4px 8px;font-size:0.8em" onclick="navigator.clipboard.writeText('${ch.code}|${ch.id}');showNotif('Copiado','success')">📋</button>
-                        <button class="btn btn-edit" style="padding:4px 8px;font-size:0.8em;margin-left:5px" onclick="editHAVChannel('${group}', ${idx})">✏️</button></div>
-                    </div>`).join('')}</div>`;
-        }
-        box.innerHTML = html;
-    }
-
-    function addNewHAVChannel() {
-        currentEditingChannel = null; document.getElementById('modalPlatform').value = 'FB';
-        document.getElementById('modalChannelName').value = ''; document.getElementById('modalChannelId').value = '';
-        document.getElementById('editChannelModal').classList.add('active');
-    }
-    function saveChannelEdit() {
-        const plat = document.getElementById('modalPlatform').value, name = document.getElementById('modalChannelName').value, id = document.getElementById('modalChannelId').value, group = document.getElementById('modalChannelGroup').value;
-        if(!name || !id) return alert('Completa datos');
-        const code = `${plat}-HAV-${name}`;
-        if(currentEditingChannel) {
-            const oldG = currentEditingChannel.group;
-            db.havCatalog[oldG].splice(currentEditingChannel.index, 1);
-            if(!db.havCatalog[oldG].length) delete db.havCatalog[oldG];
-        }
-        if(!db.havCatalog[group]) db.havCatalog[group] = [];
-        db.havCatalog[group].push({ code, id, platform: plat });
-        saveGlobalSettings(); closeChannelModal();
-    }
-    function editHAVChannel(grp, idx) {
-        currentEditingChannel = { group, grp, index: idx };
-        const ch = db.havCatalog[grp][idx];
-        document.getElementById('modalPlatform').value = ch.platform;
-        document.getElementById('modalChannelName').value = ch.code.split('-HAV-')[1] || '';
-        document.getElementById('modalChannelId').value = ch.id;
-        document.getElementById('modalChannelGroup').value = grp;
-        document.getElementById('editChannelModal').classList.add('active');
-    }
-    function closeChannelModal() { document.getElementById('editChannelModal').classList.remove('active'); }
-    function showNotif(msg, type) {
-        const div = document.createElement('div');
-        div.className = 'notif-box';
-        div.style.background = type === 'success' ? '#10b981' : '#333';
-        div.textContent = msg;
-        document.getElementById('notification-area').appendChild(div);
-        setTimeout(()=>div.remove(), 3000);
-    }
-    function applySort(col) { currentSort.column = col; currentSort.order = currentSort.order==='asc'?'desc':'asc'; renderTable(); }
-
-    window.onload = function() { 
-        renderTable(); 
-        renderHAVCatalog();
-        updateOptions();
-        startRealtimeSync(); 
     };
+    
+    fill('inPlatform', db.platforms); fill('filterPlatform', db.platforms, true);
+    fill('inChannel', db.channels); fill('filterChannel', db.channels, true);
+    fill('inProduct', db.products.length ? db.products : ALL_NICHOS); 
+    fill('filterProduct', db.products.length ? db.products : ALL_NICHOS, true);
+    fill('inId', db.ids); fill('filterId', db.ids, true);
+
+    ['ids', 'products', 'platforms', 'channels'].forEach(type => {
+        let listId = '';
+        if(type==='ids') listId='listIds'; else if(type==='products') listId='listProds'; else if(type==='platforms') listId='listPlatforms'; else if(type==='channels') listId='listChannels';
+        
+        const container = document.getElementById(listId);
+        if(container && db[type]) {
+            container.innerHTML = db[type].map((val, i) => `
+                <li>
+                    <input type="text" class="config-input" value="${val}" id="input_${type}_${i}">
+                    <button class="btn btn-save-mini" onclick="updateGlobalItem('${type}', ${i})">💾</button>
+                    <button class="btn-del-mini" onclick="delOption('${type}', ${i})">🗑️</button>
+                </li>`).join('');
+        }
+    });
+}
+
+function addOption(type, inputId) {
+    const val = document.getElementById(inputId).value.trim();
+    if(val && !db[type].includes(val)) {
+        db[type].push(val);
+        db[type].sort();
+        saveGlobalSettings();
+        document.getElementById(inputId).value = '';
+        showNotif('✅ Agregado', 'success');
+    }
+}
+
+function delOption(type, index) {
+    if (confirm('¿Eliminar?')) { db[type].splice(index, 1); saveGlobalSettings(); refreshEverything(); }
+}
+
+function updateGlobalItem(type, index) {
+    const newVal = document.getElementById(`input_${type}_${index}`).value.trim();
+    if(newVal) { db[type][index] = newVal; saveGlobalSettings(); showNotif('✅ Actualizado', 'success'); }
+}
+
+function renderTable() {
+    const q = document.getElementById('search').value.toLowerCase();
+    const pF = document.getElementById('filterPlatform').value;
+    const prF = document.getElementById('filterProduct').value;
+    const idF = document.getElementById('filterId').value;
+    const chF = document.getElementById('filterChannel').value;
+
+    let filtered = db.campaigns.filter(c => 
+        (c.code.toLowerCase().includes(q) || c.id.includes(q) || c.country.toLowerCase().includes(q)) && 
+        (!pF || c.platform === pF) && 
+        (!prF || c.product === prF) && 
+        (!idF || c.id === idF) &&
+        (!chF || chF === 'Todos' || c.channel === chF)
+    );
+
+    filtered.sort((a, b) => {
+        let vA = a[currentSort.column], vB = b[currentSort.column];
+        if (currentSort.column === 'keys') { vA = a.keywords?.length || 0; vB = b.keywords?.length || 0; }
+        return currentSort.order === 'asc' ? (vA > vB ? 1 : -1) : (vA < vB ? 1 : -1);
+    });
+
+    const tbody = document.getElementById('campaignList');
+    tbody.innerHTML = filtered.map(c => {
+        const realIndex = db.campaigns.indexOf(c);
+        const hasArticle = c.article && c.article.trim();
+        
+        // URL STATUS
+        const hasUrl = c.url && c.url.trim().length > 0;
+        const urlIcon = hasUrl ? '<span class="url-active" title="URL OK">🔗</span>' : '<span class="url-inactive" title="Sin URL">🔗</span>';
+        
+        const articleIcon = hasArticle ? 
+            `<span class="article-indicator has-article" onclick="toggleArticle(${realIndex})">✅</span>` : 
+            `<span class="article-indicator no-article">❌</span>`;
+
+        return `<tr>
+            <td>
+                <select class="platform-select" onchange="updateCampPlatform(${realIndex}, this.value)">
+                    <option value="FB" ${c.platform === 'FB' ? 'selected' : ''}>FB</option>
+                    <option value="TT" ${c.platform === 'TT' ? 'selected' : ''}>TT</option>
+                    <option value="GN" ${c.platform === 'GN' ? 'selected' : ''}>GN</option>
+                </select>
+            </td>
+            <td>${c.channel || '-'}</td>
+            <td><strong>${getNichoConEmoji(c.product)}</strong></td>
+            <td><code>${c.id}</code></td>
+            <td>${c.code}</td>
+            <td>${c.language || '-'}</td>
+            <td>${c.country}</td>
+            <td><strong>${c.keywords?.length || 0}</strong></td>
+            <td style="text-align: center;">${articleIcon}</td>
+            <td style="text-align: center;">${urlIcon}</td>
+            <td style="text-align: center; font-weight: bold; color: var(--primary);">${c.autor || '-'}</td>
+            <td>
+                <button class="btn btn-edit" style="padding: 6px 10px;" onclick="editCampaign(${realIndex})">✏️</button>
+                <button class="btn btn-del" style="padding: 6px 10px;" onclick="deleteCampaign(${realIndex})">🗑️</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function applySort(col) {
+    currentSort.order = (currentSort.column === col && currentSort.order === 'asc') ? 'desc' : 'asc';
+    currentSort.column = col;
+    renderTable();
+}
+
+function toggleArticle(i) {
+    const c = db.campaigns[i];
+    if (c.article) {
+        editCampaign(i);
+        setTimeout(() => document.getElementById('inArticle').scrollIntoView(), 300);
+    }
+}
+
+function editCampaign(index) {
+    editingIndex = index;
+    const c = db.campaigns[index];
+    document.getElementById('inPlatform').value = c.platform;
+    document.getElementById('inChannel').value = c.channel || '';
+    document.getElementById('inProduct').value = c.product;
+    document.getElementById('inId').value = c.id;
+    document.getElementById('inCode').value = c.code;
+    document.getElementById('inLanguage').value = c.language || '';
+    document.getElementById('inCountry').value = c.country;
+    document.getElementById('inKeywords').value = c.keywords ? c.keywords.join('\n') : '';
+    document.getElementById('inArticle').value = c.article || '';
+    document.getElementById('inAutor').value = c.autor || '';
+    // URL
+    document.getElementById('inUrl').value = c.url || '';
+    
+    document.getElementById('formTitle').textContent = '✏️ Editando: ' + c.code;
+    document.getElementById('btnMetaOnly').style.display = 'inline-block';
+    switchTab('tab-add');
+}
+
+function saveCampaign() {
+    const platform = document.getElementById('inPlatform').value;
+    const product = document.getElementById('inProduct').value;
+    const id = document.getElementById('inId').value;
+    const code = document.getElementById('inCode').value;
+    const country = document.getElementById('inCountry').value.toUpperCase();
+    
+    if (!platform || !product || !id || !code || !country) return alert('⚠️ Faltan datos obligatorios');
+
+    const campaign = {
+        platform, 
+        channel: document.getElementById('inChannel').value,
+        product, id, code, country,
+        language: document.getElementById('inLanguage').value,
+        keywords: document.getElementById('inKeywords').value.split('\n').map(k=>k.trim()).filter(k=>k),
+        article: document.getElementById('inArticle').value,
+        autor: document.getElementById('inAutor').value,
+        url: document.getElementById('inUrl').value,
+        updatedAt: new Date().toISOString()
+    };
+
+    if (editingIndex >= 0) {
+        campaign.firebaseId = db.campaigns[editingIndex].firebaseId;
+        saveToFirebase(campaign);
+    } else {
+        saveToFirebase(campaign);
+    }
+    resetForm();
+    switchTab('tab-list');
+}
+
+function saveMetadataOnly() {
+    if (editingIndex < 0) return;
+    const c = db.campaigns[editingIndex];
+    c.platform = document.getElementById('inPlatform').value;
+    c.channel = document.getElementById('inChannel').value;
+    c.product = document.getElementById('inProduct').value;
+    c.id = document.getElementById('inId').value;
+    c.code = document.getElementById('inCode').value;
+    c.country = document.getElementById('inCountry').value.toUpperCase();
+    c.autor = document.getElementById('inAutor').value;
+    saveToFirebase(c);
+    resetForm();
+    switchTab('tab-list');
+}
+
+function deleteCampaign(index) {
+    if (confirm('¿Eliminar campaña permanentemente de la nube?')) {
+        const c = db.campaigns[index];
+        if(c.firebaseId) deleteFromFirebase(c.firebaseId);
+    }
+}
+
+function resetForm() {
+    editingIndex = -1;
+    document.querySelectorAll('#tab-add input, #tab-add select, #tab-add textarea').forEach(el => el.value = '');
+    document.getElementById('formTitle').textContent = '➕ Nueva Campaña';
+    document.getElementById('btnMetaOnly').style.display = 'none';
+}
+
+function boldSelectedText() {
+    const ta = document.getElementById('inKeywords');
+    const start = ta.selectionStart; const end = ta.selectionEnd;
+    ta.value = ta.value.substring(0, start) + '<b>' + ta.value.substring(start, end) + '</b>' + ta.value.substring(end);
+}
+function clearAllBoldTags() {
+    const ta = document.getElementById('inKeywords');
+    ta.value = ta.value.replace(/<\/?b>/g, '');
+}
+
+// ===== IMPORTAR (JSON) =====
+function importarCampanas(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const imported = JSON.parse(e.target.result);
+            if (!Array.isArray(imported)) throw new Error('Formato inválido');
+            if (confirm(`¿Subir ${imported.length} campañas a la nube?`)) {
+                let count = 0;
+                imported.forEach(c => { saveToFirebase(c); count++; });
+                alert(`✅ Procesando ${count} campañas hacia la nube...`);
+            }
+        } catch (err) { alert('❌ Error: ' + err.message); }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+// ===== CATÁLOGO HAV =====
+function renderHAVCatalog() {
+    const container = document.getElementById('havCatalogContainer');
+    if (!container || !db.havCatalog) return;
+    
+    let html = '';
+    const platforms = { 
+        'FB': { color: '#1877f2', bg: '#e7f3ff', n: '🌎 Meta' }, 
+        'TT': { color: '#fe2c55', bg: '#fff0f3', n: '🎵 TikTok' }, 
+        'GN': { color: '#EA4335', bg: '#fff5f0', n: '🔍 Google' } 
+    };
+
+    for (const [groupName, channels] of Object.entries(db.havCatalog)) {
+        if(!channels.length) continue;
+        const plat = channels[0].platform || 'FB';
+        const style = platforms[plat] || platforms['FB'];
+        
+        html += `<div class="hav-platform-card" style="border-left-color: ${style.color}; background: ${style.bg}">
+            <h3 style="color:${style.color}">${groupName}</h3>
+            <div class="hav-channels-list">
+                ${channels.map((ch, idx) => `
+                <div class="hav-channel-item">
+                    <div class="hav-channel-info">
+                        <div class="hav-channel-name">${ch.code}</div>
+                        <div class="hav-channel-id">${ch.id}</div>
+                    </div>
+                    <div class="hav-channel-actions">
+                        <button class="btn-copy" onclick="navigator.clipboard.writeText('${ch.code} | ${ch.id}');showNotif('Copiado','success')">📋</button>
+                        <button class="btn-edit-mini" onclick="editHAVChannel('${groupName}', ${idx})">✏️</button>
+                        <button class="btn-del-mini" onclick="deleteHAVChannel('${groupName}', ${idx})">🗑️</button>
+                    </div>
+                </div>`).join('')}
+            </div>
+        </div>`;
+    }
+    container.innerHTML = html;
+}
+
+function addNewHAVChannel() {
+    currentEditingChannel = null;
+    document.getElementById('modalPlatform').value = 'FB';
+    document.getElementById('modalChannelName').value = '';
+    document.getElementById('modalChannelId').value = '';
+    document.getElementById('modalChannelGroup').value = 'MUNDO Meta';
+    document.getElementById('editChannelModal').classList.add('active');
+}
+
+function saveChannelEdit() {
+    const plat = document.getElementById('modalPlatform').value;
+    const name = document.getElementById('modalChannelName').value;
+    const id = document.getElementById('modalChannelId').value;
+    const group = document.getElementById('modalChannelGroup').value;
+    
+    if(!name || !id || !group) return alert('Completa todo');
+    
+    const code = `${plat}-HAV-${name}`;
+    
+    if (currentEditingChannel) {
+        const oldGroup = currentEditingChannel.group;
+        db.havCatalog[oldGroup].splice(currentEditingChannel.index, 1);
+        if(db.havCatalog[oldGroup].length === 0) delete db.havCatalog[oldGroup];
+    }
+    
+    if (!db.havCatalog[group]) db.havCatalog[group] = [];
+    db.havCatalog[group].push({ code, id, platform: plat });
+    
+    saveGlobalSettings();
+    closeChannelModal();
+}
+
+function deleteHAVChannel(group, index) {
+    if(confirm('¿Eliminar canal?')) {
+        db.havCatalog[group].splice(index, 1);
+        if(db.havCatalog[group].length===0) delete db.havCatalog[group];
+        saveGlobalSettings();
+    }
+}
+
+function editHAVChannel(group, index) {
+    currentEditingChannel = { group, index };
+    const ch = db.havCatalog[group][index];
+    document.getElementById('modalPlatform').value = ch.platform;
+    document.getElementById('modalChannelName').value = ch.code.split('-HAV-')[1] || '';
+    document.getElementById('modalChannelId').value = ch.id;
+    document.getElementById('modalChannelGroup').value = group;
+    document.getElementById('editChannelModal').classList.add('active');
+}
+
+function closeChannelModal() { document.getElementById('editChannelModal').classList.remove('active'); }
+
+function showNotif(msg, type) {
+    const n = document.createElement('div');
+    n.textContent = msg;
+    n.style.cssText = `position:fixed;bottom:20px;right:20px;background:${type==='success'?'#10b981':'#ef4444'};color:white;padding:15px;border-radius:8px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2)`;
+    document.body.appendChild(n);
+    setTimeout(()=>n.remove(), 2500);
+}
+
+// ===== COMPARADOR =====
+function updateCompSelects() {
+    ['comp1', 'comp2', 'comp3'].forEach(id => {
+        const el = document.getElementById(id);
+        el.innerHTML = '<option value="">Seleccionar...</option>' + 
+            db.campaigns.map((c, i) => `<option value="${i}">${c.code} (${c.country})</option>`).join('');
+    });
+}
+
+function runTripleComparison() {
+    const i1 = document.getElementById('comp1').value;
+    const i2 = document.getElementById('comp2').value;
+    const i3 = document.getElementById('comp3').value;
+    if (!i1 || !i2 || !i3) return;
+    const campaigns = [db.campaigns[i1], db.campaigns[i2], db.campaigns[i3]];
+    document.getElementById('compResults').innerHTML = campaigns.map(c => `
+        <div class="comp-card">
+            <h3>${c.code}</h3>
+            <div class="metric"><strong>País:</strong><span>${c.country}</span></div>
+            <div class="metric"><strong>ID:</strong><span>${c.id}</span></div>
+            <div class="keyword-list">${c.keywords.map(k=>`<div class="keyword-item">${k}</div>`).join('')}</div>
+        </div>`).join('');
+}
+
+window.onload = function() {
+    renderTable(); // Mostrar datos inmediatamente
+    renderHAVCatalog();
+    updateOptions();
+    startRealtimeSync(); // Luego conectar a nube
+    
+    document.getElementById('inProduct').addEventListener('change', function() {});
+    document.getElementById('editChannelModal').addEventListener('click', function(e) {
+        if (e.target === this) closeChannelModal();
+    });
+};
 </script>
 </body>
 </html>
