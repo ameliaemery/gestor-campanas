@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor HAV 2026 - V26 </title>
+    <title>Gestor HAV 2026 - V27 (URL VERDE FINAL)</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
@@ -66,61 +66,28 @@
         }
 
         /* === CATÁLOGO HAV (DISEÑO ORGANIZADO) === */
-        .hav-catalog-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); /* Tarjetas anchas */
-            gap: 30px; 
-            margin-top: 30px; 
-            align-items: start; 
-        }
-        
-        .hav-platform-card { 
-            border-radius: 12px; 
-            padding: 20px; 
-            border-left: 6px solid; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
-            background: white; 
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .hav-platform-card h3 { 
-            margin-bottom: 15px; 
-            font-size: 1.25em; 
-            font-weight: 700;
-            padding-bottom: 10px; 
-            border-bottom: 2px solid #f0f0f0; 
-        }
-        
-        .hav-channels-list { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-            max-height: 500px; 
-            overflow-y: auto; 
-            padding-right: 8px; 
-        }
-        
-        .hav-channel-item { 
-            background: #f8faff; 
-            padding: 12px 15px; 
-            border-radius: 8px; 
-            border: 1px solid #e1e4e8; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.03); 
-            transition: transform 0.2s;
-        }
+        .hav-catalog-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 30px; margin-top: 30px; align-items: start; }
+        .hav-platform-card { border-radius: 12px; padding: 20px; border-left: 6px solid; box-shadow: 0 4px 15px rgba(0,0,0,0.08); background: white; height: 100%; display: flex; flex-direction: column; }
+        .hav-platform-card h3 { margin-bottom: 15px; font-size: 1.25em; font-weight: 700; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
+        .hav-channels-list { display: flex; flex-direction: column; gap: 12px; max-height: 500px; overflow-y: auto; padding-right: 8px; }
+        .hav-channel-item { background: #f8faff; padding: 12px 15px; border-radius: 8px; border: 1px solid #e1e4e8; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.03); transition: transform 0.2s; }
         .hav-channel-item:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
+        .hav-channel-name { font-weight: 600; font-size: 0.85em; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hav-channel-id { font-size: 0.75em; color: #888; }
         
+        /* BOTONES CATÁLOGO */
+        .hav-btn-group { display: flex; gap: 3px; }
+        .btn-mini { padding: 4px 6px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75em; transition: 0.2s; }
+        .btn-copy-mini { background: var(--primary); color: white; }
+        .btn-edit-mini { background: var(--warning); color: white; }
+        .btn-del-mini { background: var(--danger); color: white; }
+
         .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 600; display: inline-block; }
         .badge-fb { background: #1877f2; color: white; }
         .badge-tt { background: #fe2c55; color: white; }
         .badge-gn { background: #EA4335; color: white; }
         
-        /* Modal y Utilidades */
+        /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; }
         .modal.active { display: flex; }
         .modal-content { background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: modalSlide 0.3s ease; }
@@ -132,9 +99,22 @@
         .btn-save-mini { background: var(--success); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
         .btn-del-mini { background: var(--danger); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
         
-        /* ESTILOS URL (VERDE = CARGADO) */
-        .url-active { color: #00E676; font-weight: bold; font-size: 1.4em; cursor: pointer; text-decoration: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1)); }
-        .url-inactive { color: #ccc; font-size: 1.4em; cursor: default; }
+        /* === ICONOS LINK (CORREGIDO FINAL) === */
+        /* Usamos text-shadow y color transparente para FORZAR el color en emojis */
+        .url-active { 
+            color: transparent !important; 
+            text-shadow: 0 0 0 #00E676 !important; /* VERDE BRILLANTE */
+            font-weight: bold; 
+            font-size: 1.3em; 
+            cursor: pointer; 
+            text-decoration: none; 
+        }
+        .url-inactive { 
+            color: transparent !important;
+            text-shadow: 0 0 0 #d1d5db !important; /* GRIS */
+            font-size: 1.3em; 
+            cursor: default; 
+        }
         
         .article-indicator { font-size: 1.3em; cursor: pointer; transition: transform 0.3s; }
         .article-indicator:hover { transform: scale(1.3); }
@@ -145,12 +125,7 @@
         #notification-area { position: fixed; bottom: 20px; right: 20px; z-index: 10000; }
         .notif-box { background: #333; color: white; padding: 15px; border-radius: 8px; margin-top: 10px; animation: slideIn 0.5s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-        
-        /* === BOTONES MÁS PEQUEÑOS EN CATÁLOGO (CORREGIDO) === */
         .btn-copy { background: var(--primary); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8em; font-weight: 600; }
-        /* Reducimos padding y márgenes para que se vean más pequeños */
-        .btn-edit-mini { background: var(--warning); color: white; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; margin-left: 3px; font-size: 0.8em; }
-        .btn-del-mini { background: var(--danger); color: white; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; margin-left: 3px; font-size: 0.8em; }
     </style>
 </head>
 <body>
@@ -692,9 +667,10 @@ function renderTable() {
             `<span class="article-indicator has-article" onclick="toggleArticle(${realIndex})">✅</span>` : 
             `<span class="article-indicator no-article">❌</span>`;
         
-        // LOGICA URL
-        const hasUrl = c.url && c.url.trim().length > 0;
+        // CORRECCION FINAL: FORZAR VERDE SI HAY URL
+        const hasUrl = (c.url && String(c.url).trim().length > 0);
         const urlClass = hasUrl ? 'url-active' : 'url-inactive';
+        // Icono siempre visible
         const urlIcon = `<span class="${urlClass}" title="${hasUrl ? c.url : 'Sin Link'}">🔗</span>`;
 
         // 3. SELECCIÓN DE NOMBRE DE PLATAFORMA (NO ABREVIADO)
@@ -860,7 +836,7 @@ function importarCampanas(event) {
     event.target.value = '';
 }
 
-// ===== 1. CATÁLOGO HAV (Restaurado a DISEÑO HERMOSO) =====
+// ===== 1. CATÁLOGO HAV (Restaurado a DISEÑO HERMOSO Y ORDENADO) =====
 function renderHAVCatalog() {
     const container = document.getElementById('havCatalogContainer');
     if (!container || !db.havCatalog) return;
@@ -873,8 +849,15 @@ function renderHAVCatalog() {
         'GN': { color: '#EA4335', bg: '#fff5f0', n: '🔍 Google' } 
     };
 
-    for (const [groupName, channels] of Object.entries(db.havCatalog)) {
-        if(!channels.length) continue;
+    // ORDEN ESPECÍFICO: PRIMERO MUNDO META, TIKTOK, GOOGLE
+    const orderedKeys = ['MUNDO Meta', 'Mundo TikTok', 'Google Ads'];
+    const allKeys = Object.keys(db.havCatalog);
+    // Filtrar los que no están en la lista ordenada y agregarlos al final
+    const finalOrder = [...orderedKeys, ...allKeys.filter(k => !orderedKeys.includes(k))];
+
+    finalOrder.forEach(groupName => {
+        const channels = db.havCatalog[groupName];
+        if(!channels || !channels.length) return;
         const plat = channels[0].platform || 'FB';
         const style = platforms[plat] || platforms['FB'];
         
@@ -887,15 +870,15 @@ function renderHAVCatalog() {
                         <div class="hav-channel-name">${ch.code}</div>
                         <div class="hav-channel-id">${ch.id}</div>
                     </div>
-                    <div class="hav-channel-actions">
-                        <button class="btn-copy" onclick="navigator.clipboard.writeText('${ch.code} | ${ch.id}');showNotif('Copiado','success')">📋</button>
-                        <button class="btn-edit-mini" onclick="editHAVChannel('${groupName}', ${idx})">✏️</button>
-                        <button class="btn-del-mini" onclick="deleteHAVChannel('${groupName}', ${idx})">🗑️</button>
+                    <div class="hav-btn-group">
+                        <button class="btn-mini btn-copy-mini" onclick="navigator.clipboard.writeText('${ch.code} | ${ch.id}');showNotif('Copiado','success')">📋</button>
+                        <button class="btn-mini btn-edit-mini" onclick="editHAVChannel('${groupName}', ${idx})">✏️</button>
+                        <button class="btn-mini btn-del-mini" onclick="deleteHAVChannel('${groupName}', ${idx})">🗑️</button>
                     </div>
                 </div>`).join('')}
             </div>
         </div>`;
-    }
+    });
     container.innerHTML = html;
 }
 
