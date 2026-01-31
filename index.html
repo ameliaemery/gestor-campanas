@@ -615,7 +615,7 @@ function updateOptions() {
     });
 }
 
-function addOption(type, inputId) {
+function (type, inputId) {
     const val = document.getElementById(inputId).value.trim();
     if (!val || db[type].includes(val)) return alert('Valor inválido');
     db[type].push(val); db[type].sort();
