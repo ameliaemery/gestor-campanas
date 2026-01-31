@@ -126,6 +126,18 @@
         .notif-box { background: #333; color: white; padding: 15px; border-radius: 8px; margin-top: 10px; animation: slideIn 0.5s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
         .btn-copy { background: var(--primary); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8em; font-weight: 600; }
+    
+        /* Estilo para IDs más grandes y visibles */
+        td code {
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: #f0f9ff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 2px solid #3b82f6;
+            color: #1e40af;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -444,6 +456,13 @@ let db = JSON.parse(localStorage.getItem('arbitrage_final_v11')) || {
     havCatalog: HAV_CATALOG_INITIAL
 };
 
+// --- FIX: Inicialización segura de arrays ---
+if (!db.ids) db.ids = ['00902', '00903', '00904', '00905', '00908', '00909'];
+if (!db.products) db.products = ALL_NICHOS;
+if (!db.platforms) db.platforms = ['FB', 'TT', 'GN'];
+if (!db.channels) db.channels = ['Mundo', 'IH', 'CS', 'HN'];
+// ------------------------------------------
+
 let editingIndex = -1;
 let currentSort = { column: 'country', order: 'asc' };
 let currentEditingChannel = null;
@@ -548,8 +567,11 @@ async function saveGlobalSettings() {
 
 const nichoEmojis = {
     'cadena': '⛓️', 'oro': '💰', 'joya': '💎', 'iphone': '📱', 'celular': '📱', 
-    'tv': '📺', 'sofá': '🛋️', 'sofa': '🛋️', 'mueble': '🪑', 'bici': '🚲', 
-    'pc': '💻', 'colchón': '🛏️', 'auto': '🚗', 'curso': '📚', 'jardín': '🌿'
+    'tv': '📺', 'televisor': '📺', 'televisores': '📺',
+    'sofá': '🛋️', 'sofa': '🛋️', 'mueble': '🪑', 'bici': '🚲', 
+    'pc': '💻', 'colchón': '🛏️', 'auto': '🚗', 'curso': '📚', 'jardín': '🌿',
+    'aire': '❄️', 'refriger': '🧊', 'generador': '⚡', 'cortacesped': '🌿',
+    'escritorio': '🖥️', 'apartamento': '🏢'
 };
 
 function getNichoConEmoji(nicho) {
@@ -617,11 +639,14 @@ function updateOptions() {
 
 function addOption(type, inputId) {
     const val = document.getElementById(inputId).value.trim();
-    if (!val || db[type].includes(val)) return alert('Valor inválido');
-    db[type].push(val); db[type].sort();
+    if (!db[type]) db[type] = [];
+    if (!val || db[type].includes(val)) return alert('Valor inválido o ya existe');
+    db[type].push(val); 
+    db[type].sort();
     saveGlobalSettings();
     document.getElementById(inputId).value = '';
     showNotif('✅ Agregado', 'success');
+    refreshEverything();
 }
 
 function delOption(type, index) {
@@ -965,8 +990,94 @@ function runTripleComparison() {
         </div>`).join('');
 }
 
+
+// ===== AUTO-COMPLETAR DESDE CATÁLOGO HAV =====
+function autoCompleteFromHAV() {
+    const nombreCampana = document.getElementById('inCode').value.trim();
+
+    if (nombreCampana.length < 5) return; // Esperar a que escriba algo significativo
+
+    // Parsear: FB-HAV-Autos-AE -> Platform, Canal, Nicho
+    const partes = nombreCampana.split('-');
+    if (partes.length < 3) return;
+
+    const plataforma = partes[0]; // FB, TT, GN
+    const nicho = partes[2];       // Autos, Celulares, Iphone, etc.
+
+    console.log('🔍 Buscando en catálogo:', { plataforma, nicho });
+
+    // Buscar en el catálogo HAV
+    let idEncontrado = null;
+    let nichoEncontrado = null;
+
+    // Recorrer todos los grupos del catálogo
+    for (let grupo in db.havCatalog) {
+        const canales = db.havCatalog[grupo];
+        if (!canales || !Array.isArray(canales)) continue;
+
+        for (let canal of canales) {
+            // Verificar si el canal coincide con plataforma y nicho
+            // Ejemplo: canal.code = "FB-HAV-Autos", canal.id = "00901", canal.platform = "FB"
+            if (canal.platform === plataforma && canal.code.includes(nicho)) {
+                idEncontrado = canal.id;
+                nichoEncontrado = nicho;
+                console.log('✅ Encontrado:', canal);
+                break;
+            }
+        }
+
+        if (idEncontrado) break;
+    }
+
+    // Auto-completar NICHO
+    if (nichoEncontrado) {
+        const selectNicho = document.getElementById('inProduct');
+
+        // Buscar el nicho exacto en el dropdown
+        for (let i = 0; i < selectNicho.options.length; i++) {
+            const opcion = selectNicho.options[i].value;
+
+            // Coincidencia exacta o parcial
+            if (opcion === nichoEncontrado || 
+                opcion.toLowerCase().includes(nichoEncontrado.toLowerCase()) ||
+                nichoEncontrado.toLowerCase().includes(opcion.toLowerCase())) {
+                selectNicho.value = opcion;
+                console.log('✅ Nicho seleccionado:', opcion);
+                break;
+            }
+        }
+    }
+
+    // Auto-completar ID
+    if (idEncontrado) {
+        // Si el ID no está en la lista, agregarlo
+        if (!db.ids.includes(idEncontrado)) {
+            console.log('➕ Agregando nuevo ID:', idEncontrado);
+            db.ids.push(idEncontrado);
+            db.ids.sort();
+            saveGlobalSettings();
+
+            // Refrescar los dropdowns
+            updateOptions();
+        }
+
+        // Seleccionar el ID
+        setTimeout(() => {
+            document.getElementById('inId').value = idEncontrado;
+            console.log('✅ ID seleccionado:', idEncontrado);
+        }, 100);
+    }
+}
+
 window.onload = function() {
     startRealtimeSync();
+
+    // Listener para auto-completar al escribir nombre de campaña
+    const campoNombre = document.getElementById('inCode');
+    if (campoNombre) {
+        campoNombre.addEventListener('input', autoCompleteFromHAV);
+        console.log('✅ Auto-completado activado');
+    }
     document.getElementById('inProduct').addEventListener('change', function() {});
     document.getElementById('editChannelModal').addEventListener('click', function(e) {
         if (e.target === this) closeChannelModal();
