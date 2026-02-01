@@ -405,7 +405,7 @@
                 <div class="control-group"><label>Plataforma</label><select id="inPlatform"></select></div>
                 <div class="control-group"><label>Canal</label><select id="inChannel"></select></div>
                 <datalist id="adManagerList"><option value="HAV"><option value="Otro"></datalist>
-                <div class="control-group"><label>Idioma</label><input type="text" id="inLanguage" placeholder="Ej: es, en"></div>
+                <div class="control-group"><label>Idioma</label><select id="inLanguage"><option value="">Seleccionar idioma...</option></select></div>
                 <div class="control-group"><label>Nicho/Producto</label><select id="inProduct"></select></div>
             </div>
             
@@ -462,12 +462,14 @@
                 <div class="control-group"><label>➕ Nuevo Nicho</label><input type="text" id="newProdName" placeholder="Ej: Escritorio"><button class="btn btn-edit" onclick="addOption('products', 'newProdName')">Crear</button></div>
                 <div class="control-group"><label>➕ Nueva Plataforma</label><select id="newPlatName"><option value="Facebook">Facebook</option><option value="TikTok">TikTok</option><option value="Google">Google</option></select><button class="btn btn-edit" onclick="addOption('platforms', 'newPlatName')">Crear</button></div>
                 <div class="control-group"><label>➕ Nuevo Canal</label><input type="text" id="newChanName"><button class="btn btn-edit" onclick="addOption('channels', 'newChanName')">Crear</button></div>
+                <div class="control-group"><label>➕ Nuevo Idioma</label><input type="text" id="newLangName" placeholder="Ej: Alemán"><button class="btn btn-edit" onclick="addOption('languages', 'newLangName')">Crear</button></div>
             </div>
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 25px;">
                 <div><h4 style="color:var(--primary)">🆔 IDs de Campaña</h4><ul id="listIds" class="config-list"></ul></div>
                 <div><h4 style="color:var(--secondary)">📦 Nichos</h4><ul id="listProds" class="config-list"></ul></div>
                 <div><h4 style="color:var(--dark)">📡 Plataformas</h4><ul id="listPlatforms" class="config-list"></ul></div>
-                <div><h4 style="color:var(--dark)">📺 Canales</h4><ul id="listChannels" class="config-list"></ul></div>
+                <div><h4 style="color:var(--dark)">📺 Canales</h4><ul id="listChannels" class="config-list"></ul>
+                <div><h4 style="color:var(--dark)">🌐 Idiomas</h4><ul id="listLanguages" class="config-list"></ul></div></div>
             </div>
         </div>
 
@@ -527,6 +529,8 @@ const ALL_NICHOS = [
     'Generadores', 'Iphone', 'Muebles', 'MueblesDeCocina', 'PcGamer', 'PcGamerBM2',
     'Refrigeradores', 'Sofa', 'SofaCama', 'Televisores', 'UniversidadesOnline'
 ];
+
+const ALL_LANGUAGES = ['Alemán', 'Inglés', 'Neerlandés', 'Búlgaro', 'Español', 'Portugués', 'Checo', 'Danés', 'Finés', 'Francés', 'Húngaro', 'Italiano', 'Lituano', 'Noruego', 'Polaco', 'Rumano', 'Árabe', 'Sueco', 'Esloveno', 'Eslovaco', 'Turco'];
 
 const HAV_CATALOG_INITIAL = {
     'MUNDO Meta': [
@@ -690,6 +694,7 @@ function startRealtimeSync() {
             db.ids = (data.ids && data.ids.length) ? data.ids : db.ids;
             db.platforms = data.platforms || db.platforms;
             db.channels = data.channels || db.channels;
+            db.languages = data.languages || ALL_LANGUAGES;
             db.havCatalog = (data.havCatalog && Object.keys(data.havCatalog).length) ? data.havCatalog : HAV_CATALOG_INITIAL;
             
             refreshEverything();
@@ -802,10 +807,11 @@ function updateOptions() {
     fill('inProduct', db.products.length ? db.products : ALL_NICHOS); 
     fill('filterProduct', db.products.length ? db.products : ALL_NICHOS, true);
     fill('inId', db.ids); fill('filterId', db.ids, true);
+    fill('inLanguage', db.languages);
 
-    ['ids', 'products', 'platforms', 'channels'].forEach(type => {
+    ['ids', 'products', 'platforms', 'channels', 'languages'].forEach(type => {
         let listId = '';
-        if(type==='ids') listId='listIds'; else if(type==='products') listId='listProds'; else if(type==='platforms') listId='listPlatforms'; else if(type==='channels') listId='listChannels';
+        if(type==='ids') listId='listIds'; else if(type==='products') listId='listProds'; else if(type==='platforms') listId='listPlatforms'; else if(type==='channels') listId='listChannels'; else if(type==='languages') listId='listLanguages';
         
         const container = document.getElementById(listId);
         if(container && db[type]) {
@@ -954,30 +960,32 @@ function saveCampaign() {
     const id = document.getElementById('inId').value;
     const code = document.getElementById('inCode').value;
     const country = document.getElementById('inCountry').value.toUpperCase();
-    
+
     if (!platform || !product || !id || !code || !country) return alert('⚠️ Faltan datos obligatorios');
 
     const campaign = {
         platform, 
         channel: document.getElementById('inChannel').value,
         product, id, code, country,
-        // GUARDAR FECHA
         date: document.getElementById('inDate').value,
         language: document.getElementById('inLanguage').value,
         keywords: document.getElementById('inKeywords').value.split('\n').map(k=>k.trim()).filter(k=>k),
         article: document.getElementById('inArticle').value,
         autor: document.getElementById('inAutor').value,
-        // GUARDAR URL
         url: document.getElementById('inUrl').value,
         updatedAt: new Date().toISOString()
     };
 
     if (editingIndex >= 0) {
         campaign.firebaseId = db.campaigns[editingIndex].firebaseId;
-        saveToFirebase(campaign);
+        db.campaigns[editingIndex] = campaign;
     } else {
-        saveToFirebase(campaign);
+        db.campaigns.push(campaign);
     }
+
+    renderTable();
+    updateStats();
+    saveToFirebase(campaign);
     resetForm();
     switchTab('tab-list');
 }
