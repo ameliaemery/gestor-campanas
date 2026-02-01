@@ -412,7 +412,7 @@
             <div class="controls" style="grid-template-columns: repeat(4, 1fr); margin-top: 15px;">
                 <div class="control-group"><label>📅 Fecha</label><input type="date" id="inDate"></div>
                 <div class="control-group"><label>ID Campaña</label><select id="inId"></select></div>
-                <div class="control-group"><label>Nombre de Campaña</label><input type="text" id="inCode"></div>
+                <div class="control-group"><label>Nombre de Campaña</label><input type="text" id="inCode" oninput="autoCompleteCampaign()"></div>
                 <div class="control-group"><label>País (ISO)</label><input type="text" id="inCountry"></div>
             </div>
             <div class="control-group" style="margin-top: 15px;">
@@ -989,6 +989,61 @@ function saveCampaign() {
     resetForm();
     switchTab('tab-list');
 }
+
+function autoCompleteCampaign() {
+    const nombreCampana = document.getElementById('inCode').value.trim();
+
+    if (!nombreCampana) return;
+
+    // Parsear: "FB-HAV-Autos-BR" → ['FB', 'HAV', 'Autos', 'BR']
+    const partes = nombreCampana.split('-');
+
+    if (partes.length < 3) return;
+
+    const platform = partes[0];  // FB, TT
+    const channel = partes[1];   // HAV, IH, CS
+    const product = partes[2];   // Autos, Celulares, etc
+
+    // Construir código base para buscar en catálogo
+    const codigoBase = `${platform}-${channel}-${product}`;
+
+    let catalogEntry = null;
+
+    // Buscar en todas las categorías del catálogo HAV
+    for (const categoria in db.havCatalog) {
+        const items = db.havCatalog[categoria];
+        if (Array.isArray(items)) {
+            catalogEntry = items.find(item => item.code === codigoBase);
+            if (catalogEntry) break;
+        }
+    }
+
+    // Si encontramos coincidencia, autocompletar
+    if (catalogEntry) {
+        // Auto-completar Nicho/Producto
+        const productSelect = document.getElementById('inProduct');
+        if (productSelect && product) {
+            productSelect.value = product;
+        }
+
+        // Auto-completar ID
+        const idSelect = document.getElementById('inId');
+        if (idSelect && catalogEntry.id) {
+            // Convertir ID a string limpio
+            let idLimpio = catalogEntry.id.toString();
+
+            // Si es notación científica, convertir a entero
+            if (idLimpio.includes('e+')) {
+                idLimpio = parseInt(parseFloat(idLimpio)).toString();
+            }
+
+            idSelect.value = idLimpio;
+        }
+
+        console.log(`✅ Auto-completado: ${product} → ID: ${catalogEntry.id}`);
+    }
+}
+
 
 function saveMetadataOnly() {
     if (editingIndex < 0) return;
