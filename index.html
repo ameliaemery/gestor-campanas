@@ -924,29 +924,51 @@ function renderTable() {
     filtered.sort((a, b) => {
         let vA = a[currentSort.column], vB = b[currentSort.column];
 
+        // 1. Lógica especial para contar Keys
         if (currentSort.column === 'keys') {
             vA = a.keywords?.length || 0;
             vB = b.keywords?.length || 0;
         }
 
+        // 2. Lógica especial para Artículo (Corrección aplicada)
         if (currentSort.column === 'article') {
             const hasA = a.article && a.article.trim() ? 1 : 0;
             const hasB = b.article && b.article.trim() ? 1 : 0;
-            vA = hasA;
-            vB = hasB;
+            
+            // Si uno tiene y el otro no, eso decide el orden
+            if (hasA !== hasB) {
+                vA = hasA; 
+                vB = hasB;
+            } else {
+                // Si ambos tienen (o no tienen), desempatamos por longitud de texto
+                vA = (a.article || '').length;
+                vB = (b.article || '').length;
+            }
         }
 
+        // 3. Lógica especial para URL/Link (Corrección aplicada)
         if (currentSort.column === 'url') {
-            vA = (a.url && String(a.url).trim().length > 0) ? 1 : 0;
-            vB = (b.url && String(b.url).trim().length > 0) ? 1 : 0;
+            // Convertimos a 1 (tiene link) o 0 (no tiene link)
+            const hasLinkA = (a.url && String(a.url).trim().length > 0) ? 1 : 0;
+            const hasLinkB = (b.url && String(b.url).trim().length > 0) ? 1 : 0;
+            vA = hasLinkA;
+            vB = hasLinkB;
         }
 
+        // 4. Lógica para Autor
         if (currentSort.column === 'autor') {
-            vA = a.autor || '';
-            vB = b.autor || '';
+            vA = (a.autor || '').toLowerCase();
+            vB = (b.autor || '').toLowerCase();
         }
 
-        return currentSort.order === 'asc' ? (vA > vB ? 1 : -1) : (vA < vB ? 1 : -1);
+        // === PARTE CRÍTICA: EL COMPARADOR ESTABLE ===
+        // Esto soluciona el error en GitHub.
+        // Si vA es menor que vB
+        if (vA < vB) return currentSort.order === 'asc' ? -1 : 1;
+        // Si vA es mayor que vB
+        if (vA > vB) return currentSort.order === 'asc' ? 1 : -1;
+        // Si son IGUALES (vA === vB), devolvemos 0 para no romper el orden
+        return 0; 
     });
 
     const tbody = document.getElementById('campaignList');
