@@ -4,8 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor HAV 2026 - V28 (CLICK ACTIVO)</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
+// Auto-carga desde Firebase
+async function loadFromCloud() {
+    try {
+        const snapshot = await campaignsRef.get();
+        if (!snapshot.empty) {
+            const loaded = [];
+            snapshot.forEach(doc => loaded.push({ firebaseId: doc.id, ...doc.data() }));
+            if (loaded.length > 0) {
+                db.campaigns = loaded;
+                renderTable();
+                updateStats();
+                showNotif(`✅ ${loaded.length} campañas cargadas`, 'success');
+            }
+        }
+    } catch (e) {
+        console.error('Error:', e);
+    }
+}
+
+// Auto-ejecutar al hacer login
+const _showApp = showApp;
+showApp = function() {
+    _showApp();
+    setTimeout(() => { loadFromCloud(); startRealtimeSync(); }, 500);
+};
+
+</script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js">
+// Auto-carga desde Firebase
+async function loadFromCloud() {
+    try {
+        const snapshot = await campaignsRef.get();
+        if (!snapshot.empty) {
+            const loaded = [];
+            snapshot.forEach(doc => loaded.push({ firebaseId: doc.id, ...doc.data() }));
+            if (loaded.length > 0) {
+                db.campaigns = loaded;
+                renderTable();
+                updateStats();
+                showNotif(`✅ ${loaded.length} campañas cargadas`, 'success');
+            }
+        }
+    } catch (e) {
+        console.error('Error:', e);
+    }
+}
+
+// Auto-ejecutar al hacer login
+const _showApp = showApp;
+showApp = function() {
+    _showApp();
+    setTimeout(() => { loadFromCloud(); startRealtimeSync(); }, 500);
+};
+
+</script>
     <style>
         /* ==========================================================================
            ESTILOS ORIGINALES (RESPETADOS)
@@ -32777,72 +32831,30 @@ window.onload = function() {
     });
 };
 
-
-// ============================================================================
-// FIREBASE COMPLETO
-// ============================================================================
-
-function sanitizeCampaign(camp) {
-    return {
-        platform: camp.platform || '',
-        channel: camp.channel || '',
-        product: camp.product || '',
-        country: camp.country || '',
-        code: camp.code || '',
-        id: camp.id || '',
-        keywords: Array.isArray(camp.keywords) ? camp.keywords : [],
-        article: camp.article || '',
-        language: camp.language || '',
-        date: camp.date || '',
-        url: camp.url || '',
-        autor: camp.autor || '',
-        firebaseId: camp.firebaseId || '',
-        timestamp: camp.timestamp || Date.now()
-    };
-}
-
-async function loadAllCampanasFromFirebase() {
+// Auto-carga desde Firebase
+async function loadFromCloud() {
     try {
-        showNotif('📡 Cargando...', 'info');
         const snapshot = await campaignsRef.get();
-
-        if (snapshot.empty) {
-            if (initialCampaigns && initialCampaigns.length > 0) {
-                db.campaigns = initialCampaigns.map(c => sanitizeCampaign(c));
+        if (!snapshot.empty) {
+            const loaded = [];
+            snapshot.forEach(doc => loaded.push({ firebaseId: doc.id, ...doc.data() }));
+            if (loaded.length > 0) {
+                db.campaigns = loaded;
                 renderTable();
                 updateStats();
-                showNotif(`✅ ${db.campaigns.length} campañas`, 'success');
+                showNotif(`✅ ${loaded.length} campañas cargadas`, 'success');
             }
-            return;
-        }
-
-        const loaded = [];
-        snapshot.forEach(doc => {
-            try {
-                loaded.push(sanitizeCampaign({ firebaseId: doc.id, ...doc.data() }));
-            } catch(e) {}
-        });
-
-        if (loaded.length > 0) {
-            db.campaigns = loaded;
-            renderTable();
-            updateStats();
-            populateFilters();
-            populateComparators();
-            showNotif(`✅ ${loaded.length} desde Firebase`, 'success');
         }
     } catch (e) {
-        console.error(e);
+        console.error('Error:', e);
     }
 }
 
-const originalShowApp = showApp;
+// Auto-ejecutar al hacer login
+const _showApp = showApp;
 showApp = function() {
-    originalShowApp();
-    setTimeout(() => {
-        loadAllCampanasFromFirebase();
-        if (typeof startRealtimeSync !== 'undefined') startRealtimeSync();
-    }, 800);
+    _showApp();
+    setTimeout(() => { loadFromCloud(); startRealtimeSync(); }, 500);
 };
 
 </script>
