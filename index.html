@@ -930,9 +930,11 @@ function renderTable() {
         }
 
         if (currentSort.column === 'article') {
-  vA = (a.article && a.article.trim()) ? 1 : 0;
-  vB = (b.article && b.article.trim()) ? 1 : 0;
-}
+            const hasA = a.article && a.article.trim() ? 1 : 0;
+            const hasB = b.article && b.article.trim() ? 1 : 0;
+            vA = hasA;
+            vB = hasB;
+        }
 
         if (currentSort.column === 'url') {
             vA = (a.url && String(a.url).trim().length > 0) ? 1 : 0;
