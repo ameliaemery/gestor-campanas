@@ -18,7 +18,7 @@
         .login-box { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 90%; max-width: 400px; text-align: center; }
         .login-box h1 { color: #667eea; margin-bottom: 10px; font-size: 2em; }
         .login-box p { color: #666; margin-bottom: 30px; }
-        .login-input { width: 100%; padding: 12px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1em; margin: 10px 0; }
+        .login-input { width: 100%; padding: 12px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1em; margin: 10px 0; box-sizing: border-box; }
         .login-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin-top: 10px; }
         .login-error { color: #dc2626; margin-top: 15px; display: none; }
         .logout-btn { position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; z-index: 1000; }
@@ -140,9 +140,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// Configuración
 const SUPABASE_URL = 'https://zwpurfuzheyzcomeckbr.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3cHVyZnV6aGV5emNvbWVja2JyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDAwMDcxMywiZXhwIjoyMDg1NTc2NzEzfQ.wgSCnZ5sHU0pXnyJGilZfepAWBGShJMqUQZ7jzfcC_8';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const USERS = {
     'amelemery': 'gestor2026',
@@ -176,7 +177,7 @@ function logout() {
 }
 
 async function loadData() {
-    const { data, error } = await supabase.from('campaigns').select('*').order('created_at', { ascending: false });
+    const { data, error } = await sb.from('campaigns').select('*').order('created_at', { ascending: false });
     if (data) {
         db.campaigns = data;
         renderTable();
@@ -238,10 +239,10 @@ async function saveCampaign() {
     };
     
     if (editingId) {
-        await supabase.from('campaigns').update(campaign).eq('id', editingId);
+        await sb.from('campaigns').update(campaign).eq('id', editingId);
         showNotif('✅ Actualizado');
     } else {
-        await supabase.from('campaigns').insert([campaign]);
+        await sb.from('campaigns').insert([campaign]);
         showNotif('✅ Guardado');
     }
     
@@ -280,7 +281,7 @@ function editCampaign(id) {
 
 async function deleteCampaign(id) {
     if (!confirm('¿Eliminar?')) return;
-    await supabase.from('campaigns').delete().eq('id', id);
+    await sb.from('campaigns').delete().eq('id', id);
     showNotif('🗑️ Eliminado');
     loadData();
 }
@@ -293,7 +294,7 @@ function showNotif(msg) {
     setTimeout(() => box.remove(), 3000);
 }
 
-// Auto-login si ya está logueado
+// Auto-login
 const loggedUser = localStorage.getItem('loggedUser');
 if (loggedUser && USERS[loggedUser]) {
     document.getElementById('loginScreen').classList.add('hidden');
