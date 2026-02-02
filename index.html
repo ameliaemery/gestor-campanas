@@ -691,9 +691,25 @@ function startRealtimeSync() {
                 saveGlobalSettings(); // Reparar nube
             }
 
-            db.ids = (data.ids && data.ids.length) ? data.ids : db.ids;
-            db.platforms = data.platforms || db.platforms;
-            db.channels = data.channels || db.channels;
+            // MERGE: Unir IDs de Firebase con locales (sin duplicados)
+            if (data.ids !== undefined) {
+                const mergedIds = [...new Set([...(db.ids || []), ...(data.ids || [])])];
+                db.ids = mergedIds.sort();
+            } else {
+                db.ids = db.ids || [];
+            }
+            if (data.platforms !== undefined) {
+                const mergedPlatforms = [...new Set([...(db.platforms || []), ...(data.platforms || [])])];
+                db.platforms = mergedPlatforms.sort();
+            } else {
+                db.platforms = db.platforms || [];
+            }
+            if (data.channels !== undefined) {
+                const mergedChannels = [...new Set([...(db.channels || []), ...(data.channels || [])])];
+                db.channels = mergedChannels.sort();
+            } else {
+                db.channels = db.channels || [];
+            }
             db.languages = data.languages || ALL_LANGUAGES;
             db.havCatalog = (data.havCatalog && Object.keys(data.havCatalog).length) ? data.havCatalog : HAV_CATALOG_INITIAL;
             
@@ -742,6 +758,7 @@ async function saveGlobalSettings() {
             ids: db.ids,
             platforms: db.platforms,
             channels: db.channels,
+            languages: db.languages,
             havCatalog: db.havCatalog,
             lastUpdate: new Date().toISOString()
         }, { merge: true });
@@ -829,11 +846,14 @@ function addOption(type, inputId) {
     const val = document.getElementById(inputId).value.trim();
     if (!db[type]) db[type] = [];
     if (!val || db[type].includes(val)) return alert('Valor inválido o ya existe');
+
     db[type].push(val); 
     db[type].sort();
+
     saveGlobalSettings();
     document.getElementById(inputId).value = '';
-    showNotif('✅ Agregado', 'success');
+    showNotif('✅ Agregado y guardado', 'success');
+    console.log(`✅ ${type} guardado:`, val);
     refreshEverything();
 }
 
