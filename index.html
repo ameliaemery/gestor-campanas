@@ -930,15 +930,9 @@ function renderTable() {
         }
 
         if (currentSort.column === 'article') {
-            const hasA = a.article && a.article.trim() ? 1 : 0;
-            const hasB = b.article && b.article.trim() ? 1 : 0;
-            if (hasA !== hasB) {
-                vA = hasA; vB = hasB;
-            } else {
-                vA = (a.article || '').length;
-                vB = (b.article || '').length;
-            }
-        }
+  vA = (a.article && a.article.trim()) ? 1 : 0;
+  vB = (b.article && b.article.trim()) ? 1 : 0;
+}
 
         if (currentSort.column === 'url') {
             vA = (a.url && String(a.url).trim().length > 0) ? 1 : 0;
