@@ -126,11 +126,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // Configuración de Supabase - YA CONFIGURADO
+        // Configuración de Supabase
         const SUPABASE_URL = 'https://zwpurfuzheyzccomeckbr.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_uzWKmHNlyoSzKhrTGGsOng_ltZb_VAL';
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Crear cliente de Supabase
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function actualizarProgreso(mensaje, clase) {
             clase = clase || 'step-current';
@@ -180,7 +181,7 @@
                     const batch = backupData.slice(i, i + BATCH_SIZE);
 
                     try {
-                        const result = await supabase
+                        const result = await supabaseClient
                             .from('campaigns')
                             .insert(batch);
 
@@ -192,12 +193,13 @@
                     } catch (error) {
                         errores += batch.length;
                         console.error('Error en lote:', error);
+                        actualizarProgreso('⚠️ Error: ' + error.message, 'step-error');
                     }
                 }
 
                 actualizarProgreso('✅ ' + count + ' campañas migradas', 'step-done');
                 if (errores > 0) {
-                    actualizarProgreso('⚠️ ' + errores + ' errores', 'step-error');
+                    actualizarProgreso('⚠️ ' + errores + ' errores (ver consola F12)', 'step-error');
                 }
 
                 progreso.innerHTML += '<div class="success-message">🎉 ¡MIGRACIÓN COMPLETADA!<br><br>✅ Migradas: ' + count + '<br><br><small>Ya puedes usar Supabase en tu gestor</small></div>';
