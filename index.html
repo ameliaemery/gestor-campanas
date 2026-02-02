@@ -378,9 +378,9 @@
                             <th onclick="applySort('language')">Idioma</th>
                             <th onclick="applySort('country')">País</th>
                             <th onclick="applySort('keys')">Keys</th>
-                            <th>Artículo</th>
-                            <th>Link</th> 
-                            <th>👤</th>
+                            <th onclick="applySort('article')">Artículo</th>
+                            <th onclick="applySort('url')">Link</th>
+                            <th onclick="applySort('autor')">👤</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -867,7 +867,39 @@ function renderTable() {
 
     filtered.sort((a, b) => {
         let vA = a[currentSort.column], vB = b[currentSort.column];
-        if (currentSort.column === 'keys') { vA = a.keywords?.length || 0; vB = b.keywords?.length || 0; }
+
+        // Ordenamiento especial por cantidad de keywords
+        if (currentSort.column === 'keys') { 
+            vA = a.keywords?.length || 0; 
+            vB = b.keywords?.length || 0; 
+        }
+
+        // Ordenamiento especial por artículo (presencia y longitud)
+        if (currentSort.column === 'article') {
+            const hasA = a.article && a.article.trim() ? 1 : 0;
+            const hasB = b.article && b.article.trim() ? 1 : 0;
+            if (hasA !== hasB) {
+                vA = hasA;
+                vB = hasB;
+            } else {
+                // Si ambos tienen o ambos no tienen, ordenar por longitud
+                vA = (a.article || '').length;
+                vB = (b.article || '').length;
+            }
+        }
+
+        // Ordenamiento especial por URL (presencia)
+        if (currentSort.column === 'url') {
+            vA = (a.url && String(a.url).trim().length > 0) ? 1 : 0;
+            vB = (b.url && String(b.url).trim().length > 0) ? 1 : 0;
+        }
+
+        // Ordenamiento especial por autor
+        if (currentSort.column === 'autor') {
+            vA = a.autor || '';
+            vB = b.autor || '';
+        }
+
         return currentSort.order === 'asc' ? (vA > vB ? 1 : -1) : (vA < vB ? 1 : -1);
     });
 
