@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor HAV 2026 - Supabase</title>
+    <style>
+        /* ==========================================================================
+           ESTILOS ORIGINALES (RESPETADOS)
+           ========================================================================== */
+        :root { --primary: #667eea; --secondary: #764ba2; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --dark: #1f2937; --light: #f9fafb; --border: #e5e7eb; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; min-height: 100vh; }
+        .container { max-width: 1800px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; padding: 30px; text-align: center; position: relative; }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .header .subtitle { font-size: 1.1em; opacity: 0.9; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; padding: 20px; background: var(--light); }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-card .number { font-size: 2.5em; font-weight: bold; color: var(--primary); }
+        .stat-card .label { color: var(--dark); margin-top: 5px; font-size: 0.9em; }
+        .tabs { display: flex; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); overflow-x: auto; }
+        .tab-btn { flex: 1; padding: 18px; background: transparent; border: none; color: white; cursor: pointer; font-size: 1.05em; font-weight: 600; border-bottom: 3px solid transparent; white-space: nowrap; }
+        .tab-btn:hover { background: rgba(255,255,255,0.1); }
+        .tab-btn.active { background: white; color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-content { display: none; padding: 30px; }
+        .tab-content.active { display: block; }
+        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .control-group { display: flex; flex-direction: column; }
+        .control-group label { font-weight: 600; margin-bottom: 8px; color: var(--dark); font-size: 0.95em; }
+        .control-group input, .control-group select, .control-group textarea { padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 1em; transition: all 0.3s; }
+        .control-group input:focus, .control-group select:focus, .control-group textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .control-group textarea { resize: vertical; font-family: 'Courier New', monospace; }
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .btn-edit { background: var(--warning); color: white; }
+        .btn-del { background: var(--danger); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-meta { background: #8b5cf6; color: white; }
+        .btn-bold { background: var(--dark); color: white; margin-left: 10px; }
+        .btn-clear-tags { background: var(--danger); color: white; margin-left: 10px; }
+        .table-wrapper { overflow-x: auto; margin-top: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+        thead { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; }
+        th { padding: 15px 10px; text-align: left; cursor: pointer; user-select: none; font-weight: 600; position: relative; white-space: nowrap; }
+        th:hover { background: rgba(255,255,255,0.1); }
+        td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tbody tr:hover { background: var(--light); }
+        
+        td:nth-child(4) { font-weight: bold; font-size: 1.05em; color: #2c3e50; }
+        td:nth-child(5) { font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.1em; color: #34495e; }
+        td:nth-child(9) { font-weight: bold; color: #333; }
+        
+        .platform-select { padding: 6px; border: 1px solid #e0e0e0; border-radius: 6px; background: white; cursor: pointer; font-size: 0.85em; font-weight: 600; width: 110px; }
+        
+        .hav-catalog-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 30px; margin-top: 30px; align-items: start; }
+        .hav-platform-card { border-radius: 12px; padding: 20px; border-left: 6px solid; box-shadow: 0 4px 15px rgba(0,0,0,0.08); background: white; height: 100%; display: flex; flex-direction: column; }
+        .hav-platform-card h3 { margin-bottom: 15px; font-size: 1.25em; font-weight: 700; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
+        .hav-channels-list { display: flex; flex-direction: column; gap: 12px; max-height: 500px; overflow-y: auto; padding-right: 8px; }
+        .hav-channel-item { background: #f8faff; padding: 12px 15px; border-radius: 8px; border: 1px solid #e1e4e8; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.03); transition: transform 0.2s; }
+        .hav-channel-item:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
+        .hav-channel-name { font-weight: 600; font-size: 0.85em; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hav-channel-id { font-size: 0.75em; color: #888; }
+        
+        .hav-btn-group { display: flex; gap: 3px; }
+        .btn-mini { padding: 4px 6px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75em; transition: 0.2s; }
+        .btn-copy-mini { background: var(--primary); color: white; }
+        .btn-edit-mini { background: var(--warning); color: white; }
+        .btn-del-mini { background: var(--danger); color: white; }
+
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 600; display: inline-block; }
+        .badge-fb { background: #1877f2; color: white; }
+        .badge-tt { background: #fe2c55; color: white; }
+        .badge-gn { background: #EA4335; color: white; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: modalSlide 0.3s ease; }
+        @keyframes modalSlide { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+        .config-list { list-style: none; max-height: 400px; overflow-y: auto; background: var(--light); padding: 15px; border-radius: 8px; }
+        .config-list li { padding: 10px; background: white; margin: 8px 0; border-radius: 6px; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .config-input { flex: 1; padding: 8px 12px; border: 2px solid var(--border); border-radius: 6px; font-size: 0.95em; }
+        .btn-save-mini { background: var(--success); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+        
+        .url-active { color: transparent !important; text-shadow: 0 0 0 #00E676 !important; font-weight: bold; font-size: 1.3em; cursor: pointer; text-decoration: none; }
+        .url-inactive { color: transparent !important; text-shadow: 0 0 0 #d1d5db !important; font-size: 1.3em; cursor: default; }
+        
+        .article-indicator { font-size: 1.3em; cursor: pointer; transition: transform 0.3s; }
+        .article-indicator:hover { transform: scale(1.3); }
+        .has-article { color: var(--success); }
+        .no-article { color: var(--border); }
+        
+        #notification-area { position: fixed; bottom: 20px; right: 20px; z-index: 10000; }
+        .notif-box { background: #333; color: white; padding: 15px; border-radius: 8px; margin-top: 10px; animation: slideIn 0.5s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        .btn-copy { background: var(--primary); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8em; font-weight: 600; }
+    
+        td code { font-size: 1.1rem; font-weight: 700; background: #f0f9ff; padding: 4px 10px; border-radius: 6px; border: 2px solid #3b82f6; color: #1e40af; display: inline-block; }
+    
+        #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: center; z-index: 99999; }
+        #loginScreen.hidden { display: none; }
+        .login-box { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 90%; max-width: 400px; text-align: center; animation: loginSlide 0.5s ease; }
+        @keyframes loginSlide { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        .login-box h1 { color: #667eea; margin-bottom: 10px; font-size: 2em; }
+        .login-box p { color: #666; margin-bottom: 30px; font-size: 0.95em; }
+        .login-input-group { margin-bottom: 20px; text-align: left; }
+        .login-input-group label { display: block; color: #333; font-weight: 600; margin-bottom: 8px; font-size: 0.95em; }
+        .login-input-group input { width: 100%; padding: 12px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1em; transition: all 0.3s; box-sizing: border-box; }
+        .login-input-group input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .login-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 1.1em; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4); }
+        .login-error { background: #fee2e2; color: #dc2626; padding: 12px; border-radius: 6px; margin-bottom: 20px; display: none; font-size: 0.9em; font-weight: 500; }
+        .login-error.show { display: block; animation: shake 0.4s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        .logout-btn { position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.2); transition: all 0.2s; }
+        .logout-btn:hover { background: #dc2626; transform: translateY(-2px); }
+        #mainApp { display: none; }
+        #mainApp.show { display: block; }
+    </style>
+</head>
+<body>
+
+<!-- PANTALLA DE LOGIN -->
+<div id="loginScreen">
+    <div class="login-box">
+        <h1>🔒 Gestor HAV 2026</h1>
+        <p>Sistema Protegido - Supabase</p>
+        <div id="loginError" class="login-error">❌ Usuario o contraseña incorrectos</div>
+        <form id="loginForm" onsubmit="return handleLogin(event)">
+            <div class="login-input-group">
+                <label>👤 Usuario</label>
+                <input type="text" id="loginUser" autocomplete="username" required autofocus>
+            </div>
+            <div class="login-input-group">
+                <label>🔑 Contraseña</label>
+                <input type="password" id="loginPass" autocomplete="current-password" required>
+            </div>
+            <button type="submit" class="login-btn">🚀 Entrar al Gestor</button>
+        </form>
+    </div>
+</div>
+
+<button class="logout-btn" onclick="logout()" style="display: none;" id="logoutBtn">🚪 Cerrar Sesión</button>
+
+<!-- APLICACIÓN PRINCIPAL -->
+<div id="mainApp">
+    <div id="notification-area"></div>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Gestor de Campañas HAV 2026</h1>
+            <p class="subtitle">☁️ Supabase Cloud Edition</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card"><div class="number" id="totalCampaigns">0</div><div class="label">📊 Total Campañas</div></div>
+            <div class="stat-card"><div class="number" id="totalKeywords">0</div><div class="label">🔑 Keywords Totales</div></div>
+            <div class="stat-card"><div class="number" id="avgKeys">0</div><div class="label">📈 Promedio Keys</div></div>
+            <div class="stat-card"><div class="number" id="totalArticles">0</div><div class="label">📝 Con Artículo</div></div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('tab-list')">📋 Lista de Campañas</button>
+            <button class="tab-btn" onclick="switchTab('tab-comp')">🔬 Comparador</button>
+            <button class="tab-btn" onclick="switchTab('tab-add')">➕ Gestionar Campaña</button>
+            <button class="tab-btn" onclick="switchTab('tab-config')">⚙️ Configuración Global</button>
+            <button class="tab-btn" onclick="switchTab('tab-catalog')">📡 Catálogo HAV</button>
+        </div>
+
+        <div id="tab-list" class="tab-content active">
+            <div class="controls">
+                <div class="control-group"><label>🔍 Buscar</label><input type="text" id="search" placeholder="Buscar..." onkeyup="renderTable()"></div>
+                <div class="control-group"><label>📺 Canal</label><select id="filterChannel" onchange="renderTable()"></select></div>
+                <div class="control-group"><label>🆔 ID Campaña</label><select id="filterId" onchange="renderTable()"></select></div>
+                <div class="control-group"><label>📦 Nicho</label><select id="filterProduct" onchange="renderTable()"></select></div>
+                <div class="control-group"><label>📡 Plataforma</label><select id="filterPlatform" onchange="renderTable()"></select></div>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="applySort('date')">📅 Fecha</th>
+                            <th onclick="applySort('platform')">Plat.</th>
+                            <th onclick="applySort('channel')">Canal</th>
+                            <th onclick="applySort('product')">Nicho</th>
+                            <th onclick="applySort('id')">ID</th>
+                            <th onclick="applySort('code')">Nombre de Campaña</th>
+                            <th onclick="applySort('language')">Idioma</th>
+                            <th onclick="applySort('country')">País</th>
+                            <th onclick="applySort('keys')">Keys</th>
+                            <th>Artículo</th>
+                            <th>Link</th>
+                            <th>👤</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="campaignList"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-comp" class="tab-content">
+            <h2>Analizar 3 Campañas Simultáneamente</h2>
+            <div class="controls" style="margin-top: 15px;">
+                <div class="control-group"><label>Campaña 1</label><select id="comp1" onchange="runTripleComparison()"></select></div>
+                <div class="control-group"><label>Campaña 2</label><select id="comp2" onchange="runTripleComparison()"></select></div>
+                <div class="control-group"><label>Campaña 3</label><select id="comp3" onchange="runTripleComparison()"></select></div>
+            </div>
+            <div id="compResults" class="comparator-grid"></div>
+        </div>
+
+        <div id="tab-add" class="tab-content">
+            <h2 id="formTitle">Gestionar Campaña</h2>
+            <div class="controls" style="grid-template-columns: repeat(4, 1fr); margin-top: 15px;">
+                <div class="control-group"><label>Plataforma</label><select id="inPlatform"></select></div>
+                <div class="control-group"><label>Canal</label><select id="inChannel"></select></div>
+                <div class="control-group"><label>Idioma</label><select id="inLanguage"><option value="">Seleccionar idioma...</option></select></div>
+                <div class="control-group"><label>Nicho/Producto</label><select id="inProduct"></select></div>
+            </div>
+            
+            <div class="controls" style="grid-template-columns: repeat(4, 1fr); margin-top: 15px;">
+                <div class="control-group"><label>📅 Fecha</label><input type="date" id="inDate"></div>
+                <div class="control-group"><label>ID Campaña</label><select id="inId"></select></div>
+                <div class="control-group"><label>Nombre de Campaña</label><input type="text" id="inCode" oninput="autoCompleteCampaign()"></div>
+                <div class="control-group"><label>País (ISO)</label><input type="text" id="inCountry"></div>
+            </div>
+            <div class="control-group" style="margin-top: 15px;">
+                <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                    <label>Keywords (una por línea)</label>
+                    <button class="btn btn-bold" onclick="boldSelectedText()"><b>B</b> Negrita</button>
+                    <button class="btn btn-clear-tags" onclick="clearAllBoldTags()">🗑️ Limpiar Negritas</button>
+                </div>
+                <textarea id="inKeywords" rows="12"></textarea>
+            </div>
+            
+            <div class="control-group" style="margin-top: 15px;">
+                <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 5px;">
+                    <label style="margin-bottom: 0;">📝 Artículo (Markdown)</label>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <label style="margin: 0; font-size: 0.9em; font-weight: bold;">✍️ Autor:</label>
+                            <select id="inAutor" style="padding: 5px 10px; font-size: 0.9em; border: 1px solid var(--border); border-radius: 4px;">
+                                <option value="">-</option>
+                                <option value="I">I</option>
+                                <option value="H">H</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <label style="margin: 0; font-size: 0.9em; font-weight: bold;">🔗 URL:</label>
+                            <input type="text" id="inUrl" placeholder="Pega aquí la URL..." style="padding: 5px 10px; font-size: 0.9em; border: 1px solid var(--border); border-radius: 4px; width: 300px;">
+                        </div>
+                    </div>
+                </div>
+                <textarea id="inArticle" rows="15" placeholder="Pega aquí tu artículo en formato Markdown..."></textarea>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-edit" onclick="saveCampaign()">💾 Guardar en Nube</button>
+                <button class="btn btn-meta" onclick="saveMetadataOnly()" id="btnMetaOnly" style="display:none;">📝 Actualizar solo Datos</button>
+                <button class="btn btn-warning" onclick="exportarCampanas()">📤 Exportar Copia Seguridad</button>
+                <button class="btn btn-del" onclick="resetForm()">🔄 Limpiar Formulario</button>
+                <input type="file" id="importFile" accept=".json" style="display:none" onchange="importarDatos(event)">
+                <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">📥 Importar Backup JSON</button>
+            </div>
+        </div>
+
+        <div id="tab-config" class="tab-content">
+            <h2>Configuración Global (Sincronizada)</h2>
+            <div class="config-section" style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #007bff;">
+                <h3 style="margin-top: 0; color: #007bff;">📦 Gestión del Catálogo HAV</h3>
+                <div style="margin-bottom: 15px;">
+                    <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">📥 Importar Catálogo JSON</button>
+                    <button class="btn btn-warning" onclick="forzarLimpiezaDuplicados()" style="margin-left: 10px;">🧹 Eliminar Duplicados</button>
+                    <button class="btn btn-del" onclick="borrarCatalogoCompleto()" style="margin-left: 10px;">🗑️ Borrar Catálogo Completo</button>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="control-group"><label>➕ Nuevo ID</label><input type="text" id="newIdVal" placeholder=""><button class="btn btn-edit" onclick="addOption('ids', 'newIdVal')">Crear</button></div>
+                <div class="control-group"><label>➕ Nuevo Nicho</label><input type="text" id="newProdName" placeholder="Ej: Escritorio"><button class="btn btn-edit" onclick="addOption('products', 'newProdName')">Crear</button></div>
+                <div class="control-group"><label>➕ Nueva Plataforma</label><select id="newPlatName"><option value="Facebook">Facebook</option><option value="TikTok">TikTok</option><option value="Google">Google</option></select><button class="btn btn-edit" onclick="addOption('platforms', 'newPlatName')">Crear</button></div>
+                <div class="control-group"><label>➕ Nuevo Canal</label><input type="text" id="newChanName"><button class="btn btn-edit" onclick="addOption('channels', 'newChanName')">Crear</button></div>
+                <div class="control-group"><label>➕ Nuevo Idioma</label><input type="text" id="newLangName" placeholder="Ej: Alemán"><button class="btn btn-edit" onclick="addOption('languages', 'newLangName')">Crear</button></div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 25px;">
+                <div><h4 style="color:var(--primary)">🆔 IDs de Campaña</h4><ul id="listIds" class="config-list"></ul></div>
+                <div><h4 style="color:var(--secondary)">📦 Nichos</h4><ul id="listProds" class="config-list"></ul></div>
+                <div><h4 style="color:var(--dark)">📡 Plataformas</h4><ul id="listPlatforms" class="config-list"></ul></div>
+                <div><h4 style="color:var(--dark)">📺 Canales</h4><ul id="listChannels" class="config-list"></ul></div>
+                <div><h4 style="color:var(--dark)">🌐 Idiomas</h4><ul id="listLanguages" class="config-list"></ul></div>
+            </div>
+        </div>
+
+        <div id="tab-catalog" class="tab-content">
+            <h2 style="color: #667eea; margin-bottom: 20px;">📡 Catálogo HAV - Canales en la Nube</h2>
+            <div style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="addNewHAVChannel()">➕ Agregar Nuevo Canal</button>
+            </div>
+            <div id="havCatalogContainer" class="hav-catalog-grid"></div>
+        </div>
+    </div>
+
+    <div id="editChannelModal" class="modal">
+        <div class="modal-content">
+            <h3>✏️ Editar Canal HAV</h3>
+            <div class="control-group"><label>Plataforma</label><select id="modalPlatform"><option value="FB">Facebook (FB)</option><option value="TT">TikTok (TT)</option><option value="GN">Google (GN)</option></select></div>
+            <div class="control-group" style="margin-top: 15px;"><label>Nombre del Canal (sin prefijo)</label><input type="text" id="modalChannelName" placeholder=""></div>
+            <div class="control-group" style="margin-top: 15px;"><label>ID del Canal</label><input type="text" id="modalChannelId" placeholder=""></div>
+            <div class="control-group" style="margin-top: 15px;"><label>Categoría/Grupo</label><input type="text" id="modalChannelGroup" placeholder=""></div>
+            <div class="modal-buttons"><button class="btn btn-del" onclick="closeChannelModal()">❌ Cancelar</button><button class="btn btn-success" onclick="saveChannelEdit()">💾 Guardar</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- SUPABASE SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+// ============================================================================
+// 1. CONFIGURACIÓN SUPABASE
+// ============================================================================
+const supabase = window.supabase.createClient(
+    'https://zwpurfuzheyzcomeckbr.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3cHVyZnV6aGV5emNvbWVja2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwMDA3MTMsImV4cCI6MjA4NTU3NjcxM30.THRBLc8s2n62OdT0j6iHeYNekOdmy87AoT5n4srybcQ'
+);
+
+console.log('🚀 Supabase conectado');
+
+// ============================================================================
+// 2. SISTEMA DE AUTENTICACIÓN
+// ============================================================================
+const USERS = {
+    'haevedecano83': 'haevedecano83@gestor.local',
+    'amelemery': 'amelemery@gestor.local'
+};
+
+async function handleLogin(event) {
+    event.preventDefault();
+    const username = document.getElementById('loginUser').value.trim();
+    const password = document.getElementById('loginPass').value;
+    const errorDiv = document.getElementById('loginError');
+    
+    if (!USERS[username]) {
+        errorDiv.textContent = '❌ Usuario no autorizado';
+        errorDiv.classList.add('show');
+        return false;
+    }
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email: USERS[username],
+        password: password
+    });
+    
+    if (error) {
+        errorDiv.textContent = '❌ Contraseña incorrecta';
+        errorDiv.classList.add('show');
+    } else {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainApp').classList.add('show');
+        document.getElementById('logoutBtn').style.display = 'block';
+        showNotif('✅ Sesión iniciada', 'success');
+        startRealtimeSync();
+    }
+    return false;
+}
+
+async function logout() {
+    await supabase.auth.signOut();
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('mainApp').classList.remove('show');
+    document.getElementById('logoutBtn').style.display = 'none';
+    showNotif('👋 Sesión cerrada', 'info');
+}
+
+// Verificar sesión al cargar
+supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainApp').classList.add('show');
+        document.getElementById('logoutBtn').style.display = 'block';
+        startRealtimeSync();
+    }
+});
+
+// ============================================================================
+// 3. ESTRUCTURA DE DATOS
+// ============================================================================
+const ALL_NICHOS = ['AireAcondicionado','Apartamentos','Autos','AutosElectricos','Bicicletas','CadenasDeOro','Celulares','Colchones','Cortacesped','CursoDeIngles','CursoDeMarketingDigital','CursosInteligenciaArtificial','Escritorio','Generadores','Iphone','Muebles','MueblesDeCocina','PcGamer','PcGamerBM2','Refrigeradores','Sofa','SofaCama','Televisores','UniversidadesOnline'];
+const ALL_LANGUAGES = ['Alemán','Inglés','Neerlandés','Búlgaro','Español','Portugués','Checo','Danés','Finés','Francés','Húngaro','Italiano','Lituano','Noruego','Polaco','Rumano','Árabe','Sueco','Esloveno','Eslovaco','Turco'];
+
+let db = {
+    campaigns: [],
+    platforms: ['FB','TT','GN'],
+    channels: ['HAV','Mundo','IH','CS','HN'],
+    products: ALL_NICHOS,
+    ids: ['00902','00903','00904','00905','00908','00909'],
+    languages: ALL_LANGUAGES,
+    havCatalog: {}
+};
+
+let editingIndex = -1;
+let currentSort = { column: 'country', order: 'asc' };
+let currentEditingChannel = null;
+
+// ============================================================================
+// 4. SINCRONIZACIÓN EN TIEMPO REAL
+// ============================================================================
+async function startRealtimeSync() {
+    showNotif('📡 Conectando a Supabase...', 'info');
+    
+    // A) Cargar campañas iniciales
+    const { data: campaigns } = await supabase.from('campaigns').select('*').order('created_at', { ascending: false });
+    if (campaigns) {
+        db.campaigns = campaigns;
+        renderTable();
+        updateStats();
+    }
+    
+    // B) Escuchar cambios en tiempo real
+    supabase.channel('campaigns-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaigns' }, async (payload) => {
+            console.log('🔄 Cambio detectado:', payload);
+            const { data: updated } = await supabase.from('campaigns').select('*').order('created_at', { ascending: false });
+            if (updated) {
+                db.campaigns = updated;
+                renderTable();
+                updateStats();
+            }
+        })
+        .subscribe();
+    
+    // C) Cargar configuración global
+    const { data: config } = await supabase.from('global_config').select('*').eq('id', 'config').single();
+    if (config) {
+        db.products = config.products || ALL_NICHOS;
+        db.ids = config.ids || [];
+        db.platforms = config.platforms || ['FB','TT','GN'];
+        db.channels = config.channels || ['HAV','Mundo','IH','CS','HN'];
+        db.languages = config.languages || ALL_LANGUAGES;
+        db.havCatalog = config.hav_catalog || {};
+        refreshEverything();
+    }
+    
+    // D) Escuchar cambios en configuración
+    supabase.channel('config-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'global_config' }, async (payload) => {
+            const { data: updatedConfig } = await supabase.from('global_config').select('*').eq('id', 'config').single();
+            if (updatedConfig) {
+                db.products = updatedConfig.products || ALL_NICHOS;
+                db.ids = updatedConfig.ids || [];
+                db.platforms = updatedConfig.platforms || [];
+                db.channels = updatedConfig.channels || [];
+                db.languages = updatedConfig.languages || ALL_LANGUAGES;
+                db.havCatalog = updatedConfig.hav_catalog || {};
+                refreshEverything();
+            }
+        })
+        .subscribe();
+}
+
+async function saveToSupabase(campaign) {
+    try {
+        const campaignData = {
+            platform: campaign.platform,
+            channel: campaign.channel,
+            product: campaign.product,
+            country: campaign.country,
+            code: campaign.code,
+            campaign_id: campaign.id,
+            keywords: campaign.keywords,
+            article: campaign.article || '',
+            language: campaign.language || '',
+            date: campaign.date || null,
+            autor: campaign.autor || '',
+            url: campaign.url || ''
+        };
+        
+        if (campaign.id && typeof campaign.id === 'number') {
+            await supabase.from('campaigns').update(campaignData).eq('id', campaign.id);
+            showNotif('☁️ Actualizado en Supabase', 'success');
+        } else {
+            await supabase.from('campaigns').insert([campaignData]);
+            showNotif('☁️ Guardado en Supabase', 'success');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al guardar: ' + error.message);
+    }
+}
+
+async function deleteFromSupabase(id) {
+    try {
+        await supabase.from('campaigns').delete().eq('id', id);
+        showNotif('🗑️ Eliminado de Supabase', 'success');
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+async function saveGlobalSettings() {
+    try {
+        await supabase.from('global_config').upsert({
+            id: 'config',
+            products: db.products,
+            ids: db.ids,
+            platforms: db.platforms,
+            channels: db.channels,
+            languages: db.languages,
+            hav_catalog: db.havCatalog,
+            last_update: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Error al guardar configuración:', error);
+    }
+}
+
+// ============================================================================
+// 5. INTERFAZ DE USUARIO (ORIGINAL)
+// ============================================================================
+
+const nichoEmojis = {
+    'cadena':'⛓️','oro':'💰','joya':'💎','iphone':'📱','celular':'📱','tv':'📺','televisor':'📺','televisores':'📺',
+    'sofá':'🛋️','sofa':'🛋️','mueble':'🪑','bici':'🚲','pc':'💻','colchón':'🛏️','auto':'🚗','curso':'📚','jardín':'🌿',
+    'aire':'❄️','refriger':'🧊','generador':'⚡','cortacesped':'🌿','escritorio':'🖥️','apartamento':'🏢'
+};
+
+function getNichoConEmoji(nicho) {
+    if (!nicho) return '';
+    const n = nicho.toLowerCase();
+    for (let key in nichoEmojis) { if (n.includes(key)) return nichoEmojis[key] + ' ' + nicho; }
+    return nicho;
+}
+
+function showNotif(msg, type = 'info') {
+    const box = document.createElement('div');
+    box.className = 'notif-box';
+    box.textContent = msg;
+    document.getElementById('notification-area').appendChild(box);
+    setTimeout(() => box.remove(), 3000);
+}
+
+function switchTab(id) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+}
+
+function updateStats() {
+    document.getElementById('totalCampaigns').textContent = db.campaigns.length;
+    const totalKeys = db.campaigns.reduce((sum, c) => sum + (c.keywords ? c.keywords.length : 0), 0);
+    document.getElementById('totalKeywords').textContent = totalKeys;
+    document.getElementById('avgKeys').textContent = db.campaigns.length > 0 ? Math.round(totalKeys / db.campaigns.length) : 0;
+    document.getElementById('totalArticles').textContent = db.campaigns.filter(c => c.article && c.article.trim()).length;
+}
+
+function renderTable() {
+    const search = document.getElementById('search').value.toLowerCase();
+    const filterChannel = document.getElementById('filterChannel').value;
+    const filterId = document.getElementById('filterId').value;
+    const filterProduct = document.getElementById('filterProduct').value;
+    const filterPlatform = document.getElementById('filterPlatform').value;
+    
+    let filtered = db.campaigns.filter(c => {
+        const matchSearch = !search || JSON.stringify(c).toLowerCase().includes(search);
+        const matchChannel = !filterChannel || c.channel === filterChannel;
+        const matchId = !filterId || c.campaign_id === filterId;
+        const matchProduct = !filterProduct || c.product === filterProduct;
+        const matchPlatform = !filterPlatform || c.platform === filterPlatform;
+        return matchSearch && matchChannel && matchId && matchProduct && matchPlatform;
+    });
+    
+    // Ordenar
+    filtered.sort((a, b) => {
+        let valA = a[currentSort.column] || '';
+        let valB = b[currentSort.column] || '';
+        if (currentSort.column === 'keys') {
+            valA = (a.keywords || []).length;
+            valB = (b.keywords || []).length;
+        }
+        if (valA < valB) return currentSort.order === 'asc' ? -1 : 1;
+        if (valA > valB) return currentSort.order === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    const tbody = document.getElementById('campaignList');
+    tbody.innerHTML = '';
+    
+    filtered.forEach((c, idx) => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td>${c.date || '-'}</td>
+            <td><span class="badge badge-${c.platform === 'FB' ? 'fb' : c.platform === 'TT' ? 'tt' : 'gn'}">${c.platform}</span></td>
+            <td>${c.channel}</td>
+            <td>${getNichoConEmoji(c.product)}</td>
+            <td><code>${c.campaign_id}</code></td>
+            <td>${c.code}</td>
+            <td>${c.language || '-'}</td>
+            <td>${c.country}</td>
+            <td><strong>${(c.keywords || []).length}</strong></td>
+            <td><span class="${c.article && c.article.trim() ? 'has-article' : 'no-article'} article-indicator">📄</span></td>
+            <td>${c.url ? `<a href="${c.url}" target="_blank" class="url-active">🔗</a>` : '<span class="url-inactive">🔗</span>'}</td>
+            <td>${c.autor || '-'}</td>
+            <td>
+                <button class="btn btn-edit" onclick="editCampaign(${c.id})">✏️</button>
+                <button class="btn btn-del" onclick="deleteCampaign(${c.id})">🗑️</button>
+            </td>
+        `;
+    });
+}
+
+function refreshEverything() {
+    // Actualizar filtros
+    const channelSelect = document.getElementById('filterChannel');
+    channelSelect.innerHTML = '<option value="">Todos</option>';
+    [...new Set(db.campaigns.map(c => c.channel))].sort().forEach(ch => {
+        channelSelect.innerHTML += `<option value="${ch}">${ch}</option>`;
+    });
+    
+    const idSelect = document.getElementById('filterId');
+    idSelect.innerHTML = '<option value="">Todos</option>';
+    [...new Set(db.campaigns.map(c => c.campaign_id))].sort().forEach(id => {
+        idSelect.innerHTML += `<option value="${id}">${id}</option>`;
+    });
+    
+    const productSelect = document.getElementById('filterProduct');
+    productSelect.innerHTML = '<option value="">Todos</option>';
+    db.products.sort().forEach(p => {
+        productSelect.innerHTML += `<option value="${p}">${p}</option>`;
+    });
+    
+    const platformSelect = document.getElementById('filterPlatform');
+    platformSelect.innerHTML = '<option value="">Todas</option>';
+    db.platforms.forEach(p => {
+        platformSelect.innerHTML += `<option value="${p}">${p}</option>`;
+    });
+    
+    // Actualizar formularios
+    const inPlatform = document.getElementById('inPlatform');
+    inPlatform.innerHTML = '';
+    db.platforms.forEach(p => {
+        inPlatform.innerHTML += `<option value="${p}">${p}</option>`;
+    });
+    
+    const inChannel = document.getElementById('inChannel');
+    inChannel.innerHTML = '';
+    db.channels.forEach(c => {
+        inChannel.innerHTML += `<option value="${c}">${c}</option>`;
+    });
+    
+    const inProduct = document.getElementById('inProduct');
+    inProduct.innerHTML = '';
+    db.products.forEach(p => {
+        inProduct.innerHTML += `<option value="${p}">${p}</option>`;
+    });
+    
+    const inId = document.getElementById('inId');
+    inId.innerHTML = '';
+    db.ids.forEach(id => {
+        inId.innerHTML += `<option value="${id}">${id}</option>`;
+    });
+    
+    const inLanguage = document.getElementById('inLanguage');
+    inLanguage.innerHTML = '<option value="">Seleccionar idioma...</option>';
+    db.languages.forEach(lang => {
+        inLanguage.innerHTML += `<option value="${lang}">${lang}</option>`;
+    });
+    
+    renderTable();
+    updateStats();
+    renderConfigLists();
+    renderHAVCatalog();
+}
+
+function applySort(column) {
+    if (currentSort.column === column) {
+        currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSort.column = column;
+        currentSort.order = 'asc';
+    }
+    renderTable();
+}
+
+async function saveCampaign() {
+    const campaign = {
+        platform: document.getElementById('inPlatform').value,
+        channel: document.getElementById('inChannel').value,
+        product: document.getElementById('inProduct').value,
+        country: document.getElementById('inCountry').value.toUpperCase(),
+        code: document.getElementById('inCode').value,
+        id: document.getElementById('inId').value,
+        keywords: document.getElementById('inKeywords').value.split('\n').filter(k => k.trim()),
+        article: document.getElementById('inArticle').value,
+        language: document.getElementById('inLanguage').value,
+        date: document.getElementById('inDate').value,
+        autor: document.getElementById('inAutor').value,
+        url: document.getElementById('inUrl').value
+    };
+    
+    if (editingIndex >= 0) {
+        campaign.id = editingIndex;
+    }
+    
+    await saveToSupabase(campaign);
+    resetForm();
+}
+
+function resetForm() {
+    editingIndex = -1;
+    document.getElementById('formTitle').textContent = 'Gestionar Campaña';
+    document.getElementById('inDate').value = '';
+    document.getElementById('inCode').value = '';
+    document.getElementById('inCountry').value = '';
+    document.getElementById('inKeywords').value = '';
+    document.getElementById('inArticle').value = '';
+    document.getElementById('inUrl').value = '';
+    document.getElementById('inAutor').value = '';
+    document.getElementById('btnMetaOnly').style.display = 'none';
+}
+
+function editCampaign(id) {
+    const campaign = db.campaigns.find(c => c.id === id);
+    if (!campaign) return;
+    
+    editingIndex = id;
+    document.getElementById('formTitle').textContent = '✏️ Editando Campaña';
+    document.getElementById('inPlatform').value = campaign.platform;
+    document.getElementById('inChannel').value = campaign.channel;
+    document.getElementById('inProduct').value = campaign.product;
+    document.getElementById('inCountry').value = campaign.country;
+    document.getElementById('inCode').value = campaign.code;
+    document.getElementById('inId').value = campaign.campaign_id;
+    document.getElementById('inKeywords').value = (campaign.keywords || []).join('\n');
+    document.getElementById('inArticle').value = campaign.article || '';
+    document.getElementById('inLanguage').value = campaign.language || '';
+    document.getElementById('inDate').value = campaign.date || '';
+    document.getElementById('inAutor').value = campaign.autor || '';
+    document.getElementById('inUrl').value = campaign.url || '';
+    document.getElementById('btnMetaOnly').style.display = 'inline-block';
+    
+    switchTab('tab-add');
+}
+
+async function deleteCampaign(id) {
+    if (!confirm('¿Eliminar esta campaña?')) return;
+    await deleteFromSupabase(id);
+}
+
+function exportarCampanas() {
+    const dataStr = JSON.stringify(db.campaigns, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `backup_campanas_${new Date().toISOString().slice(0,10)}.json`;
+    link.click();
+    showNotif('✅ Copia de seguridad descargada', 'success');
+}
+
+function importarDatos(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const imported = JSON.parse(e.target.result);
+            if (Array.isArray(imported)) {
+                for (const campaign of imported) {
+                    await saveToSupabase(campaign);
+                }
+                showNotif('✅ Datos importados', 'success');
+            }
+        } catch (error) {
+            alert('Error al importar: ' + error.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+async function addOption(type, inputId) {
+    const value = document.getElementById(inputId).value.trim();
+    if (!value) return alert('Campo vacío');
+    
+    if (type === 'ids') {
+        if (db.ids.includes(value)) return alert('Ya existe');
+        db.ids.push(value);
+        db.ids.sort();
+    } else if (type === 'products') {
+        if (db.products.includes(value)) return alert('Ya existe');
+        db.products.push(value);
+        db.products.sort();
+    } else if (type === 'platforms') {
+        const short = value === 'Facebook' ? 'FB' : value === 'TikTok' ? 'TT' : 'GN';
+        if (db.platforms.includes(short)) return alert('Ya existe');
+        db.platforms.push(short);
+    } else if (type === 'channels') {
+        if (db.channels.includes(value)) return alert('Ya existe');
+        db.channels.push(value);
+        db.channels.sort();
+    } else if (type === 'languages') {
+        if (db.languages.includes(value)) return alert('Ya existe');
+        db.languages.push(value);
+        db.languages.sort();
+    }
+    
+    document.getElementById(inputId).value = '';
+    await saveGlobalSettings();
+    refreshEverything();
+}
+
+async function deleteOption(type, value) {
+    if (!confirm(`¿Eliminar "${value}"?`)) return;
+    
+    if (type === 'ids') db.ids = db.ids.filter(i => i !== value);
+    else if (type === 'products') db.products = db.products.filter(p => p !== value);
+    else if (type === 'platforms') db.platforms = db.platforms.filter(p => p !== value);
+    else if (type === 'channels') db.channels = db.channels.filter(c => c !== value);
+    else if (type === 'languages') db.languages = db.languages.filter(l => l !== value);
+    
+    await saveGlobalSettings();
+    refreshEverything();
+}
+
+function renderConfigLists() {
+    document.getElementById('listIds').innerHTML = db.ids.map(id => 
+        `<li><span>${id}</span><button class="btn-del-mini" onclick="deleteOption('ids','${id}')">🗑️</button></li>`
+    ).join('');
+    
+    document.getElementById('listProds').innerHTML = db.products.map(p => 
+        `<li><span>${p}</span><button class="btn-del-mini" onclick="deleteOption('products','${p}')">🗑️</button></li>`
+    ).join('');
+    
+    document.getElementById('listPlatforms').innerHTML = db.platforms.map(p => 
+        `<li><span>${p}</span><button class="btn-del-mini" onclick="deleteOption('platforms','${p}')">🗑️</button></li>`
+    ).join('');
+    
+    document.getElementById('listChannels').innerHTML = db.channels.map(c => 
+        `<li><span>${c}</span><button class="btn-del-mini" onclick="deleteOption('channels','${c}')">🗑️</button></li>`
+    ).join('');
+    
+    document.getElementById('listLanguages').innerHTML = db.languages.map(l => 
+        `<li><span>${l}</span><button class="btn-del-mini" onclick="deleteOption('languages','${l}')">🗑️</button></li>`
+    ).join('');
+}
+
+function renderHAVCatalog() {
+    const container = document.getElementById('havCatalogContainer');
+    container.innerHTML = '';
+    
+    ['FB', 'TT', 'GN'].forEach(platform => {
+        const channels = db.havCatalog[platform] || [];
+        const card = document.createElement('div');
+        card.className = 'hav-platform-card';
+        card.style.borderLeftColor = platform === 'FB' ? '#1877f2' : platform === 'TT' ? '#fe2c55' : '#EA4335';
+        
+        card.innerHTML = `
+            <h3>${platform === 'FB' ? '📘 Facebook' : platform === 'TT' ? '🎵 TikTok' : '🔍 Google'} (${channels.length})</h3>
+            <div class="hav-channels-list">
+                ${channels.map(ch => `
+                    <div class="hav-channel-item">
+                        <div>
+                            <div class="hav-channel-name">${ch.code}</div>
+                            <div class="hav-channel-id">${ch.id}</div>
+                        </div>
+                        <div class="hav-btn-group">
+                            <button class="btn-mini btn-copy-mini" onclick="navigator.clipboard.writeText('${ch.id}')">📋</button>
+                            <button class="btn-mini btn-edit-mini" onclick="editHAVChannel('${platform}','${ch.code}')">✏️</button>
+                            <button class="btn-mini btn-del-mini" onclick="deleteHAVChannel('${platform}','${ch.code}')">🗑️</button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function addNewHAVChannel() {
+    currentEditingChannel = null;
+    document.getElementById('modalPlatform').value = 'FB';
+    document.getElementById('modalChannelName').value = '';
+    document.getElementById('modalChannelId').value = '';
+    document.getElementById('modalChannelGroup').value = '';
+    document.getElementById('editChannelModal').classList.add('active');
+}
+
+function editHAVChannel(platform, code) {
+    const channels = db.havCatalog[platform] || [];
+    const channel = channels.find(ch => ch.code === code);
+    if (!channel) return;
+    
+    currentEditingChannel = { platform, code };
+    document.getElementById('modalPlatform').value = platform;
+    document.getElementById('modalChannelName').value = channel.name;
+    document.getElementById('modalChannelId').value = channel.id;
+    document.getElementById('modalChannelGroup').value = channel.group || '';
+    document.getElementById('editChannelModal').classList.add('active');
+}
+
+async function saveChannelEdit() {
+    const platform = document.getElementById('modalPlatform').value;
+    const name = document.getElementById('modalChannelName').value.trim();
+    const id = document.getElementById('modalChannelId').value.trim();
+    const group = document.getElementById('modalChannelGroup').value.trim();
+    
+    if (!name || !id) return alert('Completa los campos obligatorios');
+    
+    const code = `${platform}-${name}`;
+    const newChannel = { code, name, id, group };
+    
+    if (!db.havCatalog[platform]) db.havCatalog[platform] = [];
+    
+    if (currentEditingChannel) {
+        const idx = db.havCatalog[currentEditingChannel.platform].findIndex(ch => ch.code === currentEditingChannel.code);
+        if (idx >= 0) db.havCatalog[currentEditingChannel.platform].splice(idx, 1);
+    }
+    
+    db.havCatalog[platform].push(newChannel);
+    await saveGlobalSettings();
+    closeChannelModal();
+    renderHAVCatalog();
+}
+
+async function deleteHAVChannel(platform, code) {
+    if (!confirm(`¿Eliminar canal ${code}?`)) return;
+    db.havCatalog[platform] = (db.havCatalog[platform] || []).filter(ch => ch.code !== code);
+    await saveGlobalSettings();
+    renderHAVCatalog();
+}
+
+function closeChannelModal() {
+    document.getElementById('editChannelModal').classList.remove('active');
+}
+
+function autoCompleteCampaign() {
+    const platform = document.getElementById('inPlatform').value;
+    const channel = document.getElementById('inChannel').value;
+    const product = document.getElementById('inProduct').value;
+    const country = document.getElementById('inCountry').value.toUpperCase();
+    
+    if (platform && channel && product && country) {
+        document.getElementById('inCode').value = `${platform}-${channel}-${product}-${country}`;
+    }
+}
+
+function boldSelectedText() {
+    const textarea = document.getElementById('inKeywords');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = textarea.value.substring(start, end);
+    
+    if (selected) {
+        const newText = textarea.value.substring(0, start) + `**${selected}**` + textarea.value.substring(end);
+        textarea.value = newText;
+        textarea.focus();
+        textarea.setSelectionRange(end + 4, end + 4);
+    }
+}
+
+function clearAllBoldTags() {
+    const textarea = document.getElementById('inKeywords');
+    textarea.value = textarea.value.replace(/\*\*/g, '');
+}
+
+function runTripleComparison() {
+    // Implementa comparador aquí si lo necesitas
+    document.getElementById('compResults').innerHTML = '<p>Comparador en desarrollo...</p>';
+}
+
+function forzarLimpiezaDuplicados() {
+    let totalEliminados = 0;
+    for (let cat in db.havCatalog) {
+        if (!Array.isArray(db.havCatalog[cat])) continue;
+        const items = db.havCatalog[cat];
+        const codesVistos = new Set();
+        const itemsUnicos = [];
+        items.forEach(item => {
+            if (!codesVistos.has(item.code)) {
+                codesVistos.add(item.code);
+                itemsUnicos.push(item);
+            } else {
+                totalEliminados++;
+            }
+        });
+        db.havCatalog[cat] = itemsUnicos;
+    }
+    if (totalEliminados > 0) {
+        saveGlobalSettings();
+        refreshEverything();
+        showNotif(`🧹 ${totalEliminados} duplicados eliminados`, 'success');
+    } else {
+        alert('✅ No hay duplicados');
+    }
+}
+
+async function borrarCatalogoCompleto() {
+    if (confirm('⚠️ ¿BORRAR TODO EL CATÁLOGO HAV?')) {
+        if (confirm('⚠️⚠️ ÚLTIMA CONFIRMACIÓN')) {
+            db.havCatalog = {};
+            await saveGlobalSettings();
+            refreshEverything();
+            showNotif('🗑️ Catálogo HAV borrado', 'warning');
+        }
+    }
+}
+
+function saveMetadataOnly() {
+    // Similar a saveCampaign pero sin actualizar keywords/article
+    alert('Función en desarrollo');
+}
+
+// Inicializar al cargar
+window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('inDate').valueAsDate = new Date();
+});
+</script>
+</body>
+</html>
