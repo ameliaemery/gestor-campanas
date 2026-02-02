@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reiniciar Firebase desde Cero</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+        }
+        .container {
+            background: white;
+            padding: 50px;
+            border-radius: 25px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.4);
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 15px;
+            font-size: 32px;
+            text-align: center;
+        }
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 18px;
+        }
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #2a5298;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+        .info-box strong {
+            color: #1e3c72;
+            font-size: 24px;
+        }
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
+            color: white;
+            border: none;
+            padding: 25px;
+            font-size: 22px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(244, 67, 54, 0.4);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #progreso {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            min-height: 80px;
+            font-size: 16px;
+        }
+        .step {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .step-current {
+            background: #fff3cd;
+            color: #856404;
+            font-weight: bold;
+        }
+        .step-done {
+            background: #d4edda;
+            color: #155724;
+        }
+        .step-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .warning strong {
+            color: #856404;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Reiniciar Firebase</h1>
+        <div class="subtitle">Empezar desde cero con tu backup</div>
+        
+        <div class="warning">
+            <strong>⚠️ ATENCIÓN</strong><br>
+            Esto BORRARÁ todo lo que hay ahora en Firebase<br>
+            y restaurará tu backup del 31 de enero
+        </div>
+        
+        <div class="info-box">
+            📦 Backup del <strong>31 de enero 2026</strong><br>
+            📊 Campañas: <strong>171</strong>
+        </div>
+        
+        <button id="btnIniciar" onclick="reiniciarDesdeReco()">
+            🗑️ BORRAR TODO Y RESTAURAR BACKUP
+        </button>
+        
+        <div id="progreso"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // IMPORTANTE: Reemplaza esto con TU configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY_AQUI",
+            authDomain: "gestor-campanas-hav2026.firebaseapp.com",
+            projectId: "gestor-campanas-hav2026",
+            storageBucket: "gestor-campanas-hav2026.appspot.com",
+            messagingSenderId: "TU_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Aquí va el backup - por ahora vacío
+        const backupData = [];
+        
+        // INSTRUCCIONES:
+        // 1. Primero sube este archivo a GitHub
+        // 2. Luego te diré cómo agregar tu backup aquí
+
+        function actualizarProgreso(mensaje, clase = 'step-current') {
+            const progreso = document.getElementById('progreso');
+            const div = document.createElement('div');
+            div.className = 'step ' + clase;
+            div.innerHTML = mensaje;
+            progreso.appendChild(div);
+            progreso.scrollTop = progreso.scrollHeight;
+        }
+
+        async function borrarTodo() {
+            actualizarProgreso('🗑️ Paso 1/2: Borrando datos antiguos...', 'step-current');
+            
+            try {
+                const snapshot = await db.collection('campaigns').get();
+                const total = snapshot.size;
+                
+                if (total === 0) {
+                    actualizarProgreso('✅ No hay datos para borrar', 'step-done');
+                    return 0;
+                }
+                
+                actualizarProgreso(`📋 Encontradas ${total} campañas antiguas`, 'step-current');
+                
+                const batch = db.batch();
+                let count = 0;
+                
+                snapshot.forEach((doc) => {
+                    batch.delete(doc.ref);
+                    count++;
+                });
+                
+                await batch.commit();
+                actualizarProgreso(`✅ ${count} campañas antiguas borradas`, 'step-done');
+                return count;
+                
+            } catch (error) {
+                actualizarProgreso(`❌ Error al borrar: ${error.message}`, 'step-error');
+                throw error;
+            }
+        }
+
+        async function restaurarBackup() {
+            actualizarProgreso('📥 Paso 2/2: Restaurando backup...', 'step-current');
+            
+            if (backupData.length === 0) {
+                actualizarProgreso('⚠️ No hay datos de backup. Primero agrega el backup al código.', 'step-error');
+                return 0;
+            }
+            
+            let count = 0;
+            let errores = 0;
+            
+            try {
+                for (let i = 0; i < backupData.length; i++) {
+                    const campaign = backupData[i];
+                    
+                    try {
+                        await db.collection('campaigns')
+                            .doc(campaign.firebaseId)
+                            .set(campaign);
+                        count++;
+                        
+                        if ((i + 1) % 20 === 0) {
+                            actualizarProgreso(`📦 Progreso: ${count}/${backupData.length}`, 'step-current');
+                        }
+                    } catch (error) {
+                        errores++;
+                        console.error('Error en:', campaign.code, error);
+                    }
+                }
+                
+                actualizarProgreso(`✅ ${count} campañas restauradas`, 'step-done');
+                if (errores > 0) {
+                    actualizarProgreso(`⚠️ ${errores} errores (ver consola F12)`, 'step-error');
+                }
+                
+                return count;
+                
+            } catch (error) {
+                actualizarProgreso(`❌ Error al restaurar: ${error.message}`, 'step-error');
+                throw error;
+            }
+        }
+
+        async function reiniciarDesdeReco() {
+            const btn = document.getElementById('btnIniciar');
+            const progreso = document.getElementById('progreso');
+            
+            if (!confirm('¿Estás seguro? Esto BORRARÁ todo y restaurará el backup del 31/01/2026')) {
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ PROCESANDO...';
+            progreso.innerHTML = '';
+            
+            try {
+                const borradas = await borrarTodo();
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                const restauradas = await restaurarBackup();
+                
+                actualizarProgreso('', 'step-done');
+                progreso.innerHTML += `
+                    <div class="success-message">
+                        🎉 ¡PROCESO COMPLETADO!<br><br>
+                        🗑️ Borradas: ${borradas}<br>
+                        ✅ Restauradas: ${restauradas}<br><br>
+                        <small>Puedes cerrar esta ventana y abrir tu gestor</small>
+                    </div>
+                `;
+                
+                btn.textContent = '✅ COMPLETADO';
+                btn.style.background = '#4CAF50';
+                
+            } catch (error) {
+                progreso.innerHTML += `
+                    <div class="step step-error">
+                        ❌ ERROR: ${error.message}<br>
+                        <small>Abre la consola (F12) para más detalles</small>
+                    </div>
+                `;
+                btn.disabled = false;
+                btn.textContent = '🔄 REINTENTAR';
+                console.error('Error completo:', error);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            db.collection('campaigns').limit(1).get()
+                .then(() => {
+                    console.log('✅ Conectado a Firebase');
+                })
+                .catch(error => {
+                    alert('❌ Error de conexión a Firebase: ' + error.message);
+                    console.error(error);
+                });
+        });
+    </script>
+</body>
+</html>
