@@ -106,6 +106,66 @@
     </style>
 </head>
 <body>
+    <!-- SISTEMA DE LOGIN -->
+<div id="login-container" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #f0f2f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+">
+    <div style="
+        background: white;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 400px;
+    ">
+        <h2 style="text-align: center; margin-bottom: 30px; color: #333;">
+            🔐 Gestor de Campañas
+        </h2>
+        <div style="margin-bottom: 20px;">
+            <input 
+                type="text" 
+                id="username" 
+                placeholder="Usuario"
+                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; box-sizing: border-box;"
+            />
+        </div>
+        <div style="margin-bottom: 20px;">
+            <input 
+                type="password" 
+                id="password" 
+                placeholder="Contraseña"
+                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; box-sizing: border-box;"
+            />
+        </div>
+        <button onclick="loginUser()" style="
+            width: 100%;
+            padding: 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        ">
+            Iniciar Sesión
+        </button>
+        <p id="error-message" style="color: #f44336; text-align: center; margin-top: 15px; font-size: 14px;"></p>
+    </div>
+</div>
+
+<!-- Tu gestor (se muestra después del login) -->
+<div id="gestor-content" style="display: none;">
+
     <div class="container">
         <h1>🚀 Migrar a Supabase</h1>
         <div class="subtitle">Subir 171 campañas desde backup</div>
@@ -214,5 +274,79 @@
             }
         }
     </script>
+    </div>
+<!-- Fin del contenedor del gestor -->
+
+<!-- SCRIPT DE AUTENTICACIÓN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // Configuración de Supabase
+    const SUPABASE_URL = 'https://zwpurfuzheyzcomeckbr.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3cHVyZnV6aGV5emNvbWVja2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwMDA3MTMsImV4cCI6MjA4NTU3NjcxM30.THRBLc8s2n62OdT0j6iHeYNekOdmy87AoT5n4srybcQ';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Mapeo de usuarios
+    const usuarios = {
+        'amelemery': 'amelemery@gestor.local',
+        'haevedecano83': 'haevedecano83@gestor.local'
+    };
+
+    // Función de login
+    async function loginUser() {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const errorMsg = document.getElementById('error-message');
+        
+        if (!username || !password) {
+            errorMsg.innerText = '❌ Completa todos los campos';
+            return;
+        }
+        
+        const email = usuarios[username];
+        
+        if (!email) {
+            errorMsg.innerText = '❌ Usuario no autorizado';
+            return;
+        }
+
+        errorMsg.innerText = 'Verificando...';
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        if (error) {
+            errorMsg.innerText = '❌ Usuario o contraseña incorrectos';
+            console.error('Error:', error);
+        } else {
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('gestor-content').style.display = 'block';
+            errorMsg.innerText = '';
+        }
+    }
+
+    // Permitir login con Enter
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('password');
+        if (passwordInput) {
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loginUser();
+                }
+            });
+        }
+
+        // Verificar si ya hay sesión
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('gestor-content').style.display = 'block';
+            }
+        });
+    });
+</script>
+
 </body>
 </html>
