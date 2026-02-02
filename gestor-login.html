@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Campañas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #3CB371, #2E8B57);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 400px;
+        }
+        h2 { text-align: center; color: #2E8B57; margin-bottom: 30px; }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        input:focus { outline: none; border-color: #3CB371; }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #3CB371;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        button:hover { background: #2E8B57; }
+        #error { color: red; text-align: center; margin-top: 15px; min-height: 20px; }
+        #app { display: none; }
+        .app-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 800px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        .logout { background: #dc3545; padding: 10px 20px; }
+        .logout:hover { background: #c82333; }
+    </style>
+</head>
+<body>
+    <div id="login" class="login-box">
+        <h2>🔐 Gestor de Campañas</h2>
+        <input type="text" id="user" placeholder="Usuario">
+        <input type="password" id="pass" placeholder="Contraseña">
+        <button onclick="login()">Entrar</button>
+        <div id="error"></div>
+    </div>
+
+    <div id="app" class="app-container">
+        <div class="header">
+            <div>
+                <h1>✅ Bienvenido, <span id="name"></span></h1>
+                <p>Gestor de Campañas - Supabase</p>
+            </div>
+            <button class="logout" onclick="logout()">Salir</button>
+        </div>
+        <h2>🚀 Sistema Funcionando</h2>
+        <p>✅ 171 campañas migradas</p>
+        <p>✅ RLS activado</p>
+        <p>✅ Usuarios protegidos</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const sb = window.supabase.createClient(
+            'https://zwpurfuzheyzcomeckbr.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3cHVyZnV6aGV5emNvbWVja2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwMDA3MTMsImV4cCI6MjA4NTU3NjcxM30.THRBLc8s2n62OdT0j6iHeYNekOdmy87AoT5n4srybcQ'
+        );
+
+        const users = {
+            'amelemery': 'amelemery@gestor.local',
+            'haevedecano83': 'haevedecano83@gestor.local'
+        };
+
+        async function login() {
+            const u = document.getElementById('user').value.trim();
+            const p = document.getElementById('pass').value;
+            const e = document.getElementById('error');
+            
+            if (!u || !p) { e.textContent = '❌ Completa los campos'; return; }
+            if (!users[u]) { e.textContent = '❌ Usuario no autorizado'; return; }
+            
+            e.textContent = '⏳ Verificando...';
+            
+            const { error } = await sb.auth.signInWithPassword({
+                email: users[u],
+                password: p
+            });
+            
+            if (error) {
+                e.textContent = '❌ Contraseña incorrecta';
+            } else {
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+                document.getElementById('name').textContent = u;
+            }
+        }
+
+        async function logout() {
+            await sb.auth.signOut();
+            document.getElementById('login').style.display = 'block';
+            document.getElementById('app').style.display = 'none';
+            document.getElementById('user').value = '';
+            document.getElementById('pass').value = '';
+            document.getElementById('error').textContent = '';
+        }
+
+        document.getElementById('pass').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') login();
+        });
+
+        sb.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                const email = session.user.email;
+                const u = Object.keys(users).find(k => users[k] === email);
+                if (u) {
+                    document.getElementById('login').style.display = 'none';
+                    document.getElementById('app').style.display = 'block';
+                    document.getElementById('name').textContent = u;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
