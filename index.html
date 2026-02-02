@@ -451,12 +451,32 @@
                 <button class="btn btn-meta" onclick="saveMetadataOnly()" id="btnMetaOnly" style="display:none;">📝 Actualizar solo Datos</button>
                 <button class="btn btn-warning" onclick="exportarCampanas()">📤 Exportar Copia Seguridad</button> <button class="btn btn-del" onclick="resetForm()">🔄 Limpiar Formulario</button>
                 <input type="file" id="importFile" accept=".json" style="display:none" onchange="importarDatos(event)">
-                <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">📥 Importar Datos</button>
+                <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">📥 Importar Backup JSON</button>
             </div>
         </div>
 
         <div id="tab-config" class="tab-content">
             <h2>Configuración Global (Sincronizada)</h2>
+            <div class="config-section" style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #007bff;">
+                <h3 style="margin-top: 0; color: #007bff;">📦 Gestión del Catálogo HAV</h3>
+                <div style="margin-bottom: 15px;">
+                    <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">
+                        📥 Importar Catálogo JSON
+                    </button>
+                    <button class="btn btn-warning" onclick="forzarLimpiezaDuplicados()" style="margin-left: 10px;">
+                        🧹 Eliminar Duplicados
+                    </button>
+                    <button class="btn btn-del" onclick="borrarCatalogoCompleto()" style="margin-left: 10px;">
+                        🗑️ Borrar Catálogo Completo
+                    </button>
+                </div>
+                <p style="margin: 0; font-size: 0.9em; color: #666;">
+                    • <strong>Importar:</strong> Agrega canales desde un archivo JSON<br>
+                    • <strong>Eliminar Duplicados:</strong> Limpia canales repetidos<br>
+                    • <strong>Borrar Completo:</strong> Elimina TODO el catálogo HAV
+                </p>
+            </div>
+
             <div class="controls">
                 <div class="control-group"><label>➕ Nuevo ID</label><input type="text" id="newIdVal" placeholder=""><button class="btn btn-edit" onclick="addOption('ids', 'newIdVal')">Crear</button></div>
                 <div class="control-group"><label>➕ Nuevo Nicho</label><input type="text" id="newProdName" placeholder="Ej: Escritorio"><button class="btn btn-edit" onclick="addOption('products', 'newProdName')">Crear</button></div>
@@ -486,9 +506,9 @@
         <div class="modal-content">
             <h3>✏️ Editar Canal HAV</h3>
             <div class="control-group"><label>Plataforma</label><select id="modalPlatform"><option value="FB">Facebook (FB)</option><option value="TT">TikTok (TT)</option><option value="GN">Google (GN)</option></select></div>
-            <div class="control-group" style="margin-top: 15px;"><label>Nombre del Canal (sin prefijo)</label><input type="text" id="modalChannelName" placeholder="Ej: Sofa, Celulares, AutosElectricos"></div>
-            <div class="control-group" style="margin-top: 15px;"><label>ID del Canal</label><input type="text" id="modalChannelId" placeholder="Ej: 00904, 3.408906124e+09"></div>
-            <div class="control-group" style="margin-top: 15px;"><label>Categoría/Grupo</label><input type="text" id="modalChannelGroup" placeholder="Ej: MUNDO Meta, Mundo TikTok, InsideHub TikTok"></div>
+            <div class="control-group" style="margin-top: 15px;"><label>Nombre del Canal (sin prefijo)</label><input type="text" id="modalChannelName" placeholder=""></div>
+            <div class="control-group" style="margin-top: 15px;"><label>ID del Canal</label><input type="text" id="modalChannelId" placeholder=""></div>
+            <div class="control-group" style="margin-top: 15px;"><label>Categoría/Grupo</label><input type="text" id="modalChannelGroup" placeholder=""></div>
             <div class="modal-buttons"><button class="btn btn-del" onclick="closeChannelModal()">❌ Cancelar</button><button class="btn btn-success" onclick="saveChannelEdit()">💾 Guardar</button></div>
         </div>
     </div>
@@ -532,103 +552,7 @@ const ALL_NICHOS = [
 
 const ALL_LANGUAGES = ['Alemán', 'Inglés', 'Neerlandés', 'Búlgaro', 'Español', 'Portugués', 'Checo', 'Danés', 'Finés', 'Francés', 'Húngaro', 'Italiano', 'Lituano', 'Noruego', 'Polaco', 'Rumano', 'Árabe', 'Sueco', 'Esloveno', 'Eslovaco', 'Turco'];
 
-const HAV_CATALOG_INITIAL = {
-    'MUNDO Meta': [
-        { code: 'FB-HAV-AutosElectricos', id: '9908318566', platform: 'FB' },
-        { code: 'FB-HAV-Bicicletas', id: '8762376986', platform: 'FB' },
-        { code: 'FB-HAV-Colchones', id: '4310876523', platform: 'FB' },
-        { code: 'FB-HAV-Cortacesped', id: '3203309414', platform: 'FB' },
-        { code: 'FB-HAV-Escritorio', id: '3408906124', platform: 'FB' },
-        { code: 'FB-HAV-Generadores', id: '5094975587', platform: 'FB' },
-        { code: 'FB-HAV-MueblesDeCocina', id: '9443790845', platform: 'FB' },
-        { code: 'FB-HAV-PcGamer', id: '8492214982', platform: 'FB' },
-        { code: 'FB-HAV-PcGamerBM2', id: '6741304565', platform: 'FB' },
-        { code: 'FB-HAV-SofaCama', id: '5476324359', platform: 'FB' },
-        { code: 'FB-HAV-Autos', id: '00901', platform: 'FB' },
-        { code: 'FB-HAV-Celulares', id: '00902', platform: 'FB' },
-        { code: 'FB-HAV-Iphone', id: '00903', platform: 'FB' },
-        { code: 'FB-HAV-Sofa', id: '00904', platform: 'FB' },
-        { code: 'FB-HAV-Muebles', id: '00905', platform: 'FB' },
-        { code: 'FB-HAV-Refrigeradores', id: '00906', platform: 'FB' },
-        { code: 'FB-HAV-Apartamentos', id: '00907', platform: 'FB' },
-        { code: 'FB-HAV-CadenasDeOro', id: '00908', platform: 'FB' },
-        { code: 'FB-HAV-Televisores', id: '00909', platform: 'FB' },
-        { code: 'FB-HAV-AireAcondicionado', id: '00910', platform: 'FB' },
-        { code: 'FB-HAV-CursoDeIngles', id: '02301', platform: 'FB' },
-        { code: 'FB-HAV-CursoDeMarketingDigital', id: '02302', platform: 'FB' },
-        { code: 'FB-HAV-UniversidadesOnline', id: '02303', platform: 'FB' },
-        { code: 'FB-HAV-CursosInteligenciaArtificial', id: '02304', platform: 'FB' }
-    ],
-    'Mundo TikTok': [
-        { code: 'TT-HAV-Bicicletas', id: '00534', platform: 'TT' },
-        { code: 'TT-HAV-Cortacesped', id: '00535', platform: 'TT' },
-        { code: 'TT-HAV-Generadores', id: '00536', platform: 'TT' },
-        { code: 'TT-HAV-MueblesDeCocina', id: '00537', platform: 'TT' },
-        { code: 'TT-HAV-PcGamer', id: '00539', platform: 'TT' },
-        { code: 'TT-HAV-PcGamerBM2', id: '00540', platform: 'TT' },
-        { code: 'TT-HAV-SofaCama', id: '00541', platform: 'TT' },
-        { code: 'TT-HAV-Autos', id: '00911', platform: 'TT' },
-        { code: 'TT-HAV-Celulares', id: '00912', platform: 'TT' },
-        { code: 'TT-HAV-Iphone', id: '00913', platform: 'TT' },
-        { code: 'TT-HAV-Sofa', id: '00914', platform: 'TT' },
-        { code: 'TT-HAV-Muebles', id: '00915', platform: 'TT' },
-        { code: 'TT-HAV-Refrigeradores', id: '00916', platform: 'TT' },
-        { code: 'TT-HAV-Apartamentos', id: '00732', platform: 'TT' },
-        { code: 'TT-HAV-CadenasDeOro', id: '00733', platform: 'TT' },
-        { code: 'TT-HAV-Televisores', id: '00734', platform: 'TT' },
-        { code: 'TT-HAV-AireAcondicionado', id: '00735', platform: 'TT' },
-        { code: 'TT-HAV-CursoDeIngles', id: '02305', platform: 'TT' },
-        { code: 'TT-HAV-CursoDeMarketingDigital', id: '02306', platform: 'TT' },
-        { code: 'TT-HAV-UniversidadesOnline', id: '02307', platform: 'TT' },
-        { code: 'TT-HAV-CursosInteligenciaArtificial', id: '02308', platform: 'TT' }
-    ],
-    'Google Ads': [
-        { code: 'GN-HAV-Bicicletas', id: '00716', platform: 'GN' },
-        { code: 'GN-HAV-Colchones', id: '00726', platform: 'GN' },
-        { code: 'GN-HAV-MueblesDeCocina', id: '00727', platform: 'GN' },
-        { code: 'GN-HAV-SofaCama', id: '00728', platform: 'GN' },
-        { code: 'GN-HAV-Cortacesped', id: '00729', platform: 'GN' },
-        { code: 'GN-HAV-PcGamer', id: '00730', platform: 'GN' }
-    ],
-    'InsideHub TikTok': [
-        { code: 'TT-HAV-IHBicicletas', id: '00561', platform: 'TT' },
-        { code: 'TT-HAV-IHColchones', id: '00562', platform: 'TT' },
-        { code: 'TT-HAV-IHMueblesDeCocina', id: '00563', platform: 'TT' },
-        { code: 'TT-HAV-IHSofaCama', id: '00564', platform: 'TT' },
-        { code: 'TT-HAV-IHCortacesped', id: '00565', platform: 'TT' },
-        { code: 'TT-HAV-IHPcGamer', id: '00566', platform: 'TT' },
-        { code: 'TT-HAV-IHAutosElectricos', id: '02310', platform: 'TT' },
-        { code: 'TT-HAV-IHEscritorio', id: '02311', platform: 'TT' },
-        { code: 'TT-HAV-IHAutos', id: '02312', platform: 'TT' },
-        { code: 'TT-HAV-IHCelulares', id: '02313', platform: 'TT' },
-        { code: 'TT-HAV-IHIphone', id: '02314', platform: 'TT' },
-        { code: 'TT-HAV-IHSofá', id: '02315', platform: 'TT' },
-        { code: 'TT-HAV-IHMuebles', id: '02316', platform: 'TT' },
-        { code: 'TT-HAV-IHRefrigeradores', id: '02317', platform: 'TT' },
-        { code: 'TT-HAV-IHApartamentos', id: '02318', platform: 'TT' },
-        { code: 'TT-HAV-IHCadenasDeOro', id: '02319', platform: 'TT' },
-        { code: 'TT-HAV-IHTelevisores', id: '02320', platform: 'TT' },
-        { code: 'TT-HAV-IHAireAcondicionado', id: '02321', platform: 'TT' }
-    ],
-    'Honduras TikTok': [
-        { code: 'TT-HAV-HNCortacesped', id: '6405419069', platform: 'TT' },
-        { code: 'TT-HAV-HNMueblesDeCocina', id: '9985571428', platform: 'TT' },
-        { code: 'TT-HAV-HNPcGamer', id: '4661076646', platform: 'TT' },
-        { code: 'TT-HAV-HNSofaCama', id: '3347994979', platform: 'TT' },
-        { code: 'TT-HAV-HNBicicletas', id: '1517545151', platform: 'TT' },
-        { code: 'TT-HAV-HNColchones', id: '2002321389', platform: 'TT' }
-    ],
-    'Honduras Meta': [
-        { code: 'FB-HAV-HNAutosElectricos', id: '9609693171', platform: 'FB' },
-        { code: 'FB-HAV-HNCortacesped', id: '7622109490', platform: 'FB' },
-        { code: 'FB-HAV-HNGeneradores', id: '6456028178', platform: 'FB' },
-        { code: 'FB-HAV-HNMueblesDeCocina', id: '9712746903', platform: 'FB' },
-        { code: 'FB-HAV-HNPcGamer', id: '8890619827', platform: 'FB' },
-        { code: 'FB-HAV-HNSofaCama', id: '9577903584', platform: 'FB' },
-        { code: 'FB-HAV-HNBicicletas', id: '1419867450', platform: 'FB' },
-        { code: 'FB-HAV-HNColchones', id: '2830626828', platform: 'FB' }
-    ]
-};
+const HAV_CATALOG_INITIAL = {};
 
 // ============================================================================
 // 3. ESTRUCTURA DE DATOS
@@ -683,8 +607,24 @@ function limpiarDuplicadosCatalogo() {
     return totalEliminados;
 }
 
+function borrarCatalogoCompleto() {
+    if (confirm('⚠️ ¿BORRAR TODO EL CATÁLOGO HAV?\n\nEsta acción eliminará TODOS los canales.\n¿Estás seguro?')) {
+        if (confirm('⚠️⚠️ ÚLTIMA CONFIRMACIÓN\n\nSe borrarán TODOS los canales. ¿Continuar?')) {
+            db.havCatalog = {};
+            saveGlobalSettings();
+            refreshEverything();
+            showNotif('🗑️ Catálogo HAV borrado', 'warning');
+        }
+    }
+}
+
+function forzarLimpiezaDuplicados() {
+    const total = limpiarDuplicadosCatalogo();
+    alert(total === 0 ? '✅ No hay duplicados' : `🧹 ${total} duplicados eliminados`);
+}
+
 function startRealtimeSync() {
-    setTimeout(() => limpiarDuplicadosCatalogo(), 2000);
+    setTimeout(() => { limpiarDuplicadosCatalogo(); }, 3000);
     showNotif('📡 Conectando a la Nube...', 'info');
 
     // A) Escuchar CAMPAÑAS
@@ -1138,54 +1078,48 @@ function importarDatos(event) {
             const imported = JSON.parse(e.target.result);
             if (detectarCatalogo(imported)) {
                 importarCatalogo(imported);
-            } else if (detectarCampanas(imported)) {
+            } else if (Array.isArray(imported)) {
                 if (confirm(`¿Importar ${imported.length} campañas?`)) {
-                    imported.forEach(c => saveToFirebase(c));
-                    showNotif(`✅ ${imported.length} campañas importadas`, 'success');
+                    let count = 0;
+                    imported.forEach(c => { saveToFirebase(c); count++; });
+                    showNotif(`✅ ${count} campañas importadas`, 'success');
                 }
-            } else if (detectarIDs(imported)) {
-                importarIDs(imported);
-            } else if (detectarKeywords(imported)) {
-                importarKeywords(imported);
             } else {
                 alert('❌ Formato no reconocido');
             }
-        } catch (err) { alert('❌ Error: ' + err.message); }
+        } catch (err) { alert('❌ Error: ' + err.message); console.error(err); }
     };
     reader.readAsText(file);
     event.target.value = '';
 }
 
-function detectarCatalogo(d) {
-    if (typeof d !== 'object' || Array.isArray(d)) return false;
-    for (let k in d) {
-        if (Array.isArray(d[k]) && d[k][0]?.code && d[k][0]?.id) return true;
+function detectarCatalogo(data) {
+    if (typeof data !== 'object' || Array.isArray(data)) return false;
+    for (let key in data) {
+        if (Array.isArray(data[key]) && data[key].length > 0) {
+            const firstItem = data[key][0];
+            if (firstItem && firstItem.code && firstItem.id) return true;
+        }
     }
     return false;
 }
 
-function detectarCampanas(d) {
-    return Array.isArray(d) && d.length > 0 && typeof d[0] === 'object' && (d[0].code || d[0].platform);
-}
-
-function detectarIDs(d) {
-    return Array.isArray(d) && d.every(i => typeof i === 'string' && /^\d{5,}$/.test(i));
-}
-
-function detectarKeywords(d) {
-    if (Array.isArray(d)) return d.every(i => typeof i === 'string' && !/^\d{5,}$/.test(i));
-    return false;
-}
-
-function importarCatalogo(cat) {
-    let total = 0;
-    for (let c in cat) {
-        if (!db.havCatalog[c]) db.havCatalog[c] = [];
-        cat[c].forEach(item => {
-            if (!db.havCatalog[c].find(i => i.code === item.code)) {
-                db.havCatalog[c].push(item);
+function importarCatalogo(catalogo) {
+    let totalAgregados = 0;
+    for (let categoria in catalogo) {
+        if (!Array.isArray(catalogo[categoria])) continue;
+        if (!db.havCatalog[categoria]) db.havCatalog[categoria] = [];
+        catalogo[categoria].forEach(item => {
+            if (!item || !item.code || !item.id) return;
+            const existe = db.havCatalog[categoria].find(i => i.code === item.code);
+            if (!existe) {
+                db.havCatalog[categoria].push({
+                    code: item.code,
+                    id: item.id,
+                    platform: item.platform || 'FB'
+                });
                 if (item.id && !db.ids.includes(item.id)) db.ids.push(item.id);
-                total++;
+                totalAgregados++;
             }
         });
     }
@@ -1193,39 +1127,7 @@ function importarCatalogo(cat) {
     saveGlobalSettings();
     refreshEverything();
     setTimeout(() => limpiarDuplicadosCatalogo(), 500);
-    showNotif(`✅ Catálogo: ${total} productos agregados`, 'success');
-}
-
-function importarIDs(ids) {
-    let total = 0;
-    ids.forEach(id => {
-        if (!db.ids.includes(id)) {
-            db.ids.push(id);
-            total++;
-        }
-    });
-    db.ids.sort();
-    saveGlobalSettings();
-    refreshEverything();
-    showNotif(`✅ IDs: ${total} agregados`, 'success');
-}
-
-function importarKeywords(kws) {
-    const campana = db.campaigns.find(c => c.code === document.getElementById('inCode')?.value);
-    if (!campana) {
-        alert('⚠️ Abrí una campaña primero');
-        return;
-    }
-    let total = 0;
-    kws.forEach(kw => {
-        if (!campana.keywords.includes(kw)) {
-            campana.keywords.push(kw);
-            total++;
-        }
-    });
-    saveToFirebase(campana);
-    renderTable();
-    showNotif(`✅ Keywords: ${total} agregadas`, 'success');
+    showNotif(`✅ Catálogo: ${totalAgregados} canales agregados`, 'success');
 }
 
 // ===== 1. CATÁLOGO HAV (Restaurado a DISEÑO HERMOSO Y ORDENADO) =====
