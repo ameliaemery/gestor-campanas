@@ -32779,10 +32779,9 @@ window.onload = function() {
 
 
 // ============================================================================
-// FIREBASE - SISTEMA COMPLETO DE NUBE
+// FIREBASE COMPLETO
 // ============================================================================
 
-// Sanitizar datos para evitar errores
 function sanitizeCampaign(camp) {
     return {
         platform: camp.platform || '',
@@ -32802,21 +32801,17 @@ function sanitizeCampaign(camp) {
     };
 }
 
-// CARGAR todas las campañas desde Firebase
 async function loadAllCampanasFromFirebase() {
     try {
-        showNotif('📡 Cargando desde la nube...', 'info');
-
+        showNotif('📡 Cargando...', 'info');
         const snapshot = await campaignsRef.get();
 
         if (snapshot.empty) {
-            showNotif('ℹ️ Firebase vacío, usando respaldo local', 'info');
-            // Si Firebase está vacío, usar initialCampaigns como respaldo
             if (initialCampaigns && initialCampaigns.length > 0) {
                 db.campaigns = initialCampaigns.map(c => sanitizeCampaign(c));
                 renderTable();
                 updateStats();
-                showNotif(`✅ ${db.campaigns.length} campañas cargadas (respaldo local)`, 'success');
+                showNotif(`✅ ${db.campaigns.length} campañas`, 'success');
             }
             return;
         }
@@ -32824,15 +32819,8 @@ async function loadAllCampanasFromFirebase() {
         const loaded = [];
         snapshot.forEach(doc => {
             try {
-                const data = doc.data();
-                const sanitized = sanitizeCampaign({ 
-                    firebaseId: doc.id, 
-                    ...data 
-                });
-                loaded.push(sanitized);
-            } catch (err) {
-                console.warn('Error al procesar documento:', doc.id, err);
-            }
+                loaded.push(sanitizeCampaign({ firebaseId: doc.id, ...doc.data() }));
+            } catch(e) {}
         });
 
         if (loaded.length > 0) {
@@ -32841,93 +32829,21 @@ async function loadAllCampanasFromFirebase() {
             updateStats();
             populateFilters();
             populateComparators();
-            showNotif(`✅ ${loaded.length} campañas cargadas desde Firebase`, 'success');
-            console.log(`✅ ${loaded.length} campañas sincronizadas desde la nube`);
+            showNotif(`✅ ${loaded.length} desde Firebase`, 'success');
         }
-
-    } catch (error) {
-        console.error('Error al cargar desde Firebase:', error);
-        showNotif('⚠️ Error de conexión: ' + error.message, 'warning');
-        // Usar respaldo local si hay error
-        if (initialCampaigns && initialCampaigns.length > 0) {
-            db.campaigns = initialCampaigns.map(c => sanitizeCampaign(c));
-            renderTable();
-            updateStats();
-        }
+    } catch (e) {
+        console.error(e);
     }
 }
 
-// SINCRONIZACIÓN EN TIEMPO REAL
-function startRealtimeSyncFixed() {
-    campaignsRef.onSnapshot(snapshot => {
-        if (!snapshot.empty) {
-            const loaded = [];
-            snapshot.forEach(doc => {
-                try {
-                    const data = doc.data();
-                    const sanitized = sanitizeCampaign({ 
-                        firebaseId: doc.id, 
-                        ...data 
-                    });
-                    loaded.push(sanitized);
-                } catch (err) {
-                    console.warn('Error en sincronización:', err);
-                }
-            });
-
-            if (loaded.length > 0) {
-                db.campaigns = loaded;
-                renderTable();
-                updateStats();
-                console.log('🔄 Sincronización automática:', loaded.length, 'campañas');
-            }
-        }
-    }, error => {
-        console.error('Error en sincronización tiempo real:', error);
-    });
-}
-
-// Sobrescribir la función original de sincronización
-if (typeof startRealtimeSync !== 'undefined') {
-    const originalSync = startRealtimeSync;
-    startRealtimeSync = function() {
-        try {
-            startRealtimeSyncFixed();
-        } catch (err) {
-            console.error('Error al iniciar sincronización:', err);
-            originalSync();
-        }
-    };
-}
-
-// Sobrescribir renderTable para manejar datos incompletos
-const originalRenderTable = renderTable;
-renderTable = function() {
-    try {
-        if (db.campaigns && db.campaigns.length > 0) {
-            db.campaigns = db.campaigns.map(camp => sanitizeCampaign(camp));
-        }
-        originalRenderTable();
-    } catch (error) {
-        console.error('Error al renderizar tabla:', error);
-        showNotif('⚠️ Error al mostrar campañas', 'warning');
-    }
-};
-
-// AUTO-CARGAR al mostrar la app (después del login)
 const originalShowApp = showApp;
 showApp = function() {
     originalShowApp();
-
-    // Dar tiempo para que la UI se renderice
     setTimeout(() => {
-        console.log('🚀 Iniciando carga desde Firebase...');
         loadAllCampanasFromFirebase();
-        startRealtimeSync();
+        if (typeof startRealtimeSync !== 'undefined') startRealtimeSync();
     }, 800);
 };
-
-console.log('✅ Sistema de nube configurado');
 
 </script>
 
