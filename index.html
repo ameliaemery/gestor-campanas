@@ -359,7 +359,7 @@
 
         <div id="tab-list" class="tab-content active">
             <div class="controls">
-                <div class="control-group"><label>🔍 Buscar</label><input type="text" id="search" placeholder="Buscar..." onkeyup="renderTable()"></div>
+                <div class="control-group"><label>🔍 Buscar</label><input type="text" id="search"  onkeyup="renderTable()"></div>
                 <div class="control-group"><label>📺 Canal</label><select id="filterChannel" onchange="renderTable()"></select></div>
                 <div class="control-group"><label>🆔 ID Campaña</label><select id="filterId" onchange="renderTable()"></select></div>
                 <div class="control-group"><label>📦 Nicho</label><select id="filterProduct" onchange="renderTable()"></select></div>
@@ -416,12 +416,33 @@
                 <div class="control-group"><label>País (ISO)</label><input type="text" id="inCountry"></div>
             </div>
             <div class="control-group" style="margin-top: 15px;">
-                <div style="display: flex; align-items: center; margin-bottom: 5px;">
-                    <label>Keywords (una por línea)</label>
-                    <button class="btn btn-bold" onclick="boldSelectedText()"><b>B</b> Negrita</button>
-                    <button class="btn btn-clear-tags" onclick="clearAllBoldTags()">🗑️ Limpiar Negritas</button>
+                <label style="margin-bottom: 10px;">Keywords (una por línea)</label>
+
+                <!-- Keywords divididas en dos columnas GRANDES -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <!-- COLUMNA 1: Botones de negrita -->
+                    <div>
+                        <div style="display: flex; align-items: center; margin-bottom: 8px; gap: 5px;">
+                            <button class="btn btn-bold" onclick="boldSelectedText()"><b>B</b> Negrita</button>
+                            <button class="btn btn-clear-tags" onclick="clearAllBoldTags()">🗑️ Limpiar Negritas</button>
+                        </div>
+                        <textarea id="inKeywords1" rows="20" style="width: 100%; min-height: 400px;"></textarea>
+                    </div>
+
+                    <!-- COLUMNA 2: Botón Obs. -->
+                    <div>
+                        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                            <button class="btn" style="background: #764ba2; color: white;" onclick="toggleObservaciones()">📌 Obs.</button>
+                        </div>
+                        <textarea id="inKeywords2" rows="20" style="width: 100%; min-height: 400px;"></textarea>
+                    </div>
                 </div>
-                <textarea id="inKeywords" rows="12"></textarea>
+
+                <!-- Campo de Observaciones (oculto por defecto) -->
+                <div id="obsContainer" style="display: none; margin-top: 10px;">
+                    <label style="font-size: 0.9em; color: #666;">Observaciones de la campaña:</label>
+                    <textarea id="inObservaciones" rows="3"></textarea>
+                </div>
             </div>
             
             <div class="control-group" style="margin-top: 15px;">
@@ -895,6 +916,7 @@ function renderTable() {
             <td>
                 <button class="btn btn-edit" style="padding: 6px 10px;" onclick="editCampaign(${realIndex})">✏️</button>
                 <button class="btn btn-del" style="padding: 6px 10px;" onclick="deleteCampaign(${realIndex})">🗑️</button>
+                <button class="btn" style="padding: 6px 10px; ${c.observaciones && c.observaciones.trim() ? 'background: #ef4444; color: white;' : 'background: #e5e7eb; color: #666;'}" onclick="verObservacion(${realIndex})" title="${c.observaciones && c.observaciones.trim() ? 'Ver observación' : 'Sin observaciones'}">📌</button>
             </td>
         </tr>`;
     }).join('');
@@ -926,7 +948,12 @@ function editCampaign(index) {
     document.getElementById('inCountry').value = c.country;
     // CAMPO FECHA EN EDICIÓN
     document.getElementById('inDate').value = c.date || ''; 
-    document.getElementById('inKeywords').value = c.keywords ? c.keywords.join('\n') : '';
+    // Dividir keywords en dos columnas (mitad y mitad)
+    const allKeys = c.keywords || [];
+    const mitad = Math.ceil(allKeys.length / 2);
+    document.getElementById('inKeywords1').value = allKeys.slice(0, mitad).join('\n');
+    document.getElementById('inKeywords2').value = allKeys.slice(mitad).join('\n');
+    document.getElementById('inObservaciones').value = c.observaciones || '';
     document.getElementById('inArticle').value = c.article || '';
     document.getElementById('inAutor').value = c.autor || '';
     // CARGAR URL AL EDITAR
@@ -952,7 +979,11 @@ function saveCampaign() {
         product, id, code, country,
         date: document.getElementById('inDate').value,
         language: document.getElementById('inLanguage').value,
-        keywords: document.getElementById('inKeywords').value.split('\n').map(k=>k.trim()).filter(k=>k),
+        keywords: [
+            ...(document.getElementById('inKeywords1').value.split('\n').map(k=>k.trim()).filter(k=>k)),
+            ...(document.getElementById('inKeywords2').value.split('\n').map(k=>k.trim()).filter(k=>k))
+        ],
+        observaciones: document.getElementById('inObservaciones').value,
         article: document.getElementById('inArticle').value,
         autor: document.getElementById('inAutor').value,
         url: document.getElementById('inUrl').value,
@@ -1460,6 +1491,25 @@ window.onload = function() {
         if (e.target === this) closeChannelModal();
     });
 };
+
+// FUNCIÓN PARA MOSTRAR/OCULTAR OBSERVACIONES
+function toggleObservaciones() {
+    const container = document.getElementById('obsContainer');
+    if (container) {
+        container.style.display = container.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+// FUNCIÓN PARA VER/EDITAR OBSERVACIÓN DESDE LA TABLA
+function verObservacion(index) {
+    const c = db.campaigns[index];
+    if (c.observaciones && c.observaciones.trim()) {
+        alert('📌 Observación de campaña ' + c.code + ':\n\n' + c.observaciones);
+    } else {
+        alert('Esta campaña no tiene observaciones.');
+    }
+}
+
 </script>
 
 </div><!-- Fin mainApp (contenido protegido) -->
