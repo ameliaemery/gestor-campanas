@@ -359,7 +359,7 @@
 
         <div id="tab-list" class="tab-content active">
             <div class="controls">
-                <div class="control-group"><label>🔍 Buscar</label><input type="text" id="search"  onkeyup="renderTable()"></div>
+                <div class="control-group"><label>🔍 Buscar</label><input type="text" id="search" autocomplete="off" onkeyup="renderTable()"></div>
                 <div class="control-group"><label>📺 Canal</label><select id="filterChannel" onchange="renderTable()"></select></div>
                 <div class="control-group"><label>🆔 ID Campaña</label><select id="filterId" onchange="renderTable()"></select></div>
                 <div class="control-group"><label>📦 Nicho</label><select id="filterProduct" onchange="renderTable()"></select></div>
@@ -419,22 +419,22 @@
                 <label style="margin-bottom: 10px;">Keywords (una por línea)</label>
 
                 <!-- Keywords divididas en dos columnas GRANDES -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
                     <!-- COLUMNA 1: Botones de negrita -->
                     <div>
-                        <div style="display: flex; align-items: center; margin-bottom: 8px; gap: 5px;">
-                            <button class="btn btn-bold" onclick="boldSelectedText()"><b>B</b> Negrita</button>
-                            <button class="btn btn-clear-tags" onclick="clearAllBoldTags()">🗑️ Limpiar Negritas</button>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                            <button class="btn btn-bold" onclick="boldSelectedText()" style="padding: 6px 10px; font-size: 0.85em;"><b>B</b> Negrita</button>
+                            <button class="btn btn-clear-tags" onclick="clearAllBoldTags()" style="padding: 6px 10px; font-size: 0.85em;">🗑️ Limpiar Negritas</button>
                         </div>
-                        <textarea id="inKeywords1" rows="20" style="width: 100%; min-height: 400px;"></textarea>
+                        <textarea id="inKeywords1" rows="20" style="width: 100%; height: 400px; resize: vertical;"></textarea>
                     </div>
 
                     <!-- COLUMNA 2: Botón Obs. -->
                     <div>
                         <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                            <button class="btn" style="background: #764ba2; color: white;" onclick="toggleObservaciones()">📌 Obs.</button>
+                            <button class="btn" style="background: #764ba2; color: white; padding: 6px 12px; font-size: 0.9em; cursor: default;" disabled>📌 Observaciones</button>
                         </div>
-                        <textarea id="inKeywords2" rows="20" style="width: 100%; min-height: 400px;"></textarea>
+                        <textarea id="inKeywords2" rows="20" style="width: 100%; height: 400px; resize: vertical;"></textarea>
                     </div>
                 </div>
 
@@ -948,12 +948,13 @@ function editCampaign(index) {
     document.getElementById('inCountry').value = c.country;
     // CAMPO FECHA EN EDICIÓN
     document.getElementById('inDate').value = c.date || ''; 
-    // Dividir keywords en dos columnas (mitad y mitad)
+    // Columna 1: TODAS las keywords, Columna 2: Observaciones
     const allKeys = c.keywords || [];
-    const mitad = Math.ceil(allKeys.length / 2);
-    document.getElementById('inKeywords1').value = allKeys.slice(0, mitad).join('\n');
-    document.getElementById('inKeywords2').value = allKeys.slice(mitad).join('\n');
-    document.getElementById('inObservaciones').value = c.observaciones || '';
+    document.getElementById('inKeywords1').value = allKeys.join('\n');
+    document.getElementById('inKeywords2').value = c.observaciones || '';
+
+    // Campo oculto no se usa
+    document.getElementById('inObservaciones').value = '';
     document.getElementById('inArticle').value = c.article || '';
     document.getElementById('inAutor').value = c.autor || '';
     // CARGAR URL AL EDITAR
@@ -979,11 +980,8 @@ function saveCampaign() {
         product, id, code, country,
         date: document.getElementById('inDate').value,
         language: document.getElementById('inLanguage').value,
-        keywords: [
-            ...(document.getElementById('inKeywords1').value.split('\n').map(k=>k.trim()).filter(k=>k)),
-            ...(document.getElementById('inKeywords2').value.split('\n').map(k=>k.trim()).filter(k=>k))
-        ],
-        observaciones: document.getElementById('inObservaciones').value,
+        keywords: document.getElementById('inKeywords1').value.split('\n').map(k=>k.trim()).filter(k=>k),
+        observaciones: document.getElementById('inKeywords2').value,
         article: document.getElementById('inArticle').value,
         autor: document.getElementById('inAutor').value,
         url: document.getElementById('inUrl').value,
@@ -1500,7 +1498,7 @@ function toggleObservaciones() {
     }
 }
 
-// FUNCIÓN PARA VER/EDITAR OBSERVACIÓN DESDE LA TABLA
+// FUNCIÓN PARA VER OBSERVACIÓN DESDE LA TABLA
 function verObservacion(index) {
     const c = db.campaigns[index];
     if (c.observaciones && c.observaciones.trim()) {
