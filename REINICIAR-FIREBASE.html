@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reiniciar Firebase desde Cero</title>
+    <title>Restaurar Backup Firebase</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -119,24 +119,18 @@
 </head>
 <body>
     <div class="container">
-        <h1>🔄 Reiniciar Firebase</h1>
-        <div class="subtitle">Empezar desde cero con tu backup</div>
-        
-        <div class="warning">
-            <strong>⚠️ ATENCIÓN</strong><br>
-            Esto BORRARÁ todo lo que hay ahora en Firebase<br>
-            y restaurará tu backup del 31 de enero
-        </div>
-        
+        <h1>🔄 Restaurar Firebase</h1>
+        <div class="subtitle">Restaurar backup del 31 de enero</div>
+
         <div class="info-box">
             📦 Backup del <strong>31 de enero 2026</strong><br>
             📊 Campañas: <strong>171</strong>
         </div>
-        
-        <button id="btnIniciar" onclick="reiniciarDesdeReco()">
-            🗑️ BORRAR TODO Y RESTAURAR BACKUP
+
+        <button id="btnIniciar" onclick="restaurarBackup()">
+            ✅ RESTAURAR BACKUP
         </button>
-        
+
         <div id="progreso"></div>
     </div>
 
@@ -144,25 +138,17 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // IMPORTANTE: Reemplaza esto con TU configuración de Firebase
         const firebaseConfig = {
-            apiKey: "TU_API_KEY_AQUI",
-            authDomain: "gestor-campanas-hav2026.firebaseapp.com",
-            projectId: "gestor-campanas-hav2026",
-            storageBucket: "gestor-campanas-hav2026.appspot.com",
-            messagingSenderId: "TU_SENDER_ID",
-            appId: "TU_APP_ID"
-        };
-        
+  apiKey: "AIzaSyB6lGHmig5XC4RPwAFnWaBFkpXIqdO_WoM",
+  authDomain: "gestor-campanas-hav2026.firebaseapp.com",
+  projectId: "gestor-campanas-hav2026",
+  storageBucket: "gestor-campanas-hav2026.firebasestorage.app",
+  messagingSenderId: "1715326503",
+  appId: "1:1715326503:web:2b7ecda6f5257c9da78802"
+};
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-
-        // Aquí va el backup - por ahora vacío
-        const backupData = [];
-        
-        // INSTRUCCIONES:
-        // 1. Primero sube este archivo a GitHub
-        // 2. Luego te diré cómo agregar tu backup aquí
 
         function actualizarProgreso(mensaje, clase = 'step-current') {
             const progreso = document.getElementById('progreso');
@@ -173,59 +159,46 @@
             progreso.scrollTop = progreso.scrollHeight;
         }
 
-        async function borrarTodo() {
-            actualizarProgreso('🗑️ Paso 1/2: Borrando datos antiguos...', 'step-current');
-            
-            try {
-                const snapshot = await db.collection('campaigns').get();
-                const total = snapshot.size;
-                
-                if (total === 0) {
-                    actualizarProgreso('✅ No hay datos para borrar', 'step-done');
-                    return 0;
-                }
-                
-                actualizarProgreso(`📋 Encontradas ${total} campañas antiguas`, 'step-current');
-                
-                const batch = db.batch();
-                let count = 0;
-                
-                snapshot.forEach((doc) => {
-                    batch.delete(doc.ref);
-                    count++;
-                });
-                
-                await batch.commit();
-                actualizarProgreso(`✅ ${count} campañas antiguas borradas`, 'step-done');
-                return count;
-                
-            } catch (error) {
-                actualizarProgreso(`❌ Error al borrar: ${error.message}`, 'step-error');
-                throw error;
-            }
-        }
-
         async function restaurarBackup() {
-            actualizarProgreso('📥 Paso 2/2: Restaurando backup...', 'step-current');
-            
-            if (backupData.length === 0) {
-                actualizarProgreso('⚠️ No hay datos de backup. Primero agrega el backup al código.', 'step-error');
-                return 0;
+            const btn = document.getElementById('btnIniciar');
+            const progreso = document.getElementById('progreso');
+
+            if (!confirm('¿Restaurar las 171 campañas del backup?')) {
+                return;
             }
-            
-            let count = 0;
-            let errores = 0;
-            
+
+            btn.disabled = true;
+            btn.textContent = '⏳ CARGANDO BACKUP...';
+            progreso.innerHTML = '';
+
             try {
+                // Cargar backup desde GitHub
+                actualizarProgreso('📥 Descargando backup desde GitHub...', 'step-current');
+                const response = await fetch('https://raw.githubusercontent.com/ameliaemery/gestor-campanas/main/backup_campanas_2026-01-31.json');
+
+                if (!response.ok) {
+                    throw new Error('No se pudo cargar el backup. Asegúrate de que backup_campanas_2026-01-31.json esté en tu repo.');
+                }
+
+                const backupData = await response.json();
+                actualizarProgreso(`✅ Backup cargado: ${backupData.length} campañas`, 'step-done');
+
+                // Restaurar
+                actualizarProgreso('📤 Restaurando en Firebase...', 'step-current');
+                btn.textContent = '⏳ RESTAURANDO...';
+
+                let count = 0;
+                let errores = 0;
+
                 for (let i = 0; i < backupData.length; i++) {
                     const campaign = backupData[i];
-                    
+
                     try {
                         await db.collection('campaigns')
                             .doc(campaign.firebaseId)
                             .set(campaign);
                         count++;
-                        
+
                         if ((i + 1) % 20 === 0) {
                             actualizarProgreso(`📦 Progreso: ${count}/${backupData.length}`, 'step-current');
                         }
@@ -234,55 +207,28 @@
                         console.error('Error en:', campaign.code, error);
                     }
                 }
-                
+
                 actualizarProgreso(`✅ ${count} campañas restauradas`, 'step-done');
                 if (errores > 0) {
-                    actualizarProgreso(`⚠️ ${errores} errores (ver consola F12)`, 'step-error');
+                    actualizarProgreso(`⚠️ ${errores} errores`, 'step-error');
                 }
-                
-                return count;
-                
-            } catch (error) {
-                actualizarProgreso(`❌ Error al restaurar: ${error.message}`, 'step-error');
-                throw error;
-            }
-        }
 
-        async function reiniciarDesdeReco() {
-            const btn = document.getElementById('btnIniciar');
-            const progreso = document.getElementById('progreso');
-            
-            if (!confirm('¿Estás seguro? Esto BORRARÁ todo y restaurará el backup del 31/01/2026')) {
-                return;
-            }
-            
-            btn.disabled = true;
-            btn.textContent = '⏳ PROCESANDO...';
-            progreso.innerHTML = '';
-            
-            try {
-                const borradas = await borrarTodo();
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                const restauradas = await restaurarBackup();
-                
-                actualizarProgreso('', 'step-done');
                 progreso.innerHTML += `
                     <div class="success-message">
-                        🎉 ¡PROCESO COMPLETADO!<br><br>
-                        🗑️ Borradas: ${borradas}<br>
-                        ✅ Restauradas: ${restauradas}<br><br>
-                        <small>Puedes cerrar esta ventana y abrir tu gestor</small>
+                        🎉 ¡COMPLETADO!<br><br>
+                        ✅ Restauradas: ${count}<br><br>
+                        <small>Cierra esta ventana y abre tu gestor</small>
                     </div>
                 `;
-                
+
                 btn.textContent = '✅ COMPLETADO';
                 btn.style.background = '#4CAF50';
-                
+
             } catch (error) {
                 progreso.innerHTML += `
                     <div class="step step-error">
                         ❌ ERROR: ${error.message}<br>
-                        <small>Abre la consola (F12) para más detalles</small>
+                        <small>Presiona F12 para ver más detalles</small>
                     </div>
                 `;
                 btn.disabled = false;
@@ -290,17 +236,6 @@
                 console.error('Error completo:', error);
             }
         }
-
-        window.addEventListener('load', () => {
-            db.collection('campaigns').limit(1).get()
-                .then(() => {
-                    console.log('✅ Conectado a Firebase');
-                })
-                .catch(error => {
-                    alert('❌ Error de conexión a Firebase: ' + error.message);
-                    console.error(error);
-                });
-        });
     </script>
 </body>
 </html>
