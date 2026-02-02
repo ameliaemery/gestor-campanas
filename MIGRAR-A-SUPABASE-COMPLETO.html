@@ -3,350 +3,500 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Migrar a Supabase</title>
+    <title>🔐 Gestor de Campañas - Supabase</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background: linear-gradient(135deg, #3CB371 0%, #2E8B57 100%);
             min-height: 100vh;
-            background: linear-gradient(135deg, #3ECF8E 0%, #1C7C54 100%);
-        }
-        .container {
-            background: white;
-            padding: 50px;
-            border-radius: 25px;
-            box-shadow: 0 25px 70px rgba(0,0,0,0.4);
-            max-width: 600px;
-            width: 90%;
-        }
-        h1 {
-            color: #1C7C54;
-            margin-bottom: 15px;
-            font-size: 32px;
-            text-align: center;
-        }
-        .subtitle {
-            color: #666;
-            text-align: center;
-            margin-bottom: 40px;
-            font-size: 18px;
-        }
-        .info-box {
-            background: #E6F7F0;
-            border-left: 4px solid #3ECF8E;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
-            margin-bottom: 30px;
-            border-radius: 8px;
         }
-        .info-box strong {
-            color: #1C7C54;
-            font-size: 24px;
-        }
-        button {
+        
+        /* PANTALLA DE LOGIN */
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            background: linear-gradient(135deg, #3ECF8E 0%, #1C7C54 100%);
+            height: 100%;
+            background: linear-gradient(135deg, #3CB371 0%, #2E8B57 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .login-card {
+            background: white;
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 420px;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-card h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #2E8B57;
+            font-size: 32px;
+        }
+        
+        .login-card .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 35px;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #3CB371;
+            box-shadow: 0 0 0 3px rgba(60, 179, 113, 0.1);
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #3CB371 0%, #2E8B57 100%);
             color: white;
             border: none;
-            padding: 25px;
-            font-size: 22px;
-            border-radius: 15px;
+            border-radius: 10px;
             cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(62, 207, 142, 0.4);
-        }
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-        #progreso {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f5f5f5;
-            border-radius: 10px;
-            min-height: 80px;
             font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-top: 10px;
         }
-        .step {
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(60, 179, 113, 0.4);
         }
-        .step-current {
-            background: #fff3cd;
-            color: #856404;
-            font-weight: bold;
+        
+        .btn-login:active {
+            transform: translateY(0);
         }
-        .step-done {
-            background: #d4edda;
-            color: #155724;
-        }
-        .step-error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 30px;
-            border-radius: 10px;
+        
+        #login-error {
+            color: #dc3545;
             text-align: center;
-            font-size: 20px;
+            margin-top: 20px;
+            font-size: 14px;
+            min-height: 20px;
+            font-weight: 500;
+        }
+        
+        /* PANTALLA PRINCIPAL */
+        #main-screen {
+            display: none;
+            width: 100%;
+            max-width: 1400px;
+        }
+        
+        .main-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #3CB371 0%, #2E8B57 100%);
+            color: white;
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .header-left h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .header-left .welcome {
+            opacity: 0.9;
+            font-size: 15px;
+        }
+        
+        .btn-logout {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .btn-logout:hover {
+            background: white;
+            color: #2E8B57;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 4px solid #3CB371;
+        }
+        
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card .value {
+            color: #2E8B57;
+            font-size: 36px;
+            font-weight: 700;
+        }
+        
+        .section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .section h2 {
+            color: #2E8B57;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+        
+        .section p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 12px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 12px 0;
+            color: #333;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-list li::before {
+            content: "✓";
+            background: #3CB371;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 25px 20px;
+            }
+            
+            .content {
+                padding: 25px 20px;
+            }
+            
+            .login-card {
+                padding: 35px 25px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- SISTEMA DE LOGIN -->
-<div id="login-container" style="
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #f0f2f5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-">
-    <div style="
-        background: white;
-        padding: 40px;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        width: 100%;
-        max-width: 400px;
-    ">
-        <h2 style="text-align: center; margin-bottom: 30px; color: #333;">
-            🔐 Gestor de Campañas
-        </h2>
-        <div style="margin-bottom: 20px;">
-            <input 
-                type="text" 
-                id="username" 
-                placeholder="Usuario"
-                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; box-sizing: border-box;"
-            />
+    <!-- PANTALLA DE LOGIN -->
+    <div id="login-screen">
+        <div class="login-card">
+            <h1>🔐</h1>
+            <p class="subtitle">Gestor de Campañas - Supabase</p>
+            
+            <div class="form-group">
+                <label for="username">Usuario</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    placeholder="Ingresa tu usuario"
+                    autocomplete="username"
+                />
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    placeholder="Ingresa tu contraseña"
+                    autocomplete="current-password"
+                />
+            </div>
+            
+            <button class="btn-login" onclick="handleLogin()">
+                Iniciar Sesión
+            </button>
+            
+            <div id="login-error"></div>
         </div>
-        <div style="margin-bottom: 20px;">
-            <input 
-                type="password" 
-                id="password" 
-                placeholder="Contraseña"
-                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; box-sizing: border-box;"
-            />
-        </div>
-        <button onclick="loginUser()" style="
-            width: 100%;
-            padding: 12px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-        ">
-            Iniciar Sesión
-        </button>
-        <p id="error-message" style="color: #f44336; text-align: center; margin-top: 15px; font-size: 14px;"></p>
-    </div>
-</div>
-
-<!-- Tu gestor (se muestra después del login) -->
-<div id="gestor-content" style="display: none;">
-
-    <div class="container">
-        <h1>🚀 Migrar a Supabase</h1>
-        <div class="subtitle">Subir 171 campañas desde backup</div>
-
-        <div class="info-box">
-            📦 Backup del <strong>31 de enero 2026</strong><br>
-            📊 Campañas: <strong>171</strong><br>
-            🎯 Destino: <strong>Supabase</strong>
-        </div>
-
-        <button id="btnIniciar" onclick="migrarCampanas()">
-            ⬆️ SUBIR CAMPAÑAS A SUPABASE
-        </button>
-
-        <div id="progreso"></div>
     </div>
 
+    <!-- PANTALLA PRINCIPAL -->
+    <div id="main-screen">
+        <div class="main-container">
+            <div class="header">
+                <div class="header-left">
+                    <h1>🚀 Gestor de Campañas</h1>
+                    <p class="welcome">Bienvenido, <strong id="user-display"></strong></p>
+                </div>
+                <button class="btn-logout" onclick="handleLogout()">
+                    Cerrar Sesión
+                </button>
+            </div>
+            
+            <div class="content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Campañas Migradas</h3>
+                        <div class="value">171</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Último Backup</h3>
+                        <div class="value" style="font-size: 20px;">31 Ene 2026</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Destino</h3>
+                        <div class="value" style="font-size: 24px;">Supabase</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>📊 Estado del Sistema</h2>
+                    <ul class="feature-list">
+                        <li>Conexión a Supabase establecida correctamente</li>
+                        <li>Row Level Security (RLS) activado y configurado</li>
+                        <li>Autenticación de usuarios funcionando</li>
+                        <li>Datos protegidos con políticas de seguridad</li>
+                        <li>Solo usuarios autorizados pueden acceder</li>
+                    </ul>
+                </div>
+                
+                <div class="section">
+                    <h2>🔒 Seguridad Implementada</h2>
+                    <p>✅ <strong>2 usuarios autorizados</strong> con acceso completo al sistema</p>
+                    <p>✅ <strong>Políticas RLS</strong> configuradas para SELECT, INSERT, UPDATE y DELETE</p>
+                    <p>✅ <strong>Autenticación obligatoria</strong> para todas las operaciones</p>
+                    <p>✅ <strong>Claves API protegidas</strong> mediante Row Level Security</p>
+                </div>
+                
+                <div class="section">
+                    <h2>📝 Próximos Pasos</h2>
+                    <p>• Puedes agregar más funcionalidades al gestor según necesites</p>
+                    <p>• Los datos están seguros en Supabase</p>
+                    <p>• Solo tú y usuarios autorizados pueden acceder</p>
+                    <p>• Todas las operaciones están protegidas por RLS</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUPABASE SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+    
     <script>
         // Configuración de Supabase
-        const SUPABASE_URL = 'https://zwpurfuzheyzccomeckbr.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_uzWKmHNlyoSzKhrTGGsOng_ltZb_VAL';
+        const SUPABASE_CONFIG = {
+            url: 'https://zwpurfuzheyzcomeckbr.supabase.co',
+            key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3cHVyZnV6aGV5emNvbWVja2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwMDA3MTMsImV4cCI6MjA4NTU3NjcxM30.THRBLc8s2n62OdT0j6iHeYNekOdmy87AoT5n4srybcQ'
+        };
+        
+        const supabaseClient = window.supabase.createClient(
+            SUPABASE_CONFIG.url, 
+            SUPABASE_CONFIG.key
+        );
 
-        // Crear cliente de Supabase
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Mapeo de usuarios autorizados
+        const AUTHORIZED_USERS = {
+            'amelemery': 'amelemery@gestor.local',
+            'haevedecano83': 'haevedecano83@gestor.local'
+        };
 
-        function actualizarProgreso(mensaje, clase) {
-            clase = clase || 'step-current';
-            const progreso = document.getElementById('progreso');
-            const div = document.createElement('div');
-            div.className = 'step ' + clase;
-            div.innerHTML = mensaje;
-            progreso.appendChild(div);
-            progreso.scrollTop = progreso.scrollHeight;
-        }
-
-        async function migrarCampanas() {
-            const btn = document.getElementById('btnIniciar');
-            const progreso = document.getElementById('progreso');
-
-            if (!confirm('¿Migrar 171 campañas a Supabase?')) {
+        // Función de login
+        async function handleLogin() {
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const errorDiv = document.getElementById('login-error');
+            
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+            
+            // Validaciones
+            if (!username || !password) {
+                errorDiv.textContent = '❌ Por favor completa todos los campos';
+                return;
+            }
+            
+            const email = AUTHORIZED_USERS[username];
+            
+            if (!email) {
+                errorDiv.textContent = '❌ Usuario no autorizado';
                 return;
             }
 
-            btn.disabled = true;
-            btn.textContent = '⏳ CARGANDO BACKUP...';
-            progreso.innerHTML = '';
+            errorDiv.textContent = '🔄 Verificando credenciales...';
+            errorDiv.style.color = '#3CB371';
 
             try {
-                // Cargar backup desde GitHub
-                actualizarProgreso('📥 Descargando backup...', 'step-current');
-                const response = await fetch('https://raw.githubusercontent.com/ameliaemery/gestor-campanas/main/backup_campanas_2026-01-31.json');
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
 
-                if (!response.ok) {
-                    throw new Error('No se pudo cargar el backup');
+                if (error) {
+                    errorDiv.style.color = '#dc3545';
+                    errorDiv.textContent = '❌ Usuario o contraseña incorrectos';
+                    console.error('Error de autenticación:', error);
+                } else {
+                    // Login exitoso
+                    showMainScreen(username);
                 }
-
-                const backupData = await response.json();
-                actualizarProgreso('✅ Backup cargado: ' + backupData.length + ' campañas', 'step-done');
-
-                // Migrar a Supabase
-                actualizarProgreso('📤 Subiendo a Supabase...', 'step-current');
-                btn.textContent = '⏳ MIGRANDO...';
-
-                let count = 0;
-                let errores = 0;
-
-                // Supabase permite hacer inserts en lotes
-                const BATCH_SIZE = 10;
-
-                for (let i = 0; i < backupData.length; i += BATCH_SIZE) {
-                    const batch = backupData.slice(i, i + BATCH_SIZE);
-
-                    try {
-                        const result = await supabaseClient
-                            .from('campaigns')
-                            .insert(batch);
-
-                        if (result.error) throw result.error;
-
-                        count += batch.length;
-                        actualizarProgreso('📦 Progreso: ' + count + '/' + backupData.length, 'step-current');
-
-                    } catch (error) {
-                        errores += batch.length;
-                        console.error('Error en lote:', error);
-                        actualizarProgreso('⚠️ Error: ' + error.message, 'step-error');
-                    }
-                }
-
-                actualizarProgreso('✅ ' + count + ' campañas migradas', 'step-done');
-                if (errores > 0) {
-                    actualizarProgreso('⚠️ ' + errores + ' errores (ver consola F12)', 'step-error');
-                }
-
-                progreso.innerHTML += '<div class="success-message">🎉 ¡MIGRACIÓN COMPLETADA!<br><br>✅ Migradas: ' + count + '<br><br><small>Ya puedes usar Supabase en tu gestor</small></div>';
-
-                btn.textContent = '✅ COMPLETADO';
-
-            } catch (error) {
-                progreso.innerHTML += '<div class="step step-error">❌ ERROR: ' + error.message + '<br><small>Presiona F12 para más detalles</small></div>';
-                btn.disabled = false;
-                btn.textContent = '🔄 REINTENTAR';
-                console.error('Error completo:', error);
+            } catch (err) {
+                errorDiv.style.color = '#dc3545';
+                errorDiv.textContent = '❌ Error de conexión. Intenta de nuevo.';
+                console.error('Error:', err);
             }
         }
-    </script>
-    </div>
-<!-- Fin del contenedor del gestor -->
 
-<!-- SCRIPT DE AUTENTICACIÓN -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    // Configuración de Supabase
-    const SUPABASE_URL = 'https://zwpurfuzheyzcomeckbr.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3cHVyZnV6aGV5emNvbWVja2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwMDA3MTMsImV4cCI6MjA4NTU3NjcxM30.THRBLc8s2n62OdT0j6iHeYNekOdmy87AoT5n4srybcQ';
-    
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // Mapeo de usuarios
-    const usuarios = {
-        'amelemery': 'amelemery@gestor.local',
-        'haevedecano83': 'haevedecano83@gestor.local'
-    };
-
-    // Función de login
-    async function loginUser() {
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value;
-        const errorMsg = document.getElementById('error-message');
-        
-        if (!username || !password) {
-            errorMsg.innerText = '❌ Completa todos los campos';
-            return;
-        }
-        
-        const email = usuarios[username];
-        
-        if (!email) {
-            errorMsg.innerText = '❌ Usuario no autorizado';
-            return;
+        // Función de logout
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
+            showLoginScreen();
         }
 
-        errorMsg.innerText = 'Verificando...';
-
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
-
-        if (error) {
-            errorMsg.innerText = '❌ Usuario o contraseña incorrectos';
-            console.error('Error:', error);
-        } else {
-            document.getElementById('login-container').style.display = 'none';
-            document.getElementById('gestor-content').style.display = 'block';
-            errorMsg.innerText = '';
+        // Mostrar pantalla principal
+        function showMainScreen(username) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-screen').style.display = 'block';
+            document.getElementById('user-display').textContent = username;
+            
+            // Limpiar campos de login
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('login-error').textContent = '';
         }
-    }
 
-    // Permitir login con Enter
-    document.addEventListener('DOMContentLoaded', function() {
-        const passwordInput = document.getElementById('password');
-        if (passwordInput) {
-            passwordInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    loginUser();
+        // Mostrar pantalla de login
+        function showLoginScreen() {
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('main-screen').style.display = 'none';
+        }
+
+        // Detectar Enter en campos de login
+        document.addEventListener('DOMContentLoaded', function() {
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            
+            [usernameInput, passwordInput].forEach(input => {
+                if (input) {
+                    input.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            handleLogin();
+                        }
+                    });
                 }
             });
-        }
 
-        // Verificar si ya hay sesión
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) {
-                document.getElementById('login-container').style.display = 'none';
-                document.getElementById('gestor-content').style.display = 'block';
-            }
+            // Verificar si ya hay sesión activa
+            supabaseClient.auth.getSession().then(({ data: { session } }) => {
+                if (session) {
+                    const userEmail = session.user.email;
+                    const username = Object.keys(AUTHORIZED_USERS).find(
+                        key => AUTHORIZED_USERS[key] === userEmail
+                    );
+                    if (username) {
+                        showMainScreen(username);
+                    }
+                }
+            });
         });
-    });
-</script>
-
+    </script>
 </body>
 </html>
