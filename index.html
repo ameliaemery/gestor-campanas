@@ -396,8 +396,8 @@
                 <div class="label">🔑 Keywords Totales</div>
             </div>
             <div class="stat-card clickable" onclick="showKeywordAnalysis()" title="Click para análisis">
-                <div class="number" id="avgKeys">0</div>
-                <div class="label">📈 Promedio Keys 🔍</div>
+                <div class="number" id="filteredCount">0</div>
+                <div class="label">🔍 Campañas Filtro</div>
             </div>
             <div class="stat-card clickable" onclick="filterByArticleStatus()" title="Click para filtrar">
                 <div class="number" id="totalArticles">0</div>
@@ -842,12 +842,19 @@ function switchTab(id) {
     if(id === 'tab-catalog') renderHAVCatalog();
 }
 
-function updateStats() {
+function updateStats(filteredCampaigns = null) {
+    const campaignsToCount = filteredCampaigns !== null ? filteredCampaigns : db.campaigns;
+
     document.getElementById('totalCampaigns').textContent = db.campaigns.length;
     const totalKeys = db.campaigns.reduce((sum, c) => sum + (c.keywords?.length || 0), 0);
     document.getElementById('totalKeywords').textContent = totalKeys;
-    document.getElementById('avgKeys').textContent = db.campaigns.length ? Math.round(totalKeys / db.campaigns.length) : 0;
-    const withArticles = db.campaigns.filter(c => c.article && c.article.trim()).length;
+
+    const filteredElement = document.getElementById('filteredCount');
+    if (filteredElement) {
+        filteredElement.textContent = (filteredCampaigns !== null) ? filteredCampaigns.length : 0;
+    }
+
+    const withArticles = campaignsToCount.filter(c => c.article && c.article.trim()).length;
     document.getElementById('totalArticles').textContent = withArticles;
 }
 
@@ -1020,6 +1027,7 @@ function renderTable() {
             </td>
         </tr>`;
     }).join('');
+    updateStats(filtered);
 }
 
 function applySort(col) {
@@ -1188,13 +1196,20 @@ function resetForm() {
 }
 
 function boldSelectedText() {
-    const ta = document.getElementById('inKeywords');
-    const start = ta.selectionStart; const end = ta.selectionEnd;
+    const ta = document.getElementById('inKeywords1') || document.getElementById('inKeywords2');
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    if (start === end) return;
     ta.value = ta.value.substring(0, start) + '<b>' + ta.value.substring(start, end) + '</b>' + ta.value.substring(end);
+    const newPos = start + '<b>'.length + (end - start) + '</b>'.length;
+    ta.focus();
+    ta.setSelectionRange(newPos, newPos);
 }
 function clearAllBoldTags() {
-    const ta = document.getElementById('inKeywords');
-    ta.value = ta.value.replace(/<\/?b>/g, '');
+    const ta = document.getElementById('inKeywords1') || document.getElementById('inKeywords2');
+    if (!ta) return;
+    ta.value = ta.value.replace(/<\/?b>/gi, '');
 }
 
 // ===== IMPORTAR (JSON) =====
