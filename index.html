@@ -534,25 +534,7 @@
 
         <div id="tab-config" class="tab-content">
             <h2>Configuración Global (Sincronizada)</h2>
-            <div class="config-section" style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #007bff;">
-                <h3 style="margin-top: 0; color: #007bff;">📦 Gestión del Catálogo HAV</h3>
-                <div style="margin-bottom: 15px;">
-                    <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">
-                        📥 Importar Catálogo JSON
-                    </button>
-                    <button class="btn btn-warning" onclick="forzarLimpiezaDuplicados()" style="margin-left: 10px;">
-                        🧹 Eliminar Duplicados
-                    </button>
-                    <button class="btn btn-del" onclick="borrarCatalogoCompleto()" style="margin-left: 10px;">
-                        🗑️ Borrar Catálogo Completo
-                    </button>
-                </div>
-                <p style="margin: 0; font-size: 0.9em; color: #666;">
-                    • <strong>Importar:</strong> Agrega canales desde un archivo JSON<br>
-                    • <strong>Eliminar Duplicados:</strong> Limpia canales repetidos<br>
-                    • <strong>Borrar Completo:</strong> Elimina TODO el catálogo HAV
-                </p>
-            </div>
+            
 
             <div class="controls">
                 <div class="control-group"><label>➕ Nuevo ID</label><input type="text" id="newIdVal" placeholder=""><button class="btn btn-edit" onclick="addOption('ids', 'newIdVal')">Crear</button></div>
@@ -574,6 +556,25 @@
 
         <div id="tab-catalog" class="tab-content">
             <h2 style="color: #667eea; margin-bottom: 20px;">📡 Catálogo HAV - Canales en la Nube</h2>
+            <div class="config-section" style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #007bff;">
+                <h3 style="margin-top: 0; color: #007bff;">📦 Gestión del Catálogo HAV</h3>
+                <div style="margin-bottom: 15px;">
+                    <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">
+                        📥 Importar Catálogo JSON
+                    </button>
+                    <button class="btn btn-warning" onclick="forzarLimpiezaDuplicados()" style="margin-left: 10px;">
+                        🧹 Eliminar Duplicados
+                    </button>
+                    <button class="btn btn-del" onclick="borrarCatalogoCompleto()" style="margin-left: 10px;">
+                        🗑️ Borrar Catálogo Completo
+                    </button>
+                </div>
+                <p style="margin: 0; font-size: 0.9em; color: #666;">
+                    • <strong>Importar:</strong> Agrega canales desde un archivo JSON<br>
+                    • <strong>Eliminar Duplicados:</strong> Limpia canales repetidos<br>
+                    • <strong>Borrar Completo:</strong> Elimina TODO el catálogo HAV
+                </p>
+            </div>
             <div style="margin-bottom: 20px;">
                 <button class="btn btn-primary" onclick="addNewHAVChannel()">➕ Agregar Nuevo Canal</button>
             </div>
@@ -1119,8 +1120,6 @@ function saveCampaign() {
 
 function autoCompleteCampaign() {
     const campaignName = document.getElementById('inCode').value.trim();
-
-    // Si está vacío, limpiar campos y no autocompletar
     if (!campaignName) {
         document.getElementById('inPlatform').value = '';
         document.getElementById('inChannel').value = '';
@@ -1130,7 +1129,6 @@ function autoCompleteCampaign() {
         document.getElementById('inId').value = '';
         return;
     }
-
     const parts = campaignName.split('-');
     if (parts.length >= 4) {
         const [platform, channel, product, country] = parts;
@@ -1138,7 +1136,6 @@ function autoCompleteCampaign() {
         document.getElementById('inChannel').value = channel || '';
         document.getElementById('inProduct').value = product || '';
         document.getElementById('inCountry').value = country || '';
-
         const languageSelect = document.getElementById('inLanguage');
         const matchingCampaign = db.campaigns.find(c => c.code === campaignName);
         if (matchingCampaign && matchingCampaign.language) {
