@@ -1085,6 +1085,16 @@ function saveCampaign() {
     const code = document.getElementById('inCode').value;
     const country = document.getElementById('inCountry').value.toUpperCase();
 
+    
+    // Verificar duplicados solo si es una campaña NUEVA (no está editando)
+    if (editingIndex < 0) {
+        const exists = db.campaigns.some(c => c.code === code);
+        if (exists) {
+            alert('⛔ ERROR: Esta campaña YA EXISTE en la base de datos. No se puede guardar duplicada.\n\nRevisa el listado o edita la campaña existente.');
+            return;
+        }
+    }
+
     if (!platform || !product || !id || !code || !country) return alert('⚠️ Faltan datos obligatorios');
 
     const campaign = {
@@ -1120,6 +1130,10 @@ function saveCampaign() {
 
 function autoCompleteCampaign() {
     const campaignName = document.getElementById('inCode').value.trim();
+
+    // Verificar si la campaña ya existe (para advertencia visual)
+    checkDuplicateCampaign(campaignName);
+
     if (!campaignName) {
         document.getElementById('inPlatform').value = '';
         document.getElementById('inChannel').value = '';
@@ -1144,6 +1158,39 @@ function autoCompleteCampaign() {
     }
 }
 
+
+
+function checkDuplicateCampaign(campaignName) {
+    const inCodeField = document.getElementById('inCode');
+
+    if (!campaignName || editingIndex >= 0) {
+        // Si está editando o el campo está vacío, usar estilo normal
+        inCodeField.style.backgroundColor = '';
+        inCodeField.style.borderColor = '';
+        inCodeField.style.color = '';
+        return false;
+    }
+
+    // Verificar si ya existe una campaña con ese nombre
+    const exists = db.campaigns.some(c => c.code === campaignName);
+
+    if (exists) {
+        // Marcar en ROJO si ya existe
+        inCodeField.style.backgroundColor = '#fee';
+        inCodeField.style.borderColor = '#f00';
+        inCodeField.style.color = '#c00';
+        inCodeField.style.fontWeight = 'bold';
+        showNotif('⚠️ ATENCIÓN: Esta campaña YA EXISTE', 'error');
+        return true;
+    } else {
+        // Verde si es nueva
+        inCodeField.style.backgroundColor = '#efe';
+        inCodeField.style.borderColor = '#0a0';
+        inCodeField.style.color = '#060';
+        inCodeField.style.fontWeight = 'bold';
+        return false;
+    }
+}
 
 function saveMetadataOnly() {
     if (editingIndex < 0) return;
@@ -1176,6 +1223,14 @@ function resetForm() {
     document.querySelectorAll('#tab-add input, #tab-add select, #tab-add textarea').forEach(el => el.value = '');
     document.getElementById('formTitle').textContent = '➕ Nueva Campaña';
     document.getElementById('btnMetaOnly').style.display = 'none';
+    // Limpiar estilo del campo de nombre
+    const inCodeField = document.getElementById('inCode');
+    if (inCodeField) {
+        inCodeField.style.backgroundColor = '';
+        inCodeField.style.borderColor = '';
+        inCodeField.style.color = '';
+        inCodeField.style.fontWeight = '';
+    }
 }
 
 function boldSelectedText() {
