@@ -560,13 +560,15 @@
                 <div class="control-group"><label>➕ Nueva Plataforma</label><select id="newPlatName"><option value="Facebook">Facebook</option><option value="TikTok">TikTok</option><option value="Google">Google</option></select><button class="btn btn-edit" onclick="addOption('platforms', 'newPlatName')">Crear</button></div>
                 <div class="control-group"><label>➕ Nuevo Canal</label><input type="text" id="newChanName"><button class="btn btn-edit" onclick="addOption('channels', 'newChanName')">Crear</button></div>
                 <div class="control-group"><label>➕ Nuevo Idioma</label><input type="text" id="newLangName" placeholder="Ej: Alemán"><button class="btn btn-edit" onclick="addOption('languages', 'newLangName')">Crear</button></div>
+                <div class="control-group"><label>➕ Nuevo País</label><input type="text" id="newCountryName" placeholder="Ej: PE (Perú)"><button class="btn btn-edit" onclick="addOption('countries', 'newCountryName')">Crear</button></div>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 25px;">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 25px;">
                 <div><h4 style="color:var(--primary)">🆔 IDs de Campaña</h4><ul id="listIds" class="config-list"></ul></div>
                 <div><h4 style="color:var(--secondary)">📦 Nichos</h4><ul id="listProds" class="config-list"></ul></div>
                 <div><h4 style="color:var(--dark)">📡 Plataformas</h4><ul id="listPlatforms" class="config-list"></ul></div>
-                <div><h4 style="color:var(--dark)">📺 Canales</h4><ul id="listChannels" class="config-list"></ul>
-                <div><h4 style="color:var(--dark)">🌐 Idiomas</h4><ul id="listLanguages" class="config-list"></ul></div></div>
+                <div><h4 style="color:var(--dark)">📺 Canales</h4><ul id="listChannels" class="config-list"></ul></div>
+                <div><h4 style="color:var(--dark)">🌐 Idiomas</h4><ul id="listLanguages" class="config-list"></ul></div>
+                <div><h4 style="color:var(--dark)">🌍 Países</h4><ul id="listCountries" class="config-list"></ul></div>
             </div>
         </div>
 
@@ -648,6 +650,7 @@ if (!db.ids) db.ids = ['00902', '00903', '00904', '00905', '00908', '00909'];
 if (!db.products) db.products = ALL_NICHOS;
 if (!db.platforms) db.platforms = ['FB', 'TT', 'GN'];
 if (!db.channels) db.channels = ['Mundo', 'IH', 'CS', 'HN'];
+if (!db.countries) db.countries = ['PL', 'DE', 'ES', 'FR', 'IT', 'NL', 'BE', 'PT', 'UK', 'US', 'MX', 'AR', 'BR', 'CL', 'CO', 'PE'];
 // ------------------------------------------
 
 let editingIndex = -1;
@@ -803,6 +806,7 @@ async function saveGlobalSettings() {
             channels: db.channels,
             languages: db.languages,
             havCatalog: db.havCatalog,
+            countries: db.countries || [],
             lastUpdate: new Date().toISOString()
         }, { merge: true });
     } catch (error) { console.error(error); }
@@ -876,9 +880,9 @@ function updateOptions() {
     fill('inId', db.ids); fill('filterId', db.ids, true);
     fill('inLanguage', db.languages);
 
-    ['ids', 'products', 'platforms', 'channels', 'languages'].forEach(type => {
+    ['ids', 'products', 'platforms', 'channels', 'languages', 'countries'].forEach(type => {
         let listId = '';
-        if(type==='ids') listId='listIds'; else if(type==='products') listId='listProds'; else if(type==='platforms') listId='listPlatforms'; else if(type==='channels') listId='listChannels'; else if(type==='languages') listId='listLanguages';
+        if(type==='ids') listId='listIds'; else if(type==='products') listId='listProds'; else if(type==='platforms') listId='listPlatforms'; else if(type==='channels') listId='listChannels'; else if(type==='languages') listId='listLanguages'; else if(type==='countries') listId='listCountries';
         
         const container = document.getElementById(listId);
         if(container && db[type]) {
@@ -1106,61 +1110,40 @@ function saveCampaign() {
     renderTable();
     updateStats();
     saveToFirebase(campaign);
-    resetForm();
-    switchTab('tab-list');
+    // Mantenerse en el formulario
+    setTimeout(() => {
+        resetForm();
+        showNotif('✅ Campaña guardada. Listo para la siguiente.', 'success');
+    }, 500);
 }
 
 function autoCompleteCampaign() {
-    const nombreCampana = document.getElementById('inCode').value.trim();
+    const campaignName = document.getElementById('inCode').value.trim();
 
-    if (!nombreCampana) return;
-
-    // Parsear: "FB-HAV-Autos-BR" → ['FB', 'HAV', 'Autos', 'BR']
-    const partes = nombreCampana.split('-');
-
-    if (partes.length < 3) return;
-
-    const platform = partes[0];  // FB, TT
-    const channel = partes[1];   // HAV, IH, CS
-    const product = partes[2];   // Autos, Celulares, etc
-
-    // Construir código base para buscar en catálogo
-    const codigoBase = `${platform}-${channel}-${product}`;
-
-    let catalogEntry = null;
-
-    // Buscar en todas las categorías del catálogo HAV
-    for (const categoria in db.havCatalog) {
-        const items = db.havCatalog[categoria];
-        if (Array.isArray(items)) {
-            catalogEntry = items.find(item => item.code === codigoBase);
-            if (catalogEntry) break;
-        }
+    // Si está vacío, limpiar campos y no autocompletar
+    if (!campaignName) {
+        document.getElementById('inPlatform').value = '';
+        document.getElementById('inChannel').value = '';
+        document.getElementById('inProduct').value = '';
+        document.getElementById('inLanguage').value = '';
+        document.getElementById('inCountry').value = '';
+        document.getElementById('inId').value = '';
+        return;
     }
 
-    // Si encontramos coincidencia, autocompletar
-    if (catalogEntry) {
-        // Auto-completar Nicho/Producto
-        const productSelect = document.getElementById('inProduct');
-        if (productSelect && product) {
-            productSelect.value = product;
+    const parts = campaignName.split('-');
+    if (parts.length >= 4) {
+        const [platform, channel, product, country] = parts;
+        document.getElementById('inPlatform').value = platform || '';
+        document.getElementById('inChannel').value = channel || '';
+        document.getElementById('inProduct').value = product || '';
+        document.getElementById('inCountry').value = country || '';
+
+        const languageSelect = document.getElementById('inLanguage');
+        const matchingCampaign = db.campaigns.find(c => c.code === campaignName);
+        if (matchingCampaign && matchingCampaign.language) {
+            languageSelect.value = matchingCampaign.language;
         }
-
-        // Auto-completar ID
-        const idSelect = document.getElementById('inId');
-        if (idSelect && catalogEntry.id) {
-            // Convertir ID a string limpio
-            let idLimpio = catalogEntry.id.toString();
-
-            // Si es notación científica, convertir a entero
-            if (idLimpio.includes('e+')) {
-                idLimpio = parseInt(parseFloat(idLimpio)).toString();
-            }
-
-            idSelect.value = idLimpio;
-        }
-
-        console.log(`✅ Auto-completado: ${product} → ID: ${catalogEntry.id}`);
     }
 }
 
@@ -1177,8 +1160,11 @@ function saveMetadataOnly() {
     c.date = document.getElementById('inDate').value;
     c.autor = document.getElementById('inAutor').value;
     saveToFirebase(c);
-    resetForm();
-    switchTab('tab-list');
+    // Mantenerse en el formulario
+    setTimeout(() => {
+        resetForm();
+        showNotif('✅ Campaña guardada. Listo para la siguiente.', 'success');
+    }, 500);
 }
 
 function deleteCampaign(index) {
