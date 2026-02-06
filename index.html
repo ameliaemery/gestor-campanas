@@ -442,7 +442,9 @@
                     </thead>
                     <tbody id="campaignList"></tbody>
                 </table>
-            </div>
+            
+            <div style="margin:15px 0;text-align:center;"><button class="btn btn-success" onclick="generarReporte()" style="padding:8px 16px;font-size:0.9em;background:#10b981;">📊 Generar Reporte de Campañas Visibles</button></div>
+</div>
         </div>
 
         <div id="tab-comp" class="tab-content">
@@ -526,7 +528,7 @@
             <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
                 <button class="btn btn-edit" onclick="saveCampaign()">💾 Guardar en Nube</button>
                 <button class="btn btn-meta" onclick="saveMetadataOnly()" id="btnMetaOnly" style="display:none;">📝 Actualizar solo Datos</button>
-                <button class="btn btn-warning" onclick="exportarCampanas()">📤 Exportar Copia Seguridad</button> <button class="btn btn-del" onclick="resetForm()">🔄 Limpiar Formulario</button>
+                <button class="btn btn-warning" onclick="exportarCampanas()">📤 Exportar Copia Seguridad</button>  <button class="btn btn-del" onclick="resetForm()">🔄 Limpiar Formulario</button>
                 <input type="file" id="importFile" accept=".json" style="display:none" onchange="importarDatos(event)">
                 <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">📥 Importar Backup JSON</button>
             </div>
@@ -779,6 +781,85 @@ function exportarCampanas() {
     link.download = `backup_campanas_${new Date().toISOString().slice(0,10)}.json`;
     link.click();
     showNotif('✅ Copia de seguridad descargada', 'success');
+}
+
+
+function generarReporte() {
+    if (db.campaigns.length === 0) {
+        alert('No hay campañas para generar reporte.');
+        return;
+    }
+
+    // Función para extraer el título de la primera línea del artículo
+    function extraerTitulo(article) {
+        if (!article || !article.trim()) return 'Sin título';
+
+        // Quitar marcadores de markdown
+        let firstLine = article.split('\n')[0].trim();
+
+        // Remover markdown común: #, ##, ###, **, *, etc.
+        firstLine = firstLine.replace(/^#+\s*/g, ''); // Encabezados
+        firstLine = firstLine.replace(/\*\*/g, ''); // Negritas
+        firstLine = firstLine.replace(/\*/g, ''); // Cursivas
+        firstLine = firstLine.replace(/<b>/gi, '').replace(/<\/b>/gi, ''); // Etiquetas HTML
+
+        return firstLine || 'Sin título';
+    }
+
+    // Función para formatear país
+    function formatearPais(countryCode) {
+        const paises = {
+            'PL': 'Polonia', 'DE': 'Alemania', 'ES': 'España', 'FR': 'Francia',
+            'IT': 'Italia', 'NL': 'Países Bajos', 'BE': 'Bélgica', 'PT': 'Portugal',
+            'UK': 'Reino Unido', 'US': 'Estados Unidos', 'MX': 'México',
+            'AR': 'Argentina', 'BR': 'Brasil', 'CL': 'Chile', 'CO': 'Colombia',
+            'PE': 'Perú'
+        };
+        return paises[countryCode] || countryCode;
+    }
+
+    // Función para formatear fecha
+    function formatearFecha(fecha) {
+        if (!fecha) return 'Sin fecha';
+        // Convertir de YYYY-MM-DD a DD/MM/YYYY
+        const partes = fecha.split('-');
+        if (partes.length === 3) {
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+        return fecha;
+    }
+
+    // Generar contenido del reporte
+    let reporte = '═══════════════════════════════════════════════════════════════════\n';
+    reporte += '                    REPORTE DE CAMPAÑAS HAV 2026\n';
+    reporte += '═══════════════════════════════════════════════════════════════════\n\n';
+    reporte += `Total de Campañas: ${db.campaigns.length}\n`;
+    reporte += `Fecha de Generación: ${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}\n\n`;
+    reporte += '═══════════════════════════════════════════════════════════════════\n\n';
+
+    db.campaigns.forEach((c, index) => {
+        reporte += `N°: ${index + 1}\n`;
+        reporte += `TÍTULO: ${extraerTitulo(c.article)}\n`;
+        reporte += `PAÍS: ${formatearPais(c.country)}\n`;
+        reporte += `NOMBRE DE CAMPAÑA: ${c.code}\n`;
+        reporte += `FECHA: ${formatearFecha(c.date)}\n`;
+        reporte += `PLATAFORMA: ${c.platform === 'FB' ? 'Facebook' : c.platform === 'TT' ? 'TikTok' : c.platform === 'GN' ? 'Google' : c.platform}\n`;
+        reporte += `CANAL: ${c.channel || 'N/A'}\n`;
+        reporte += `IDIOMA: ${c.language || 'N/A'}\n`;
+        reporte += `KEYWORDS: ${c.keywords ? c.keywords.length : 0}\n`;
+        reporte += '───────────────────────────────────────────────────────────────────\n\n';
+    });
+
+    // Crear archivo de texto
+    const blob = new Blob([reporte], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `reporte-campanas-${new Date().toISOString().slice(0,10)}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    showNotif('📊 Reporte generado y descargado', 'success');
 }
 
 async function saveToFirebase(campaign) {
@@ -1164,18 +1245,15 @@ function checkDuplicateCampaign(campaignName) {
     const inCodeField = document.getElementById('inCode');
 
     if (!campaignName || editingIndex >= 0) {
-        // Si está editando o el campo está vacío, usar estilo normal
         inCodeField.style.backgroundColor = '';
         inCodeField.style.borderColor = '';
         inCodeField.style.color = '';
         return false;
     }
 
-    // Verificar si ya existe una campaña con ese nombre
     const exists = db.campaigns.some(c => c.code === campaignName);
 
     if (exists) {
-        // Marcar en ROJO si ya existe
         inCodeField.style.backgroundColor = '#fee';
         inCodeField.style.borderColor = '#f00';
         inCodeField.style.color = '#c00';
@@ -1183,7 +1261,6 @@ function checkDuplicateCampaign(campaignName) {
         showNotif('⚠️ ATENCIÓN: Esta campaña YA EXISTE', 'error');
         return true;
     } else {
-        // Verde si es nueva
         inCodeField.style.backgroundColor = '#efe';
         inCodeField.style.borderColor = '#0a0';
         inCodeField.style.color = '#060';
@@ -1223,7 +1300,6 @@ function resetForm() {
     document.querySelectorAll('#tab-add input, #tab-add select, #tab-add textarea').forEach(el => el.value = '');
     document.getElementById('formTitle').textContent = '➕ Nueva Campaña';
     document.getElementById('btnMetaOnly').style.display = 'none';
-    // Limpiar estilo del campo de nombre
     const inCodeField = document.getElementById('inCode');
     if (inCodeField) {
         inCodeField.style.backgroundColor = '';
@@ -1764,6 +1840,72 @@ function verObservacion(index) {
     }
 }
 
+
+async function generarReporte() {
+    if (!db.campaigns.length) return alert('No hay campañas');
+
+    function extraerTitulo(article) {
+        if (!article) return 'Sin título';
+        const p = article.indexOf('<p>');
+        let t = (p!==-1 ? article.substring(0,p) : article).split('\n')[0].trim();
+        return t.replace(/^#+\s*/g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/<\/?b>/gi,'').replace(/<\/?strong>/gi,'').trim() || 'Sin título';
+    }
+
+    const fs = (document.getElementById('search')||{}).value||'';
+    const fp = (document.getElementById('filterPlatform')||{}).value||'Todos';
+    const fc = (document.getElementById('filterChannel')||{}).value||'Todos';
+    const fpr = (document.getElementById('filterProduct')||{}).value||'Todos';
+    const fi = (document.getElementById('filterId')||{}).value||'Todos';
+
+    const camps = db.campaigns.filter(c => {
+        if (fs && !c.code.toLowerCase().includes(fs.toLowerCase())) return false;
+        if (fp!=='Todos' && c.platform!==fp) return false;
+        if (fc!=='Todos' && c.channel!==fc) return false;
+        if (fpr!=='Todos' && c.product!==fpr) return false;
+        if (fi!=='Todos' && c.id!==fi) return false;
+        return true;
+    });
+
+    if (!camps.length) return alert('No hay campañas visibles');
+
+    let nom = 'reporte';
+    if (fc!=='Todos') nom += `-${fc}`;
+    if (fpr!=='Todos') nom += `-${fpr}`;
+    if (fp!=='Todos') nom += `-${fp}`;
+    if (fi!=='Todos') nom += `-ID${fi}`;
+    if (fs) nom += `-${fs}`;
+    if (nom==='reporte') nom='reporte-completo';
+
+    let h = '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"><style>table{border-collapse:collapse;}th{background:#4472C4;color:white;font-weight:bold;border:1px solid black;padding:8px;}td{border:1px solid black;padding:8px;}</style></head><body><table><tr><th>No</th><th>TÍTULO</th><th>PAÍS</th><th>ETIQUETA</th><th>FECHA</th></tr>';
+    camps.forEach((c,i) => {
+        const f = c.date ? c.date.split('-').reverse().join('/') : 'Sin fecha';
+        h += `<tr><td>${i+1}</td><td>${extraerTitulo(c.article)}</td><td>${c.country||'N/A'}</td><td>${c.code}</td><td>${f}</td></tr>`;
+    });
+    h += '</table></body></html>';
+
+    const blob = new Blob(['\uFEFF'+h], {type:'application/vnd.ms-excel;charset=utf-8'});
+
+    if (window.showSaveFilePicker) {
+        try {
+            const hdl = await window.showSaveFilePicker({suggestedName:`${nom}-${new Date().toISOString().slice(0,10)}.xls`,types:[{description:'Excel',accept:{'application/vnd.ms-excel':['.xls']}}]});
+            const w = await hdl.createWritable();
+            await w.write(blob);
+            await w.close();
+            showNotif(`📊 ${camps.length} campañas`, 'success');
+            return;
+        } catch(e) { if(e.name==='AbortError') return; }
+    }
+
+    const url = URL.createObjectURL(blob);
+    const lnk = document.createElement('a');
+    lnk.href = url;
+    lnk.download = `${nom}-${new Date().toISOString().slice(0,10)}.xls`;
+    document.body.appendChild(lnk);
+    lnk.click();
+    document.body.removeChild(lnk);
+    URL.revokeObjectURL(url);
+    showNotif(`📊 ${camps.length} campañas`, 'success');
+}
 </script>
 
 
