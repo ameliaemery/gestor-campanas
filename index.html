@@ -344,6 +344,82 @@
             transform: translateY(-8px) scale(1.02);
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
+
+/* === COMPARADOR EN COLUMNAS === */
+.comparator-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.comp-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.comp-card h3 {
+    margin: 0 0 15px 0;
+    color: #1f2937;
+    font-size: 16px;
+    border-bottom: 2px solid #3b82f6;
+    padding-bottom: 10px;
+    word-break: break-word;
+}
+
+.comp-card .metric {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.comp-card .metric strong {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.comp-card .metric span {
+    color: #1f2937;
+    font-weight: 500;
+}
+
+.comp-card .keyword-list {
+    margin-top: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.comp-card .keyword-item {
+    background: #f9fafb;
+    padding: 8px 12px;
+    margin: 5px 0;
+    border-radius: 4px;
+    font-size: 14px;
+    border-left: 3px solid #3b82f6;
+    word-break: break-word;
+}
+
+#btnShowModified {
+    transition: all 0.3s ease;
+}
+
+#btnShowModified:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5);
+}
+
+#btnClearFilter {
+    transition: all 0.3s ease;
+}
+
+#btnClearFilter:hover {
+    background: #4b5563;
+}
+
 </style>
 </head>
 <body>
@@ -403,6 +479,11 @@
                 <div class="number" id="totalArticles">0</div>
                 <div class="label">📝 Con Artículo 🔍</div>
             </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+                <button id="btnShowModified" onclick="showModifiedCampaigns()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4); width: 100%;">📝 Modificadas (0)</button>
+                <button id="btnClearFilter" onclick="clearModifiedFilter()" style="display: none; background: #6b7280; color: white; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; margin-top: 8px; width: 100%;">✖️ Mostrar Todas</button>
+                <button onclick="clearModifiedHistory()" style="background: #ef4444; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; margin-top: 8px; width: 100%;">🗑️ Limpiar Historial</button>
+            </div>
         </div>
 
         <div class="tabs">
@@ -453,11 +534,24 @@
 
         <div id="tab-comp" class="tab-content">
             <h2>Analizar 3 Campañas Simultáneamente</h2>
-            <div class="controls" style="margin-top: 15px;">
-                <div class="control-group"><label>Campaña 1</label><select id="comp1" onchange="runTripleComparison()"></select></div>
-                <div class="control-group"><label>Campaña 2</label><select id="comp2" onchange="runTripleComparison()"></select></div>
-                <div class="control-group"><label>Campaña 3</label><select id="comp3" onchange="runTripleComparison()"></select></div>
+            <div class="controls" style="margin-top: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                <div class="control-group">
+                    <label>Campaña 1 🔍</label>
+                    <input type="text" id="comp1" list="comp1-list" placeholder="Escribe para buscar..." oninput="runTripleComparison()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <datalist id="comp1-list"></datalist>
+                </div>
+                <div class="control-group">
+                    <label>Campaña 2 🔍 (opcional)</label>
+                    <input type="text" id="comp2" list="comp2-list" placeholder="Opcional..." oninput="runTripleComparison()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <datalist id="comp2-list"></datalist>
+                </div>
+                <div class="control-group">
+                    <label>Campaña 3 🔍 (opcional)</label>
+                    <input type="text" id="comp3" list="comp3-list" placeholder="Opcional..." oninput="runTripleComparison()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <datalist id="comp3-list"></datalist>
+                </div>
             </div>
+            <button onclick="clearComparison()" style="margin-top: 10px; padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑️ Limpiar</button>
             <div id="compResults" class="comparator-grid"></div>
         </div>
 
@@ -1786,26 +1880,68 @@ function showNotif(msg, type) {
 
 // ===== COMPARADOR =====
 function updateCompSelects() {
-    ['comp1', 'comp2', 'comp3'].forEach(id => {
-        const el = document.getElementById(id);
-        el.innerHTML = '<option value="">Seleccionar...</option>' + 
-            db.campaigns.map((c, i) => `<option value="${i}">${c.code} (${c.country})</option>`).join('');
+    const campaignMap = new Map();
+    db.campaigns.forEach((c, i) => {
+        campaignMap.set(c.code, i);
     });
+
+    ['comp1', 'comp2', 'comp3'].forEach(id => {
+        const datalist = document.getElementById(id + '-list');
+        const sortedCampaigns = db.campaigns
+            .map((c, i) => ({ name: c.code, index: i }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        datalist.innerHTML = sortedCampaigns
+            .map(c => `<option value="${c.name}">${c.name}</option>`)
+            .join('');
+    });
+
+    window.campaignMap = campaignMap;
 }
 
 function runTripleComparison() {
-    const i1 = document.getElementById('comp1').value;
-    const i2 = document.getElementById('comp2').value;
-    const i3 = document.getElementById('comp3').value;
-    if (!i1 || !i2 || !i3) return;
-    const campaigns = [db.campaigns[i1], db.campaigns[i2], db.campaigns[i3]];
-    document.getElementById('compResults').innerHTML = campaigns.map(c => `
+    const v1 = document.getElementById('comp1').value;
+    const v2 = document.getElementById('comp2').value;
+    const v3 = document.getElementById('comp3').value;
+
+    const values = [v1, v2, v3].filter(v => v && v.trim() !== '');
+
+    if (values.length === 0) {
+        document.getElementById('compResults').innerHTML = '';
+        return;
+    }
+
+    const campaigns = [];
+    for (const val of values) {
+        const idx = window.campaignMap.get(val);
+        if (idx !== undefined) {
+            campaigns.push(db.campaigns[idx]);
+        }
+    }
+
+    if (campaigns.length === 0) {
+        document.getElementById('compResults').innerHTML = '<div style="color: #ef4444; padding: 20px; text-align: center; grid-column: 1/-1;">⚠️ Selecciona al menos una campaña válida</div>';
+        return;
+    }
+
+    const resultsDiv = document.getElementById('compResults');
+    resultsDiv.style.gridTemplateColumns = `repeat(${campaigns.length}, 1fr)`;
+
+    resultsDiv.innerHTML = campaigns.map(c => `
         <div class="comp-card">
             <h3>${c.code}</h3>
             <div class="metric"><strong>País:</strong><span>${c.country}</span></div>
             <div class="metric"><strong>ID:</strong><span>${c.id}</span></div>
+            <div class="metric"><strong>Keywords:</strong><span>${c.keywords.length}</span></div>
             <div class="keyword-list">${c.keywords.map(k=>`<div class="keyword-item">${k}</div>`).join('')}</div>
         </div>`).join('');
+}
+
+function clearComparison() {
+    document.getElementById('comp1').value = '';
+    document.getElementById('comp2').value = '';
+    document.getElementById('comp3').value = '';
+    document.getElementById('compResults').innerHTML = '';
 }
 
 
@@ -2427,6 +2563,123 @@ async function generarReporte() {
 
         showNotif(`✓ ${camps.length} campañas exportadas a Excel (sin keywords)`, 'success');
     }
+
+
+
+// ===== SISTEMA DE TRACKING CON PERSISTENCIA =====
+function loadModifiedFromStorage() {
+    const stored = localStorage.getItem('modifiedCampaigns');
+    if (stored) {
+        try {
+            const arr = JSON.parse(stored);
+            window.modifiedCampaigns = new Set(arr);
+        } catch (e) {
+            window.modifiedCampaigns = new Set();
+        }
+    } else {
+        window.modifiedCampaigns = new Set();
+    }
+    updateModifiedButton();
+}
+
+function saveModifiedToStorage() {
+    const arr = Array.from(window.modifiedCampaigns);
+    localStorage.setItem('modifiedCampaigns', JSON.stringify(arr));
+}
+
+if (!window.modifiedCampaigns) {
+    loadModifiedFromStorage();
+}
+
+function markAsModified(campaignCode) {
+    window.modifiedCampaigns.add(campaignCode);
+    saveModifiedToStorage();
+    updateModifiedButton();
+}
+
+function updateModifiedButton() {
+    const btn = document.getElementById('btnShowModified');
+    if (btn) {
+        const count = window.modifiedCampaigns.size;
+        btn.textContent = `📝 Modificadas (${count})`;
+    }
+}
+
+function showModifiedCampaigns() {
+    if (window.modifiedCampaigns.size === 0) {
+        showNotif('No hay campañas modificadas. Crea o edita una campaña.', 'error');
+        return;
+    }
+
+    showTab('list');
+
+    const tbody = document.querySelector('#campaignTable tbody');
+    if (!tbody) return;
+
+    const allRows = tbody.querySelectorAll('tr');
+    let visibleCount = 0;
+
+    allRows.forEach((row) => {
+        const codeCell = row.cells[5];
+        if (codeCell && window.modifiedCampaigns.has(codeCell.textContent.trim())) {
+            row.style.display = '';
+            row.style.backgroundColor = '#fef3c7';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    const btnClear = document.getElementById('btnClearFilter');
+    if (btnClear) btnClear.style.display = 'inline-block';
+
+    showNotif(`Mostrando ${visibleCount} campañas modificadas`, 'success');
+}
+
+function clearModifiedFilter() {
+    const tbody = document.querySelector('#campaignTable tbody');
+    if (!tbody) return;
+
+    const allRows = tbody.querySelectorAll('tr');
+    allRows.forEach(row => {
+        row.style.display = '';
+        row.style.backgroundColor = '';
+    });
+
+    const btnClear = document.getElementById('btnClearFilter');
+    if (btnClear) btnClear.style.display = 'none';
+
+    renderTable();
+    showNotif('Mostrando todas las campañas', 'success');
+}
+
+function clearModifiedHistory() {
+    if (confirm('¿Limpiar el historial de campañas modificadas?\n\nEsta acción no se puede deshacer.')) {
+        window.modifiedCampaigns.clear();
+        saveModifiedToStorage();
+        updateModifiedButton();
+        showNotif('✅ Historial de modificadas limpiado', 'success');
+    }
+}
+
+// ===== ATAJOS DE TECLADO =====
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveToCloud();
+        showNotif('💾 Guardando con Ctrl+S...', 'success');
+    }
+
+    if ((e.ctrlKey || e.metaKey) && e.key === 'g') {
+        e.preventDefault();
+        saveToCloud();
+        showNotif('💾 Guardando con Ctrl+G...', 'success');
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadModifiedFromStorage();
+});
 
 </script>
 
