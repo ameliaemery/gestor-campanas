@@ -526,7 +526,6 @@
 </style>
 </head>
 <body>
-<!-- ========== PANTALLA DE LOGIN SEGURA ========== -->
 <div id="loginScreen">
     <div class="login-box">
         <h1>🔒 Gestor HAV 2026</h1>
@@ -552,10 +551,8 @@
     </div>
 </div>
 
-<!-- ========== BOTÓN CERRAR SESIÓN ========== -->
 <button class="logout-btn" onclick="logout()" style="display: none;" id="logoutBtn">🚪 Cerrar Sesión</button>
 
-<!-- ========== APLICACIÓN PRINCIPAL (PROTEGIDA) ========== -->
 <div id="mainApp">
 
     <div id="notification-area"></div>
@@ -677,9 +674,7 @@
             <div class="control-group" style="margin-top: 15px;">
                 <label style="margin-bottom: 10px;">Keywords (una por línea)</label>
 
-                <!-- Keywords divididas en dos columnas GRANDES -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
-                    <!-- COLUMNA 1: Botones de negrita -->
                     <div>
                         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
                             <button class="btn btn-bold" onclick="boldSelectedText()" style="padding: 6px 10px; font-size: 0.85em;"><b>B</b> Negrita</button>
@@ -688,7 +683,6 @@
                         <textarea id="inKeywords1" rows="20" style="width: 100%; height: 400px; resize: vertical;"></textarea>
                     </div>
 
-                    <!-- COLUMNA 2: Botón Obs. -->
                     <div>
                         <div style="display: flex; align-items: center; margin-bottom: 8px;">
                             <button class="btn" style="background: #764ba2; color: white; padding: 6px 12px; font-size: 0.9em; cursor: default;" disabled>📌 Observaciones</button>
@@ -697,7 +691,6 @@
                     </div>
                 </div>
 
-                <!-- Campo de Observaciones (oculto por defecto) -->
                 <div id="obsContainer" style="display: none; margin-top: 10px;">
                     <label style="font-size: 0.9em; color: #666;">Observaciones de la campaña:</label>
                     <textarea id="inObservaciones" rows="3"></textarea>
@@ -1618,32 +1611,72 @@ function toggleArticle(i) {
 }
 
 function editCampaign(index) {
-    editingIndex = index;
-    const c = db.campaigns[index];
-    document.getElementById('inPlatform').value = c.platform;
-    document.getElementById('inChannel').value = c.channel || '';
-    document.getElementById('inProduct').value = c.product;
-    document.getElementById('inId').value = c.id;
-    document.getElementById('inCode').value = c.code;
-    document.getElementById('inLanguage').value = c.language || '';
-    document.getElementById('inCountry').value = c.country;
-    // CAMPO FECHA EN EDICIÓN
-    document.getElementById('inDate').value = c.date || ''; 
-    // Columna 1: TODAS las keywords, Columna 2: Observaciones
-    const allKeys = c.keywords || [];
-    document.getElementById('inKeywords1').value = allKeys.join('\n');
-    document.getElementById('inKeywords2').value = c.observaciones || '';
+    try {
+        // Validar que el índice es válido
+        if (index < 0 || index >= db.campaigns.length) {
+            console.error('Índice inválido:', index);
+            showNotif('Error: Campaña no encontrada', 'danger');
+            return;
+        }
 
-    // Campo oculto no se usa
-    document.getElementById('inObservaciones').value = '';
-    document.getElementById('inArticle').value = c.article || '';
-    document.getElementById('inAutor').value = c.autor || '';
-    // CARGAR URL AL EDITAR
-    document.getElementById('inUrl').value = c.url || '';
-    
-    document.getElementById('formTitle').textContent = '✏️ Editando: ' + c.code;
-    document.getElementById('btnMetaOnly').style.display = 'inline-block';
-    switchTab('tab-add');
+        editingIndex = index;
+        const c = db.campaigns[index];
+
+        // Verificar que la campaña existe
+        if (!c) {
+            console.error('Campaña no encontrada en índice:', index);
+            showNotif('Error: Campaña no encontrada', 'danger');
+            return;
+        }
+
+        // Cargar datos con verificación de elementos
+        const setValueSafe = (id, value) => {
+            const elem = document.getElementById(id);
+            if (elem) {
+                elem.value = value || '';
+            } else {
+                console.warn(`Elemento ${id} no encontrado`);
+            }
+        };
+
+        setValueSafe('inPlatform', c.platform);
+        setValueSafe('inChannel', c.channel);
+        setValueSafe('inProduct', c.product);
+        setValueSafe('inId', c.id);
+        setValueSafe('inCode', c.code);
+        setValueSafe('inLanguage', c.language);
+        setValueSafe('inCountry', c.country);
+        setValueSafe('inDate', c.date);
+        setValueSafe('inAutor', c.autor);
+        setValueSafe('inUrl', c.url);
+        setValueSafe('inArticle', c.article);
+
+        // Keywords
+        const allKeys = c.keywords || [];
+        setValueSafe('inKeywords1', allKeys.join('\n'));
+        setValueSafe('inKeywords2', c.observaciones);
+        setValueSafe('inObservaciones', '');
+
+        // Actualizar UI
+        const formTitle = document.getElementById('formTitle');
+        if (formTitle) {
+            formTitle.textContent = '✏️ Editando: ' + c.code;
+        }
+
+        const btnMeta = document.getElementById('btnMetaOnly');
+        if (btnMeta) {
+            btnMeta.style.display = 'inline-block';
+        }
+
+        // Cambiar a la pestaña de edición
+        switchTab('tab-add');
+
+        console.log('Campaña cargada exitosamente:', c.code);
+
+    } catch (error) {
+        console.error('Error en editCampaign:', error);
+        showNotif('Error al cargar la campaña: ' + error.message, 'danger');
+    }
 }
 
 function saveCampaign() {
@@ -1682,6 +1715,7 @@ function saveCampaign() {
     if (editingIndex >= 0) {
         campaign.firebaseId = db.campaigns[editingIndex].firebaseId;
         db.campaigns[editingIndex] = campaign;
+        markAsModified(campaign.code);
     } else {
         db.campaigns.push(campaign);
     }
@@ -2674,20 +2708,21 @@ function loadModifiedFromStorage() {
     const stored = localStorage.getItem('modifiedCampaigns');
     if (stored) {
         try {
-            const arr = JSON.parse(stored);
-            window.modifiedCampaigns = new Set(arr);
+            const obj = JSON.parse(stored);
+            window.modifiedCampaigns = new Map(Object.entries(obj));
         } catch (e) {
-            window.modifiedCampaigns = new Set();
+            window.modifiedCampaigns = new Map();
         }
     } else {
-        window.modifiedCampaigns = new Set();
+        window.modifiedCampaigns = new Map();
     }
-    updateModifiedButton();
+    cleanExpiredModifications();
+    updateModifiedCount();
 }
 
 function saveModifiedToStorage() {
-    const arr = Array.from(window.modifiedCampaigns);
-    localStorage.setItem('modifiedCampaigns', JSON.stringify(arr));
+    const obj = Object.fromEntries(window.modifiedCampaigns);
+    localStorage.setItem('modifiedCampaigns', JSON.stringify(obj));
 }
 
 if (!window.modifiedCampaigns) {
@@ -2695,72 +2730,104 @@ if (!window.modifiedCampaigns) {
 }
 
 function markAsModified(campaignCode) {
-    window.modifiedCampaigns.add(campaignCode);
+    window.modifiedCampaigns.set(campaignCode, Date.now());
     saveModifiedToStorage();
-    updateModifiedButton();
+    updateModifiedCount();
 }
 
-function updateModifiedButton() {
+function cleanExpiredModifications() {
+    const SIETE_DIAS = 7 * 24 * 60 * 60 * 1000;
+    const ahora = Date.now();
+    for (let [code, timestamp] of window.modifiedCampaigns) {
+        if (ahora - timestamp > SIETE_DIAS) {
+            window.modifiedCampaigns.delete(code);
+        }
+    }
+    saveModifiedToStorage();
+}
+
+function updateModifiedCount() {
+    cleanExpiredModifications();
+    const count = window.modifiedCampaigns.size;
     const btn = document.getElementById('btnShowModified');
     if (btn) {
-        const count = window.modifiedCampaigns.size;
         btn.textContent = `📝 Modificadas (${count})`;
     }
 }
 
 function showModifiedCampaigns() {
+    // 1. Limpiar y verificar
+    cleanExpiredModifications();
     if (window.modifiedCampaigns.size === 0) {
-        showNotif('No hay campañas modificadas. Crea o edita una campaña.', 'error');
+        showNotif('⚠️ No hay campañas modificadas en los últimos 7 días', 'error');
         return;
     }
 
-    showTab('list');
+    // 2. Cambiar obligatoriamente a la pestaña de lista
+    switchTab('tab-list');
 
-    const tbody = document.querySelector('#campaignTable tbody');
-    if (!tbody) return;
+    // 3. Obtener la tabla con el ID CORRECTO
+    const tbody = document.getElementById('campaignList');
+    
+    if (!tbody) {
+        console.error("Error crítico: No se encuentra 'campaignList'");
+        return;
+    }
 
     const allRows = tbody.querySelectorAll('tr');
     let visibleCount = 0;
 
     allRows.forEach((row) => {
-        const codeCell = row.cells[5];
-        if (codeCell && window.modifiedCampaigns.has(codeCell.textContent.trim())) {
-            row.style.display = '';
-            row.style.backgroundColor = '#fef3c7';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
+        // La celda 5 contiene el 'code' (Nombre de campaña)
+        const codeCell = row.cells[5]; 
+        
+        if (codeCell) {
+            const codeText = codeCell.textContent.trim();
+            // Verificar si está en el Map
+            if (window.modifiedCampaigns.has(codeText)) {
+                row.style.display = '';
+                row.style.backgroundColor = '#fef3c7'; // Amarillo claro
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
         }
     });
 
+    // Mostrar botón de "Mostrar Todas"
     const btnClear = document.getElementById('btnClearFilter');
     if (btnClear) btnClear.style.display = 'inline-block';
 
-    showNotif(`Mostrando ${visibleCount} campañas modificadas`, 'success');
+    if (visibleCount > 0) {
+        showNotif(`✅ Mostrando ${visibleCount} campañas modificadas`, 'success');
+    } else {
+        showNotif('⚠️ Las campañas modificadas están ocultas por el filtro actual.', 'warning');
+    }
 }
 
 function clearModifiedFilter() {
-    const tbody = document.querySelector('#campaignTable tbody');
+    const tbody = document.getElementById('campaignList');
     if (!tbody) return;
-
-    const allRows = tbody.querySelectorAll('tr');
-    allRows.forEach(row => {
-        row.style.display = '';
-        row.style.backgroundColor = '';
-    });
-
+    
+    // Si hay un filtro de búsqueda activo, renderTable() lo respeta.
+    // Si queremos mostrar TODO, llamamos a renderTable() normal
+    renderTable(); 
+    
     const btnClear = document.getElementById('btnClearFilter');
     if (btnClear) btnClear.style.display = 'none';
-
-    renderTable();
-    showNotif('Mostrando todas las campañas', 'success');
+    
+    showNotif('Mostrando todas las campañas', 'info');
 }
 
 function clearModifiedHistory() {
-    if (confirm('¿Limpiar el historial de campañas modificadas?\n\nEsta acción no se puede deshacer.')) {
+    if (window.modifiedCampaigns.size === 0) {
+        showNotif('No hay campañas modificadas para limpiar', 'info');
+        return;
+    }
+    if (confirm('¿Seguro que quieres limpiar el historial de campañas modificadas?\n\nEsta acción no se puede deshacer.')) {
         window.modifiedCampaigns.clear();
         saveModifiedToStorage();
-        updateModifiedButton();
+        updateModifiedCount();
         showNotif('✅ Historial de modificadas limpiado', 'success');
     }
 }
@@ -2784,103 +2851,6 @@ document.addEventListener('DOMContentLoaded', function() {
     loadModifiedFromStorage();
 });
 
-
-
-// ===== SISTEMA DE TRACKING CON PERSISTENCIA =====
-function loadModifiedFromStorage() {
-    const stored = localStorage.getItem('modifiedCampaigns');
-    if (stored) {
-        try {
-            const arr = JSON.parse(stored);
-            window.modifiedCampaigns = new Set(arr);
-        } catch (e) {
-            window.modifiedCampaigns = new Set();
-        }
-    } else {
-        window.modifiedCampaigns = new Set();
-    }
-    updateModifiedButton();
-}
-
-function saveModifiedToStorage() {
-    const arr = Array.from(window.modifiedCampaigns);
-    localStorage.setItem('modifiedCampaigns', JSON.stringify(arr));
-}
-
-if (!window.modifiedCampaigns) {
-    loadModifiedFromStorage();
-}
-
-function markAsModified(campaignCode) {
-    window.modifiedCampaigns.add(campaignCode);
-    saveModifiedToStorage();
-    updateModifiedButton();
-}
-
-function updateModifiedButton() {
-    const btn = document.getElementById('btnShowModified');
-    if (btn) {
-        const count = window.modifiedCampaigns.size;
-        btn.textContent = `📝 Modificadas (${count})`;
-    }
-}
-
-function showModifiedCampaigns() {
-    if (window.modifiedCampaigns.size === 0) {
-        showNotif('No hay campañas modificadas. Crea o edita una campaña.', 'error');
-        return;
-    }
-
-    showTab('list');
-
-    const tbody = document.querySelector('#campaignTable tbody');
-    if (!tbody) return;
-
-    const allRows = tbody.querySelectorAll('tr');
-    let visibleCount = 0;
-
-    allRows.forEach((row) => {
-        const codeCell = row.cells[5];
-        if (codeCell && window.modifiedCampaigns.has(codeCell.textContent.trim())) {
-            row.style.display = '';
-            row.style.backgroundColor = '#fef3c7';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
-        }
-    });
-
-    const btnClear = document.getElementById('btnClearFilter');
-    if (btnClear) btnClear.style.display = 'inline-block';
-
-    showNotif(`Mostrando ${visibleCount} campañas modificadas`, 'success');
-}
-
-function clearModifiedFilter() {
-    const tbody = document.querySelector('#campaignTable tbody');
-    if (!tbody) return;
-
-    const allRows = tbody.querySelectorAll('tr');
-    allRows.forEach(row => {
-        row.style.display = '';
-        row.style.backgroundColor = '';
-    });
-
-    const btnClear = document.getElementById('btnClearFilter');
-    if (btnClear) btnClear.style.display = 'none';
-
-    renderTable();
-    showNotif('Mostrando todas las campañas', 'success');
-}
-
-function clearModifiedHistory() {
-    if (confirm('¿Limpiar el historial de campañas modificadas?\n\nEsta acción no se puede deshacer.')) {
-        window.modifiedCampaigns.clear();
-        saveModifiedToStorage();
-        updateModifiedButton();
-        showNotif('✅ Historial de modificadas limpiado', 'success');
-    }
-}
 
 // ===== VENTANAS EMERGENTES =====
 function openTabInWindow(tabId) {
@@ -2927,7 +2897,6 @@ if (typeof document !== 'undefined') {
 </script>
 
 
-    <!-- Modal Análisis Keywords -->
     <div id="analysisModal" class="analysis-modal" onclick="if(event.target === this) closeAnalysisModal()">
         <div class="analysis-content">
             <div class="analysis-header">📊 Análisis Detallado de Keywords</div>
@@ -2938,6 +2907,5 @@ if (typeof document !== 'undefined') {
         </div>
     </div>
 
-</div><!-- Fin mainApp (contenido protegido) -->
-</body>
+</div></body>
 </html>
