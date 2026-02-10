@@ -1510,6 +1510,7 @@ function renderTable() {
                 <button class="btn btn-edit" style="padding: 6px 10px;" onclick="editCampaign(${realIndex})">✏️</button>
                 <button class="btn btn-del" style="padding: 6px 10px;" onclick="deleteCampaign(${realIndex})">🗑️</button>
                 <button class="btn" style="padding: 6px 10px; ${c.observaciones && c.observaciones.trim() ? 'background: #ef4444; color: white;' : 'background: #e5e7eb; color: #666;'}" onclick="verObservacion(${realIndex})" title="${c.observaciones && c.observaciones.trim() ? 'Ver observación' : 'Sin observaciones'}">📌</button>
+                <button class="btn" style="padding: 6px 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600;" onclick="abrirModalPromptIA(${realIndex})" title="Generar Prompt IA">🤖</button>
             </td>
         </tr>`;
     }).join('');
@@ -2816,5 +2817,294 @@ if (typeof document !== 'undefined') {
         </div>
     </div>
 
-</div></body>
+</div>
+<!-- ========================================== -->
+<!-- MÓDULO GENERADOR DE PROMPTS IA - TOTALMENTE EDITABLE -->
+<!-- ========================================== -->
+<div id="modalPromptIA" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
+  <div style="background:white; padding:30px; max-width:800px; width:92%; border-radius:16px; max-height:92vh; overflow-y:auto; box-shadow: 0 20px 60px rgba(0,0,0,0.4);">
+
+    <div style="text-align:center; margin-bottom:25px;">
+      <h2 style="margin:0; color:#2563eb; font-size:26px;">🤖 Generador de Prompts IA</h2>
+      <p style="color:#6b7280; font-size:14px; margin:8px 0 0 0;">Datos auto-completados - <strong style="color:#10b981;">Puedes modificar todo lo que quieras</strong></p>
+    </div>
+
+    <!-- Grid de 2 columnas -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
+
+      <div>
+        <label style="font-weight:600; font-size:13px; display:block; margin-bottom:5px; color:#374151;">🌍 País Objetivo:</label>
+        <input id="ia_pais" type="text" style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:8px; font-size:14px; transition:border 0.3s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e5e7eb'">
+      </div>
+
+      <div>
+        <label style="font-weight:600; font-size:13px; display:block; margin-bottom:5px; color:#374151;">🗣️ Idioma Nativo:</label>
+        <input id="ia_idioma" type="text" style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:8px; font-size:14px; transition:border 0.3s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e5e7eb'">
+      </div>
+
+    </div>
+
+    <!-- Campo completo de nicho -->
+    <div style="margin-bottom:15px;">
+      <label style="font-weight:600; font-size:13px; display:block; margin-bottom:5px; color:#374151;">📦 Nicho / Producto:</label>
+      <input id="ia_nicho" type="text" style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:8px; font-size:14px; transition:border 0.3s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e5e7eb'">
+    </div>
+
+    <!-- Campo completo H1 -->
+    <div style="margin-bottom:15px;">
+      <label style="font-weight:600; font-size:13px; display:block; margin-bottom:5px; color:#374151;">🎯 Keyword Principal (H1):</label>
+      <input id="ia_h1" type="text" style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:8px; font-size:14px; transition:border 0.3s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e5e7eb'">
+    </div>
+
+    <!-- Keywords EDITABLES -->
+    <div style="margin-bottom:20px;">
+      <label style="font-weight:600; font-size:13px; display:block; margin-bottom:5px; color:#374151;">🔑 Keywords (Editable - borra las que no quieras):</label>
+      <textarea id="ia_keywords" style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:8px; font-size:13px; height:140px; font-family:inherit; resize:vertical; line-height:1.6; transition:border 0.3s;" placeholder="keyword1&#10;keyword2&#10;keyword3&#10;...puedes borrar o agregar líneas" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
+      <small style="color:#10b981; font-size:11px; display:block; margin-top:4px;">✏️ Puedes borrar, editar o agregar keywords. Una por línea. Solo para tu referencia (no van en el prompt).</small>
+    </div>
+
+    <!-- Divisor visual -->
+    <div style="border-top:2px dashed #e5e7eb; margin:20px 0;"></div>
+
+    <!-- Botones con estilo mejorado -->
+    <div style="display:flex; gap:10px; margin-bottom:20px;">
+      <button onclick="generarPromptMagnifico()" style="flex:1; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white; border:none; padding:12px 20px; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(16,185,129,0.3); transition:all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(16,185,129,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(16,185,129,0.3)'">
+        ✨ Generar Prompt
+      </button>
+      <button onclick="copiarPromptIA()" style="flex:1; background:linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color:white; border:none; padding:12px 20px; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(59,130,246,0.3); transition:all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(59,130,246,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(59,130,246,0.3)'">
+        📋 Copiar Prompt
+      </button>
+      <button onclick="cerrarModalPromptIA()" style="background:#6b7280; color:white; border:none; padding:12px 20px; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; transition:all 0.3s;" onmouseover="this.style.background='#4b5563'" onmouseout="this.style.background='#6b7280'">
+        ❌ Cerrar
+      </button>
+    </div>
+
+    <!-- Área de prompt generado -->
+    <div>
+      <label style="font-weight:600; font-size:13px; display:block; margin-bottom:5px; color:#374151;">📄 Prompt Generado:</label>
+      <textarea id="ia_prompt_generado" style="width:100%; padding:12px; border:2px solid #e5e7eb; border-radius:8px; font-size:12px; height:300px; font-family:'Courier New', monospace; background:#f9fafb; resize:vertical; line-height:1.5;"></textarea>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ============================================
+// GENERADOR DE PROMPTS IA - TOTALMENTE EDITABLE
+// ============================================
+
+// Mapeo de países (ISO a nombre completo)
+const paisesMap = {
+  'AE': 'Emiratos Árabes Unidos', 'ES': 'España', 'MX': 'México', 'AR': 'Argentina',
+  'CL': 'Chile', 'CO': 'Colombia', 'PE': 'Perú', 'BR': 'Brasil', 'US': 'Estados Unidos',
+  'GB': 'Reino Unido', 'FR': 'Francia', 'DE': 'Alemania', 'IT': 'Italia', 'PT': 'Portugal',
+  'PL': 'Polonia', 'NL': 'Países Bajos', 'BE': 'Bélgica', 'SE': 'Suecia', 'NO': 'Noruega',
+  'DK': 'Dinamarca', 'FI': 'Finlandia', 'CH': 'Suiza', 'AT': 'Austria', 'IE': 'Irlanda',
+  'CA': 'Canadá', 'AU': 'Australia', 'NZ': 'Nueva Zelanda', 'SG': 'Singapur', 'HK': 'Hong Kong',
+  'JP': 'Japón', 'KR': 'Corea del Sur', 'IN': 'India', 'ZA': 'Sudáfrica', 'TR': 'Turquía',
+  'RU': 'Rusia', 'UA': 'Ucrania', 'EG': 'Egipto', 'SA': 'Arabia Saudita', 'QA': 'Qatar',
+  'KW': 'Kuwait', 'OM': 'Omán', 'BH': 'Baréin', 'IL': 'Israel', 'TH': 'Tailandia',
+  'MY': 'Malasia', 'ID': 'Indonesia', 'PH': 'Filipinas', 'VN': 'Vietnam', 'PK': 'Pakistán',
+  'BD': 'Bangladesh', 'NG': 'Nigeria', 'KE': 'Kenia', 'GH': 'Ghana', 'UY': 'Uruguay',
+  'PY': 'Paraguay', 'BO': 'Bolivia', 'EC': 'Ecuador', 'VE': 'Venezuela', 'CR': 'Costa Rica',
+  'PA': 'Panamá', 'DO': 'República Dominicana', 'PR': 'Puerto Rico', 'GT': 'Guatemala',
+  'HN': 'Honduras', 'SV': 'El Salvador', 'NI': 'Nicaragua', 'CU': 'Cuba', 'JM': 'Jamaica',
+  'TT': 'Trinidad y Tobago', 'BS': 'Bahamas', 'BB': 'Barbados'
+};
+
+// Mapeo de idiomas
+const idiomasMap = {
+  'es': 'Español', 'en': 'Inglés', 'pt': 'Portugués', 'fr': 'Francés', 'de': 'Alemán',
+  'it': 'Italiano', 'pl': 'Polaco', 'nl': 'Holandés', 'sv': 'Sueco', 'no': 'Noruego',
+  'da': 'Danés', 'fi': 'Finlandés', 'ru': 'Ruso', 'ar': 'Árabe', 'tr': 'Turco',
+  'ja': 'Japonés', 'ko': 'Coreano', 'zh': 'Chino', 'hi': 'Hindi', 'th': 'Tailandés',
+  'vi': 'Vietnamita', 'id': 'Indonesio', 'ms': 'Malayo', 'he': 'Hebreo'
+};
+
+function convertirPaisCompleto(pais) {
+  if (pais && pais.length === 2) {
+    return paisesMap[pais.toUpperCase()] || pais;
+  }
+  return pais;
+}
+
+function convertirIdiomaCompleto(idioma) {
+  if (idioma && idioma.length === 2) {
+    return idiomasMap[idioma.toLowerCase()] || idioma;
+  }
+  return idioma;
+}
+
+function abrirModalPromptIA(campaniaIndex) {
+  console.log('🎨 Abriendo modal editable para campaña:', campaniaIndex);
+
+  if (typeof db === 'undefined' || !db.campaigns || !Array.isArray(db.campaigns)) {
+    alert('⚠️ No hay campañas cargadas. Espera unos segundos.');
+    return;
+  }
+
+  if (campaniaIndex < 0 || campaniaIndex >= db.campaigns.length) {
+    alert('❌ Índice de campaña inválido: ' + campaniaIndex);
+    return;
+  }
+
+  const campania = db.campaigns[campaniaIndex];
+
+  if (!campania) {
+    alert('❌ No se pudo acceder a la campaña');
+    return;
+  }
+
+  console.log('✅ Campaña cargada:', campania);
+
+  // Convertir país e idioma
+  const paisRaw = campania.pais || campania.country || '';
+  const idiomaRaw = campania.idioma || campania.language || '';
+
+  const paisCompleto = convertirPaisCompleto(paisRaw);
+  const idiomaCompleto = convertirIdiomaCompleto(idiomaRaw);
+
+  // Procesar keywords UNA POR LÍNEA
+  let keywordsTexto = '';
+  if (campania.keywords) {
+    if (typeof campania.keywords === 'string') {
+      keywordsTexto = campania.keywords.split(',').map(k => k.trim()).filter(k => k).join('\n');
+    } else if (Array.isArray(campania.keywords)) {
+      keywordsTexto = campania.keywords.map(k => String(k).trim()).filter(k => k).join('\n');
+    }
+  }
+
+  console.log('Keywords procesadas (editables):', keywordsTexto);
+
+  // Rellenar todos los campos (TODOS EDITABLES)
+  document.getElementById('ia_pais').value = paisCompleto;
+  document.getElementById('ia_idioma').value = idiomaCompleto;
+  document.getElementById('ia_nicho').value = campania.nicho || campania.product || '';
+  document.getElementById('ia_h1').value = campania.nombre || campania.name || '';
+  document.getElementById('ia_keywords').value = keywordsTexto;
+  document.getElementById('ia_prompt_generado').value = '';
+
+  document.getElementById('modalPromptIA').style.display = 'flex';
+  console.log('✅ Modal editable abierto - puedes modificar todo');
+}
+
+function cerrarModalPromptIA() {
+  document.getElementById('modalPromptIA').style.display = 'none';
+}
+
+function generarPromptMagnifico() {
+  const pais = document.getElementById('ia_pais').value.trim();
+  const idioma = document.getElementById('ia_idioma').value.trim();
+  const nicho = document.getElementById('ia_nicho').value.trim();
+  const h1 = document.getElementById('ia_h1').value.trim();
+
+  if (!pais || !idioma || !nicho || !h1) {
+    alert('⚠️ Por favor completa todos los campos obligatorios');
+    return;
+  }
+
+  // PROMPT EXACTO
+  const prompt = `Actúa como un experto redactor de artículos advertorial RSOC con 15 años de experiencia en redes sociales.
+Necesito crear un artículo 100% compliant con las políticas publicitarias para ${pais} en idioma ${idioma} (Nativo).
+
+🛑 **MANDATO DE EJECUCIÓN OBLIGATORIO**:
+Tu misión es hacer **EXACTAMENTE LO QUE PIDO**, respetando longitudes, negritas y asegurando una traducción perfecta.
+
+⛔ **REGLA DE TRADUCCIÓN**: El input contiene textos en ESPAÑOL que sirven como PLANTILLAS. TRADÚCELOS fielmente al ${idioma} y adáptalos al país ${pais}. NO escribas nada en español en el resultado final.
+
+
+---
+### 📏 REGLAS DE FORMATO Y EXTENSIÓN (OBLIGATORIO)
+
+**1. Longitud:** Mínimo 1200 palabras, Máximo 1500 palabras.
+**2. Uso de Negritas:** ÚNICAMENTE en Título H1, Subtítulos H2, la PRIMERA vez que aparece la Keyword Principal y menciones de Keywords Secundarias.
+**3. Párrafos:** 2 a 3 párrafos por H2. Longitud de 6 a 8 renglones visuales por párrafo de forma consistente.
+**4. Las palabras de los Títulos principales (H1), siembre deben ir en Mayúsculas las primeras letras, tanto en el titulo principal (H1), como de los títulos  secundarios (H2), es "obligatorio"
+
+---
+### 🛡️ TONO Y COMPLIANCE (OBLIGATORIO)
+
+- **Tono General:** Neutral e informativo.
+- **Estilo de Escritura:** CERO lenguaje de venta agresiva.
+- **Resultados:** NO garantizar aprobaciones ni resultados.
+- **Anonimato:** NO mencionar marcas reales, financieras,  bancos específicos ni precios concretos.
+- **Pagos:** NO mencionar métodos de pago específicos (tarjetas, plataformas financieras).
+- **Publicidad:** NO mencionar anunciantes ni ofertas comerciales directas.
+
+---
+### 🏗️ ESTRUCTURA Y CONTENIDO
+
+**1. TÍTULO PRINCIPAL (H1)**
+Instrucción: Utiliza OBLIGATORIAMENTE esta información para el título: "${h1}".
+Acción: Tradúcela al ${idioma} de forma atractiva pero profesional.
+Formato: # **[Texto Traducido]**
+
+**2. INTRODUCCIÓN**
+Instrucción: Traduce este párrafo maestro al ${idioma}:
+"En ${pais}, algunas tiendas y plataformas ofrecen planes para **Comprar un ${nicho}**. La disponibilidad, el costo y los requisitos varían según el proveedor, el producto y el tipo de financiamiento, y siempre están sujetos a evaluaciones de elegibilidad y asequibilidad. Este artículo explica cómo funciona, los términos comunes, qué revisar antes de decidir y qué buscar para evitar costos inesperados."
+
+**3. DISCLAIMER INICIAL**
+Instrucción: Traduce al ${idioma} y ponlo en cursiva:
+*"Solo para fines informativos; esto no constituye asesoramiento financiero. No se garantiza la aprobación. Por favor, consulte los términos y condiciones oficiales del proveedor al realizar la compra."*
+
+**4. DESARROLLO (H2)**
+Instrucción: Desarrolla los siguientes puntos (traducidos). Usa el separador (---) antes de cada H2.
+   - [Genera 4 subtítulos H2 traducidos y relevantes para el nicho]
+
+**5. CONCLUSIÓN (H2)**
+Formato:
+---
+## **[Conclusión Traducida]**
+Contenido: Párrafo de cierre en ${idioma}.
+
+**7. DISCLAIMER FINAL**
+Instrucción: Traduce al ${idioma} y ponlo en cursiva:
+*"La información compartida en este artículo está vigente al momento de su publicación. Para obtener información más actualizada, investigue por su cuenta."*
+---
+**8. FUENTES Y REFERENCIAS (H2)**
+Instrucción: Genera un H2 titulado "Fuentes" (Traducido).
+⚠️ Lista 5 fuentes de autoridad REAL en ${pais} (Bancos, Ministerios, Entidades de Consumidores).
+
+¡Escribe el artículo en formato editabl.md!`;
+
+  document.getElementById('ia_prompt_generado').value = prompt;
+  document.getElementById('ia_prompt_generado').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+
+  console.log('✅ Prompt generado exitosamente');
+
+  if (typeof showNotif === 'function') {
+    showNotif('✅ Prompt generado correctamente', 'success');
+  }
+}
+
+function copiarPromptIA() {
+  const textarea = document.getElementById('ia_prompt_generado');
+
+  if (!textarea.value.trim()) {
+    alert('⚠️ Primero genera el prompt haciendo clic en "✨ Generar Prompt"');
+    return;
+  }
+
+  textarea.select();
+  textarea.setSelectionRange(0, 99999);
+
+  try {
+    document.execCommand('copy');
+    console.log('✅ Prompt copiado al portapapeles');
+
+    if (typeof showNotif === 'function') {
+      showNotif('✅ Prompt copiado al portapapeles', 'success');
+    }
+
+    alert('✅ ¡Prompt copiado exitosamente!\n\n📋 Ahora pégalo en Qwen o Perplexity (Ctrl+V)');
+  } catch (err) {
+    console.error('❌ Error al copiar:', err);
+    alert('⚠️ Error al copiar automáticamente.\n\nSelecciona el texto manualmente y copia con Ctrl+C');
+  }
+}
+
+console.log('✅ Módulo IA totalmente editable cargado');
+</script>
+
+</body>
 </html>
