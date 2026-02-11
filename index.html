@@ -439,7 +439,38 @@
     opacity: 1;
 }
 
+.bank-campaign-card {background: white; padding: 12px 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #667eea; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+.bank-campaign-card:hover {transform: translateX(5px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2); border-left-color: #764ba2;}
+.bank-campaign-card.active {background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-left-color: #10b981;}
+.bank-campaign-card h4 {margin: 0 0 8px 0; font-size: 0.95em; font-weight: 600;}
+.bank-campaign-card .meta {font-size: 0.85em; opacity: 0.8; display: flex; gap: 12px; flex-wrap: wrap;}
+.keyword-item {background: white; padding: 10px 12px; margin-bottom: 8px; border-radius: 6px; border: 2px solid #e5e7eb; display: flex; align-items: center; gap: 10px; transition: all 0.2s;}
+.keyword-item:hover {border-color: #667eea; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);}
+.keyword-item.selected {border-color: #10b981; background: #f0fdf4;}
+.keyword-item input[type="checkbox"] {width: 18px; height: 18px; cursor: pointer;}
+.keyword-text {flex: 1; font-weight: 500; font-size: 0.95em; word-break: break-word;}
+.keyword-priority {padding: 4px 10px; border-radius: 4px; font-size: 0.75em; font-weight: 600; white-space: nowrap;}
+.priority-high {background: #ef4444; color: white;}
+.priority-normal {background: #6b7280; color: white;}
+.keyword-metrics {display: flex; gap: 8px; font-size: 0.75em; color: #666;}
+.metric-value {padding: 2px 6px; background: #f3f4f6; border-radius: 3px; white-space: nowrap;}
+
+/* EDICIÓN Y ELIMINACIÓN */
+.keyword-item.editing { border-color: #f59e0b; background: #fffbeb; }
+.keyword-text-input { width: 100%; padding: 8px 12px; border: 2px solid #667eea; border-radius: 6px; font-size: 0.95em; font-weight: 500; }
+.keyword-actions { display: flex; gap: 5px; }
+.btn-mini { padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8em; font-weight: 600; }
+.btn-edit-mini { background: #f59e0b; color: white; }
+.btn-del-mini { background: #ef4444; color: white; }
+.btn-save-mini { background: #10b981; color: white; }
+.btn-cancel-mini { background: #6b7280; color: white; }
+.keyword-edited-badge { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; }
+.sync-status { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 8px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 0.9em; font-weight: 600; z-index: 9999; display: none; }
+.sync-status.saving { background: #fef3c7; color: #92400e; display: block; }
+.sync-status.saved { background: #d1fae5; color: #065f46; display: block; }
+.sync-status.error { background: #fee2e2; color: #dc2626; display: block; }
 </style>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div id="loginScreen">
@@ -507,6 +538,7 @@
             <button class="tab-btn" oncontextmenu="openTabInWindow('tab-add'); return false;" onclick="switchTab('tab-add')">➕ Gestionar Campaña</button>
             <button class="tab-btn" oncontextmenu="openTabInWindow('tab-config'); return false;" onclick="switchTab('tab-config')">⚙️ Configuración Global</button>
             <button class="tab-btn" oncontextmenu="openTabInWindow('tab-catalog'); return false;" onclick="switchTab('tab-catalog')">📡 Catálogo HAV</button>
+            <button class="tab-btn" oncontextmenu="openTabInWindow('tab-keyword-bank'); return false;" onclick="switchTab('tab-keyword-bank')">🏦 Banco Keywords</button>
         </div>
 
         <div id="tab-list" class="tab-content active">
@@ -691,6 +723,40 @@
             </div>
             <div id="havCatalogContainer" class="hav-catalog-grid"></div>
         </div>
+
+    <!-- TAB BANCO KEYWORDS -->
+    <div id="tab-keyword-bank" class="tab-content">
+      <h2 style="color: #667eea; margin-bottom: 20px;">🏦 Banco de Keywords</h2>
+      <div class="stats" style="margin-bottom: 20px;">
+        <div class="stat-card"><div class="number" id="bankTotalCampaigns">0</div><div class="label">Campañas</div></div>
+        <div class="stat-card"><div class="number" id="bankTotalKeywords">0</div><div class="label">Keywords</div></div>
+        <div class="stat-card"><div class="number" id="bankHighPriority">0</div><div class="label">Alta Prioridad</div></div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"><div class="number" id="bankSelectedCount" style="color: white;">0</div><div class="label" style="color: white;">Seleccionadas</div></div>
+      </div>
+      <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn btn-primary" onclick="document.getElementById('importBankExcel').click()">📊 Importar Excel</button>
+        <input type="file" id="importBankExcel" accept=".xlsx,.xls" style="display:none" onchange="importKeywordBankFromExcel(event)">
+        <button class="btn btn-primary" onclick="document.getElementById('importBankFile').click()">📥 Importar JSON</button>
+        <input type="file" id="importBankFile" accept=".json" style="display:none" onchange="importKeywordBank(event)">
+        <button class="btn btn-success" onclick="exportKeywordBank()">💾 Exportar</button>
+        <button class="btn btn-del" onclick="clearSelectedKeywords()">🗑️ Limpiar</button>
+        <button class="btn btn-warning" onclick="clearBankData()">⚠️ Vaciar</button>
+      </div>
+      <div class="controls" style="grid-template-columns: 1fr 1fr 1fr 1fr 2fr; margin-bottom: 20px;">
+        <div class="control-group"><label>🔍 Buscar</label><input type="text" id="bankSearch" placeholder="Buscar..." oninput="filterKeywordBank()" autocomplete="off"></div>
+        <div class="control-group"><label>📦 Nicho</label><select id="bankFilterProduct" onchange="filterKeywordBank()"><option value="">Todos</option></select></div>
+        <div class="control-group"><label>🌍 País</label><select id="bankFilterCountry" onchange="filterKeywordBank()"><option value="">Todos</option></select></div>
+        <div class="control-group"><label>🔥 Prioridad</label><select id="bankFilterPriority" onchange="updateCurrentCampaignView()"><option value="">Todas</option><option value="high">Alta</option><option value="normal">Normal</option></select></div>
+        <div class="control-group"><label>⚡ Acciones</label><div style="display: flex; gap: 8px;"><button class="btn btn-success" onclick="copySelectedKeywords()" style="flex: 1; padding: 8px; font-size: 0.9em;">📋 Copiar</button><button class="btn btn-primary" onclick="sendToForm()" style="flex: 1; padding: 8px; font-size: 0.9em;">➡️ A Campaña</button></div></div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; min-height: 500px;">
+        <div style="border-right: 2px solid #e5e7eb; padding-right: 20px;">
+          <h3 style="color: #667eea; margin-bottom: 15px; font-size: 1.1em;">📋 Campañas (<span id="bankFilteredCount">0</span>)</h3>
+          <div id="bankCampaignsList" style="max-height: 600px; overflow-y: auto;"><div style="text-align: center; padding: 60px 20px; color: #999;"><div style="font-size: 3em;">📊</div><p>Importa un archivo Excel</p></div></div>
+        </div>
+        <div><div id="bankKeywordsDetail" style="background: #f9fafb; padding: 20px; border-radius: 8px; min-height: 600px;"><div style="text-align: center; padding: 100px 20px; color: #999;"><div style="font-size: 3em;">👈</div><p>Selecciona una campaña</p></div></div></div>
+      </div>
+    </div>
     </div>
 
     <div id="editChannelModal" class="modal">
@@ -766,6 +832,11 @@ if (!db.countries) db.countries = ['PL', 'DE', 'ES', 'FR', 'IT', 'NL', 'BE', 'PT
 // ------------------------------------------
 
 let editingIndex = -1;
+let keywordBank = [];
+let selectedKeywords = [];
+let currentBankCampaignIndex = -1;
+let bankSortDirection = 'desc';
+let originalKeywordOrder = [];;
 let currentSort = { column: 'country', order: 'asc' };
 let currentEditingChannel = null;
 
@@ -1043,6 +1114,8 @@ let currentEditingChannel = null;
             </tbody>
         </table>
     </div>
+
+    <div id="syncStatus" class="sync-status"></div>
 </body>
 </html>`;
 
@@ -3104,6 +3177,559 @@ function copiarPromptIA() {
 }
 
 console.log('✅ Módulo IA totalmente editable cargado');
+
+
+// BANCO DE KEYWORDS
+
+async function importKeywordBankFromExcel(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  showNotif('Leyendo Excel...', 'info');
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, {type: 'array'});
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(firstSheet);
+      if (rows.length === 0) { alert('Excel vacío'); return; }
+      const cols = Object.keys(rows[0]);
+      let formatType = 'unknown';
+      if (cols.includes('campaign_id') && cols.includes('product') && cols.includes('keyword')) {
+        formatType = 'standard';
+      } else if (cols.some(c => c.toLowerCase().includes('keyword')) && 
+                 (cols.some(c => c.toLowerCase().includes('search')) || cols.some(c => c.toLowerCase().includes('impression')))) {
+        formatType = 'tabla-keywords';
+      }
+      if (formatType === 'unknown') { alert('Formato no reconocido'); return; }
+      showNotif('Formato: ' + formatType, 'info');
+      const campaignMap = {};
+      if (formatType === 'standard') {
+        rows.forEach(row => {
+          const cid = row.campaign_id;
+          if (!campaignMap[cid]) {
+            campaignMap[cid] = {
+              campaign_id: cid, product: row.product, country: row.country,
+              platform: cid.split('-')[0] || 'FB', channel: cid.split('-')[1] || 'HAV',
+              keywords: [], date_added: new Date().toISOString().slice(0, 10)
+            };
+          }
+          campaignMap[cid].keywords.push({
+            text: row.keyword, priority: row.priority || 'normal',
+            impressions: parseInt(row.impressions) || 0, clicks: parseInt(row.clicks) || 0,
+            ctr: parseFloat(row.ctr) || 0, conversions: parseInt(row.conversions) || 0,
+            cost: parseFloat(row.cost) || 0, cpc: parseFloat(row.cpc) || 0
+          });
+        });
+      } else if (formatType === 'tabla-keywords') {
+        const keyCol = cols.find(c => c.toLowerCase().includes('keyword')) || 'Keyword';
+        const campCol = cols.find(c => { const val = String(rows[0][c]); return val.includes('FB-') || val.includes('TT-') || val.includes('MMT'); }) || cols[1];
+        const searchCol = cols.find(c => c.toLowerCase().includes('search') || c.toLowerCase().includes('impression')) || 'Searches';
+        const clickCol = cols.find(c => c.toLowerCase().includes('click')) || 'Clicks';
+        const ctrCol = cols.find(c => c.toLowerCase().includes('ctr')) || 'CTR';
+        rows.forEach(row => {
+          const cid = row[campCol];
+          if (!cid || cid === '' || typeof cid !== 'string') return;
+          const parts = cid.split('-');
+          if (parts.length < 4) return;
+          if (!campaignMap[cid]) {
+            campaignMap[cid] = {
+              campaign_id: cid, product: parts[2], country: parts[3],
+              platform: parts[0], channel: parts[1], keywords: [],
+              date_added: new Date().toISOString().slice(0, 10)
+            };
+          }
+          let ctrVal = 0;
+          if (row[ctrCol]) { const ctrStr = String(row[ctrCol]).replace('%', '').trim(); ctrVal = parseFloat(ctrStr) || 0; }
+          campaignMap[cid].keywords.push({
+            text: row[keyCol] || '', priority: 'normal',
+            impressions: parseInt(row[searchCol]) || 0, clicks: parseInt(row[clickCol]) || 0,
+            ctr: ctrVal, conversions: 0, cost: 0, cpc: 0
+          });
+        });
+      }
+      keywordBank = Object.values(campaignMap).map(camp => {
+        camp.total_keywords = camp.keywords.length;
+        camp.high_priority_count = camp.keywords.filter(k => k.priority === 'high').length;
+        return camp;
+      });
+      localStorage.setItem('keywordBank', JSON.stringify(keywordBank));
+      updateBankStats(); populateBankFilters(); renderBankCampaigns();
+      const totalKw = keywordBank.reduce((s,c) => s + c.total_keywords, 0);
+      showNotif(keywordBank.length + ' campañas | ' + totalKw + ' keywords', 'success');
+      document.getElementById('importBankExcel').value = '';
+    
+
+        // AUTO-SINCRONIZACIÓN
+        if (keywordBank && keywordBank.length > 0) {
+            setTimeout(() => {
+                if (typeof syncBankToFirebase === 'function') {
+                    syncBankToFirebase();
+                }
+            }, 1000);
+        }
+} catch (error) { alert('Error: ' + error.message); console.error(error); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function importKeywordBank(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      keywordBank = JSON.parse(e.target.result);
+      localStorage.setItem('keywordBank', JSON.stringify(keywordBank));
+      updateBankStats(); populateBankFilters(); renderBankCampaigns();
+      showNotif(keywordBank.length + ' campañas', 'success');
+      document.getElementById('importBankFile').value = '';
+    } catch (error) { alert('Error: ' + error.message); }
+  };
+  reader.readAsText(file);
+}
+
+function loadKeywordBankFromStorage() {
+  const stored = localStorage.getItem('keywordBank');
+  if (stored) { try { keywordBank = JSON.parse(stored); updateBankStats(); populateBankFilters(); } catch(e) {} }
+}
+
+function updateBankStats() {
+  const e1 = document.getElementById('bankTotalCampaigns');
+  const e2 = document.getElementById('bankTotalKeywords');
+  const e3 = document.getElementById('bankHighPriority');
+  const e4 = document.getElementById('bankSelectedCount');
+  if (e1) e1.textContent = keywordBank.length;
+  if (e2) e2.textContent = keywordBank.reduce((s, c) => s + c.total_keywords, 0);
+  if (e3) e3.textContent = keywordBank.reduce((s, c) => s + c.high_priority_count, 0);
+  if (e4) e4.textContent = selectedKeywords.length;
+}
+
+function populateBankFilters() {
+  const products = [...new Set(keywordBank.map(c => c.product))].sort();
+  const countries = [...new Set(keywordBank.map(c => c.country))].sort();
+  const psel = document.getElementById('bankFilterProduct');
+  if (psel) psel.innerHTML = '<option value="">Todos</option>' + products.map(p => '<option value="' + p + '">' + p + '</option>').join('');
+  const csel = document.getElementById('bankFilterCountry');
+  if (csel) csel.innerHTML = '<option value="">Todos</option>' + countries.map(c => '<option value="' + c + '">' + c + '</option>').join('');
+}
+
+function renderBankCampaigns() {
+  const cont = document.getElementById('bankCampaignsList'); if (!cont) return;
+  if (keywordBank.length === 0) { cont.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#999;"><p>Importa archivo</p></div>'; return; }
+  const filtered = getFilteredBankCampaigns();
+  const cel = document.getElementById('bankFilteredCount'); if (cel) cel.textContent = filtered.length;
+  cont.innerHTML = filtered.map(camp => {
+    const idx = keywordBank.indexOf(camp);
+    return '<div class="bank-campaign-card" onclick="showBankCampaignDetail(' + idx + ')"><h4>' + camp.campaign_id + '</h4><div class="meta"><span>📦 ' + camp.product + '</span><span>🌍 ' + camp.country + '</span><span>📝 ' + camp.total_keywords + '</span></div></div>';
+  }).join('');
+}
+
+function getFilteredBankCampaigns() {
+  const search = (document.getElementById('bankSearch')?.value || '').toLowerCase();
+  const product = document.getElementById('bankFilterProduct')?.value || '';
+  const country = document.getElementById('bankFilterCountry')?.value || '';
+  return keywordBank.filter(camp => {
+    if (product && camp.product !== product) return false;
+    if (country && camp.country !== country) return false;
+    if (search) {
+      const ok = camp.campaign_id.toLowerCase().includes(search) || camp.keywords.some(kw => kw.text.toLowerCase().includes(search));
+      if (!ok) return false;
+    }
+    return true;
+  });
+}
+
+function filterKeywordBank() { renderBankCampaigns(); }
+
+function showBankCampaignDetail(idx) {
+  currentBankCampaignIndex = idx;
+  const camp = keywordBank[idx];
+  originalKeywordOrder = [...camp.keywords];
+  updateCurrentCampaignView();
+}
+
+function updateCurrentCampaignView() {
+  if (currentBankCampaignIndex < 0) return;
+  const camp = keywordBank[currentBankCampaignIndex];
+  const cont = document.getElementById('bankKeywordsDetail'); if (!cont) return;
+  document.querySelectorAll('.bank-campaign-card').forEach((card, i) => {
+    const filtered = getFilteredBankCampaigns();
+    const realIdx = keywordBank.indexOf(filtered[i]);
+    card.classList.toggle('active', realIdx === currentBankCampaignIndex);
+  });
+  const priof = document.getElementById('bankFilterPriority')?.value || '';
+  let fkws = camp.keywords.filter(kw => !priof || kw.priority === priof);
+  let html = '<div style="margin-bottom:20px;border-bottom:2px solid #667eea;padding-bottom:15px;"><h3 style="color:#667eea;margin:0 0 10px 0;">' + camp.campaign_id + '</h3><div style="display:flex;gap:20px;font-size:0.9em;color:#666;"><span>📦 ' + camp.product + '</span><span>🌍 ' + camp.country + '</span><span>📝 ' + fkws.length + ' kws</span></div></div><div style="margin-bottom:15px;display:flex;gap:10px;"><button class="btn btn-success" onclick="selectAllKeywordsFromCampaign()" style="flex:1;padding:8px;font-size:0.85em;">✅ Todas</button><button class="btn btn-warning" onclick="deselectAllKeywordsFromCampaign()" style="flex:1;padding:8px;font-size:0.85em;">❌ Ninguna</button></div><div style="max-height:450px;overflow-y:auto;">';
+  fkws.forEach(kw => {
+    const aidx = camp.keywords.indexOf(kw);
+    const sel = selectedKeywords.some(sk => sk.campaignId === camp.campaign_id && sk.text === kw.text);
+    const pcls = kw.priority === 'high' ? 'priority-high' : 'priority-normal';
+    const plbl = kw.priority === 'high' ? '🔥 ALTA' : 'NORMAL';
+    html += '<div class="keyword-item ' + (sel?'selected':'') + '" id="kw-' + currentBankCampaignIndex + '-' + aidx + '"><input type="checkbox" ' + (sel?'checked':'') + ' onchange="toggleKeywordSelection(' + aidx + ')"><span class="keyword-text">' + kw.text + '</span><span class="keyword-priority ' + pcls + '">' + plbl + '</span><div class="keyword-metrics"><span class="metric-value">👁️ ' + kw.impressions.toLocaleString() + '</span><span class="metric-value">🖱️ ' + kw.clicks + '</span><span class="metric-value">📊 ' + kw.ctr.toFixed(2) + '%</span></div></div>';
+  });
+  html += '</div>'; cont.innerHTML = html;
+}
+
+function toggleKeywordSelection(kwIdx) {
+  const camp = keywordBank[currentBankCampaignIndex]; const kw = camp.keywords[kwIdx];
+  const eidx = selectedKeywords.findIndex(sk => sk.campaignId === camp.campaign_id && sk.text === kw.text);
+  if (eidx >= 0) { selectedKeywords.splice(eidx, 1); } else { selectedKeywords.push({campaignId: camp.campaign_id, text: kw.text, priority: kw.priority, product: camp.product, country: camp.country}); }
+  updateBankStats(); const el = document.getElementById('kw-' + currentBankCampaignIndex + '-' + kwIdx); if (el) el.classList.toggle('selected');
+}
+
+function selectAllKeywordsFromCampaign() {
+  const camp = keywordBank[currentBankCampaignIndex]; const priof = document.getElementById('bankFilterPriority')?.value || '';
+  camp.keywords.forEach(kw => { if (priof && kw.priority !== priof) return; const ex = selectedKeywords.some(sk => sk.campaignId === camp.campaign_id && sk.text === kw.text); if (!ex) { selectedKeywords.push({campaignId: camp.campaign_id, text: kw.text, priority: kw.priority, product: camp.product, country: camp.country}); } });
+  updateBankStats(); updateCurrentCampaignView(); showNotif(selectedKeywords.length + ' seleccionadas', 'success');
+}
+
+function deselectAllKeywordsFromCampaign() {
+  const camp = keywordBank[currentBankCampaignIndex];
+  selectedKeywords = selectedKeywords.filter(sk => sk.campaignId !== camp.campaign_id);
+  updateBankStats(); updateCurrentCampaignView();
+}
+
+function clearSelectedKeywords() {
+  selectedKeywords = []; updateBankStats();
+  if (currentBankCampaignIndex >= 0) updateCurrentCampaignView();
+  showNotif('Limpiado', 'info');
+}
+
+function copySelectedKeywords() {
+  if (selectedKeywords.length === 0) { alert('No hay keywords seleccionadas'); return; }
+  const txt = selectedKeywords.map(kw => kw.priority === 'high' ? '**' + kw.text + '**' : kw.text).join('\n');
+  navigator.clipboard.writeText(txt).then(() => { showNotif(selectedKeywords.length + ' copiadas', 'success'); }).catch(() => { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); showNotif(selectedKeywords.length + ' copiadas', 'success'); });
+}
+
+function sendToForm() {
+  if (selectedKeywords.length === 0) { alert('No hay keywords'); return; }
+  const txt = selectedKeywords.map(kw => kw.priority === 'high' ? '**' + kw.text + '**' : kw.text).join('\n');
+  switchTab('tab-add'); const ta = document.getElementById('inKeywords1');
+  if (ta) { ta.value = ta.value.trim() ? ta.value + '\n' + txt : txt; setTimeout(() => ta.scrollIntoView({behavior:'smooth',block:'center'}), 100); showNotif(selectedKeywords.length + ' keywords', 'success'); }
+}
+
+function exportKeywordBank() {
+  if (keywordBank.length === 0) { alert('Banco vacío'); return; }
+  const str = JSON.stringify(keywordBank, null, 2);
+  const blob = new Blob([str], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'banco_' + new Date().toISOString().slice(0,10) + '.json'; a.click();
+  URL.revokeObjectURL(url); showNotif('Exportado', 'success');
+}
+
+function clearBankData() {
+  if (confirm('¿Vaciar banco?')) {
+    keywordBank = []; selectedKeywords = []; currentBankCampaignIndex = -1; originalKeywordOrder = [];
+    localStorage.removeItem('keywordBank'); updateBankStats(); renderBankCampaigns();
+    document.getElementById('bankKeywordsDetail').innerHTML = '<div style="text-align:center;padding:100px 20px;color:#999;">Vaciado</div>';
+    showNotif('Vaciado', 'warning');
+  }
+}
+
+(function() {
+  const origSwitchTab = window.switchTab;
+  window.switchTab = function(id) {
+    if (origSwitchTab) origSwitchTab(id);
+    if (id === 'tab-keyword-bank') { loadKeywordBankFromStorage(); if (keywordBank.length > 0) renderBankCampaigns(); }
+  };
+})();
+
+window.addEventListener('DOMContentLoaded', loadKeywordBankFromStorage);
+
+
+
+// ============================================================================
+// SISTEMA COMPLETO: EDICIÓN, ELIMINACIÓN, SINCRONIZACIÓN Y ORDENAMIENTO
+// ============================================================================
+
+let editingKeywordIndex = null;
+const keywordBankRef = dbFirebase.collection('keywordBank');
+let keywordSortBy = null; // 'impressions', 'clicks', 'alpha', 'priority'
+let keywordSortDirection = 'desc';
+
+// ORDENAR KEYWORDS
+function sortKeywordsBy(criteria) {
+    if (keywordSortBy === criteria) {
+        keywordSortDirection = keywordSortDirection === 'desc' ? 'asc' : 'desc';
+    } else {
+        keywordSortBy = criteria;
+        keywordSortDirection = 'desc';
+    }
+
+    const campaign = keywordBank[currentBankCampaignIndex];
+    campaign.keywords.sort((a, b) => {
+        let valA, valB;
+        if (criteria === 'impressions') {
+            valA = a.impressions || a.searches || 0;
+            valB = b.impressions || b.searches || 0;
+        } else if (criteria === 'clicks') {
+            valA = a.clicks || 0;
+            valB = b.clicks || 0;
+        } else if (criteria === 'alpha') {
+            valA = a.text.toLowerCase();
+            valB = b.text.toLowerCase();
+        } else if (criteria === 'priority') {
+            valA = a.priority === 'high' ? 1 : 0;
+            valB = b.priority === 'high' ? 1 : 0;
+        }
+
+        if (criteria === 'alpha') {
+            return keywordSortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        } else {
+            if (valA < valB) return keywordSortDirection === 'asc' ? -1 : 1;
+            if (valA > valB) return keywordSortDirection === 'asc' ? 1 : -1;
+            return 0;
+        }
+    });
+
+    updateCurrentCampaignView();
+
+    const msgs = {
+        impressions: `👁️ ${keywordSortDirection === 'desc' ? 'Mayor a menor' : 'Menor a mayor'}`,
+        clicks: `🖱️ ${keywordSortDirection === 'desc' ? 'Mayor a menor' : 'Menor a mayor'}`,
+        alpha: `🔤 ${keywordSortDirection === 'desc' ? 'Z→A' : 'A→Z'}`,
+        priority: `⭐ ${keywordSortDirection === 'desc' ? 'Alta primero' : 'Normal primero'}`
+    };
+    showNotif(msgs[criteria], 'info');
+}
+
+// REDEFINIR updateCurrentCampaignView
+const _origUpdate = updateCurrentCampaignView;
+function updateCurrentCampaignView() {
+    if (currentBankCampaignIndex < 0) return;
+    const campaign = keywordBank[currentBankCampaignIndex];
+    const container = document.getElementById('bankKeywordsDetail');
+
+    let html = `
+        <div style="margin-bottom:20px;border-bottom:2px solid #667eea;padding-bottom:15px;">
+            <h3 style="color:#667eea;margin:0 0 10px 0;">${campaign.campaign_id || campaign.campaignid}</h3>
+            <div style="display:flex;gap:20px;font-size:0.9em;color:#666;flex-wrap:wrap;">
+                <span>📦 ${campaign.product}</span>
+                <span>🌍 ${campaign.country}</span>
+                <span>📝 ${campaign.keywords.length} kw</span>
+                <span style="color:#f59e0b;">✏️ ${campaign.keywords.filter(k => k.edited).length} editadas</span>
+            </div>
+        </div>
+        <div style="margin-bottom:15px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-success" onclick="selectAllKeywordsFromCampaign()" style="padding:8px 16px;font-size:0.85em;">✅ Todas</button>
+            <button class="btn btn-warning" onclick="deselectAllKeywordsFromCampaign()" style="padding:8px 16px;font-size:0.85em;">❌ Ninguna</button>
+            <button class="btn btn-danger" onclick="deleteSelectedKeywords()" style="padding:8px 16px;font-size:0.85em;">🗑️ Eliminar</button>
+            <div style="border-left:2px solid #ddd;margin-left:10px;padding-left:10px;display:flex;gap:5px;align-items:center;">
+                <span style="font-size:0.85em;color:#666;font-weight:600;">Ordenar:</span>
+                <button class="btn-mini" style="background:#667eea;color:white;padding:6px 12px;" onclick="sortKeywordsBy('impressions')" title="Por impresiones">👁️</button>
+                <button class="btn-mini" style="background:#667eea;color:white;padding:6px 12px;" onclick="sortKeywordsBy('clicks')" title="Por clics">🖱️</button>
+                <button class="btn-mini" style="background:#667eea;color:white;padding:6px 12px;" onclick="sortKeywordsBy('alpha')" title="Alfabético">🔤</button>
+                <button class="btn-mini" style="background:#667eea;color:white;padding:6px 12px;" onclick="sortKeywordsBy('priority')" title="Por prioridad">⭐</button>
+            </div>
+        </div>
+        <div style="max-height:450px;overflow-y:auto;">`;
+
+    const filterPriority = document.getElementById('bankFilterPriority')?.value;
+
+    campaign.keywords.forEach((kw, idx) => {
+        if (filterPriority && filterPriority !== 'Todas' && kw.priority !== filterPriority) return;
+
+        const isSelected = selectedKeywords.some(sk => 
+            sk.campaignId === campaign.campaign_id && sk.text === kw.text
+        );
+        const isEditing = editingKeywordIndex === idx;
+
+        html += `
+            <div class="keyword-item ${isSelected ? 'selected' : ''} ${isEditing ? 'editing' : ''}">
+                <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleKeywordSelection(${idx})">`;
+
+        if (isEditing) {
+            html += `<input type="text" class="keyword-text-input" id="kwInput-${idx}" 
+                value="${kw.text.replace(/"/g, '&quot;')}"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();saveKeywordEdit(${idx});}if(event.key==='Escape')cancelKeywordEdit();">`;
+        } else {
+            html += `<span class="keyword-text">${kw.text}${kw.edited ? '<span class="keyword-edited-badge">✏️</span>' : ''}</span>`;
+        }
+
+        html += `
+                <div class="keyword-metrics">
+                    <span class="metric-value">👁️ ${(kw.impressions || kw.searches || 0).toLocaleString()}</span>
+                    <span class="metric-value">🖱️ ${kw.clicks || 0}</span>
+                    <span class="metric-value" style="background:${kw.priority === 'high' ? '#ef4444' : '#6b7280'};color:white;padding:4px 8px;">
+                        ${kw.priority === 'high' ? '⭐' : '📌'}
+                    </span>
+                </div>
+                <div class="keyword-actions">`;
+
+        if (isEditing) {
+            html += `<button class="btn-mini btn-save-mini" onclick="saveKeywordEdit(${idx})">💾</button>
+                     <button class="btn-mini btn-cancel-mini" onclick="cancelKeywordEdit()">❌</button>`;
+        } else {
+            html += `<button class="btn-mini btn-edit-mini" onclick="startKeywordEdit(${idx})">✏️</button>
+                     <button class="btn-mini btn-del-mini" onclick="deleteSingleKeyword(${idx})">🗑️</button>`;
+        }
+
+        html += `</div></div>`;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function startKeywordEdit(idx) {
+    if (editingKeywordIndex !== null) {
+        showNotif('Termina de editar primero', 'warning');
+        return;
+    }
+    editingKeywordIndex = idx;
+    updateCurrentCampaignView();
+    setTimeout(() => {
+        const inp = document.getElementById(`kwInput-${idx}`);
+        if (inp) { inp.focus(); inp.select(); }
+    }, 50);
+}
+
+async function saveKeywordEdit(idx) {
+    const inp = document.getElementById(`kwInput-${idx}`);
+    if (!inp) return;
+    const newText = inp.value.trim();
+    if (!newText) { showNotif('No puede estar vacía', 'warning'); return; }
+
+    const campaign = keywordBank[currentBankCampaignIndex];
+    const kw = campaign.keywords[idx];
+
+    if (newText !== kw.text) {
+        kw.text = newText;
+        kw.edited = true;
+        kw.editedAt = new Date().toISOString();
+        localStorage.setItem('keywordBank', JSON.stringify(keywordBank));
+        await syncBankToFirebase();
+        showNotif('✅ Guardado', 'success');
+    }
+
+    editingKeywordIndex = null;
+    updateBankStats();
+    updateCurrentCampaignView();
+}
+
+function cancelKeywordEdit() {
+    editingKeywordIndex = null;
+    updateCurrentCampaignView();
+}
+
+async function deleteSingleKeyword(idx) {
+    if (!confirm('¿Eliminar?')) return;
+    const campaign = keywordBank[currentBankCampaignIndex];
+    const deleted = campaign.keywords[idx];
+    campaign.keywords.splice(idx, 1);
+    campaign.total_keywords = campaign.keywords.length;
+
+    selectedKeywords = selectedKeywords.filter(sk => 
+        !(sk.campaignId === campaign.campaign_id && sk.text === deleted.text)
+    );
+
+    if (campaign.keywords.length === 0) {
+        keywordBank.splice(currentBankCampaignIndex, 1);
+        currentBankCampaignIndex = -1;
+        localStorage.setItem('keywordBank', JSON.stringify(keywordBank));
+        await syncBankToFirebase();
+        updateBankStats();
+        populateBankFilters();
+        renderBankCampaigns();
+        document.getElementById('bankKeywordsDetail').innerHTML = '<div style="text-align:center;padding:100px 20px;"><p>Campaña eliminada</p></div>';
+        showNotif('Campaña eliminada', 'warning');
+        return;
+    }
+
+    localStorage.setItem('keywordBank', JSON.stringify(keywordBank));
+    await syncBankToFirebase();
+    updateBankStats();
+    renderBankCampaigns();
+    updateCurrentCampaignView();
+    showNotif('Eliminada', 'success');
+}
+
+async function deleteSelectedKeywords() {
+    const campaign = keywordBank[currentBankCampaignIndex];
+    const selected = selectedKeywords.filter(sk => sk.campaignId === campaign.campaign_id);
+    if (selected.length === 0) { showNotif('No hay seleccionadas', 'warning'); return; }
+    if (!confirm(`¿Eliminar ${selected.length}?`)) return;
+
+    const texts = selected.map(sk => sk.text);
+    campaign.keywords = campaign.keywords.filter(kw => !texts.includes(kw.text));
+    campaign.total_keywords = campaign.keywords.length;
+    selectedKeywords = selectedKeywords.filter(sk => sk.campaignId !== campaign.campaign_id);
+
+    if (campaign.keywords.length === 0) {
+        keywordBank.splice(currentBankCampaignIndex, 1);
+        currentBankCampaignIndex = -1;
+        localStorage.setItem('keywordBank', JSON.stringify(keywordBank));
+        await syncBankToFirebase();
+        updateBankStats();
+        populateBankFilters();
+        renderBankCampaigns();
+        document.getElementById('bankKeywordsDetail').innerHTML = '<div style="text-align:center;padding:100px 20px;"><p>Campaña eliminada</p></div>';
+        showNotif('Campaña eliminada', 'warning');
+        return;
+    }
+
+    localStorage.setItem('keywordBank', JSON.stringify(keywordBank));
+    await syncBankToFirebase();
+    updateBankStats();
+    renderBankCampaigns();
+    updateCurrentCampaignView();
+    showNotif(`${selected.length} eliminadas`, 'success');
+}
+
+// SINCRONIZACIÓN
+async function syncBankToFirebase() {
+    try {
+        showSyncStatus('saving');
+        const snapshot = await keywordBankRef.get();
+        const batch = dbFirebase.batch();
+        snapshot.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+
+        const batch2 = dbFirebase.batch();
+        keywordBank.forEach((camp, idx) => {
+            const docRef = keywordBankRef.doc(`camp_${idx}`);
+            batch2.set(docRef, { ...camp, updatedAt: new Date().toISOString() });
+        });
+        await batch2.commit();
+        showSyncStatus('saved');
+    } catch (error) {
+        console.error(error);
+        showSyncStatus('error');
+    }
+}
+
+async function loadBankFromFirebase() {
+    try {
+        const snapshot = await keywordBankRef.orderBy('campaign_id').get();
+        if (!snapshot.empty) {
+            keywordBank = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                delete data.updatedAt;
+                keywordBank.push(data);
+            });
+            updateBankStats();
+            populateBankFilters();
+            renderBankCampaigns();
+        }
+    } catch (error) { console.error(error); }
+}
+
+function showSyncStatus(status) {
+    const el = document.getElementById('syncStatus');
+    if (!el) return;
+    el.className = `sync-status ${status}`;
+    if (status === 'saving') el.textContent = '☁️ Guardando...';
+    else if (status === 'saved') {
+        el.textContent = '✅ Guardado';
+        setTimeout(() => el.style.display = 'none', 2000);
+    } else {
+        el.textContent = '❌ Error';
+        setTimeout(() => el.style.display = 'none', 3000);
+    }
+}
+
 </script>
 
 </body>
