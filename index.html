@@ -3248,22 +3248,84 @@ async function importKeywordBankFromExcel(event) {
           });
         });
       }
-      const nuevasCampanas = Object.values(campaignMap).map(camp => {
+      // ================================================================
+      // PASO 1: CREAR ARRAY DE NUEVAS CAMPAÑAS (NO REEMPLAZAR)
+      // ================================================================
+      const newCampaigns = Object.values(campaignMap).map(camp => {
         camp.total_keywords = camp.keywords.length;
         camp.high_priority_count = camp.keywords.filter(k => k.priority === 'high').length;
         return camp;
       });
 
-      // MERGE SIMPLE: Agregar solo las que NO existen
-      const idsExistentes = new Set(keywordBank.map(c => c.campaignid));
-      const soloNuevas = nuevasCampanas.filter(c => !idsExistentes.has(c.campaignid));
-      keywordBank = [...keywordBank, ...soloNuevas];
+      console.log('🔄 Campañas en Excel:', newCampaigns.length);
+      console.log('📦 Campañas en banco ANTES:', keywordBank.length);
 
-      console.log('✅ Agregadas:', soloNuevas.length, '| Total:', keywordBank.length)
+      // ================================================================
+      // PASO 2: MERGE INTELIGENTE - NO BORRAR EXISTENTES
+      // ================================================================
+
+      // Obtener IDs de campañas que YA existen en el banco
+      const existingIds = new Set(keywordBank.map(c => c.campaignid));
+
+      // Filtrar solo las campañas NUEVAS (que NO existen)
+      const campaignsToAdd = newCampaigns.filter(c => !existingIds.has(c.campaignid));
+
+      if (campaignsToAdd.length > 0) {
+        // AGREGAR campañas nuevas SIN borrar las existentes
+        keywordBank.push(...campaignsToAdd);
+
+        console.log('✅ AGREGADAS:', campaignsToAdd.length, 'campañas nuevas');
+        console.log('📊 TOTAL en banco:', keywordBank.length, 'campañas');
+
+        const totalKw = keywordBank.reduce((s,c) => s + c.total_keywords, 0);
+        showNotif(campaignsToAdd.length + ' campañas AGREGADAS | Total: ' + keywordBank.length + ' campañas (' + totalKw + ' keywords)', 'success');
+
+      } else {
+        // Todas las campañas YA existen - actualizar keywords
+        console.log('ℹ️ Campañas ya existen - Actualizando keywords');
+
+        let keywordsAgregadas = 0;
+        let campanasActualizadas = 0;
+
+        newCampaigns.forEach(newCamp => {
+          const existing = keywordBank.find(c => c.campaignid === newCamp.campaignid);
+          if (existing) {
+            // Obtener keywords existentes (comparar en minúsculas)
+            const existingKwTexts = new Set(existing.keywords.map(k => k.text.toLowerCase()));
+
+            // Filtrar solo keywords NUEVAS
+            const newKws = newCamp.keywords.filter(k => !existingKwTexts.has(k.text.toLowerCase()));
+
+            if (newKws.length > 0) {
+              // Agregar keywords nuevas
+              existing.keywords.push(...newKws);
+              existing.totalkeywords = existing.keywords.length;
+              existing.total_keywords = existing.keywords.length;
+              existing.high_priority_count = existing.keywords.filter(k => k.priority === 'high').length;
+
+              keywordsAgregadas += newKws.length;
+              campanasActualizadas++;
+
+              console.log('📝', newKws.length, 'keywords nuevas agregadas a', existing.campaignid);
+            }
+          }
+        });
+
+        if (keywordsAgregadas > 0) {
+          const totalKw = keywordBank.reduce((s,c) => s + c.total_keywords, 0);
+          showNotif(keywordsAgregadas + ' keywords nuevas agregadas a ' + campanasActualizadas + ' campañas existentes | Total: ' + totalKw + ' keywords', 'success');
+        } else {
+          showNotif('Sin cambios - Todas las campañas y keywords ya existen', 'info');
+        }
+      }
+
+      console.log('✅ BANCO FINAL:', keywordBank.length, 'campañas');
+
+      // ================================================================
+      // PASO 3: GUARDAR Y ACTUALIZAR
+      // ================================================================
       localStorage.setItem('keywordBank', JSON.stringify(keywordBank));
       updateBankStats(); populateBankFilters(); renderBankCampaigns();
-      const totalKw = keywordBank.reduce((s,c) => s + c.total_keywords, 0);
-      showNotif(keywordBank.length + ' campañas | ' + totalKw + ' keywords', 'success');
       document.getElementById('importBankExcel').value = '';
     
 
