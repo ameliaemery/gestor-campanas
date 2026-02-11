@@ -3181,113 +3181,104 @@ console.log('✅ Módulo IA totalmente editable cargado');
 
 // BANCO DE KEYWORDS
 
-
-
-// ============================================================================
-// IMPORTAR DESDE EXCEL - FUNCIÓN COMPLETA Y CORREGIDA
-// ============================================================================
 async function importKeywordBankFromExcel(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+  const file = event.target.files[0];
+  if (!file) return;
+  showNotif('Leyendo Excel...', 'info');
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, {type: 'array'});
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(firstSheet);
+      if (rows.length === 0) { alert('Excel vacío'); return; }
+      const cols = Object.keys(rows[0]);
+      let formatType = 'unknown';
+      if (cols.includes('campaign_id') && cols.includes('product') && cols.includes('keyword')) {
+        formatType = 'standard';
+      } else if (cols.some(c => c.toLowerCase().includes('keyword')) && 
+                 (cols.some(c => c.toLowerCase().includes('search')) || cols.some(c => c.toLowerCase().includes('impression')))) {
+        formatType = 'tabla-keywords';
+      }
+      if (formatType === 'unknown') { alert('Formato no reconocido'); return; }
+      showNotif('Formato: ' + formatType, 'info');
+      const campaignMap = {};
+      if (formatType === 'standard') {
+        rows.forEach(row => {
+          const cid = row.campaign_id;
+          if (!campaignMap[cid]) {
+            campaignMap[cid] = {
+              campaign_id: cid, product: row.product, country: row.country,
+              platform: cid.split('-')[0] || 'FB', channel: cid.split('-')[1] || 'HAV',
+              keywords: [], date_added: new Date().toISOString().slice(0, 10)
+            };
+          }
+          campaignMap[cid].keywords.push({
+            text: row.keyword, priority: row.priority || 'normal',
+            impressions: parseInt(row.impressions) || 0, clicks: parseInt(row.clicks) || 0,
+            ctr: parseFloat(row.ctr) || 0, conversions: parseInt(row.conversions) || 0,
+            cost: parseFloat(row.cost) || 0, cpc: parseFloat(row.cpc) || 0
+          });
+        });
+      } else if (formatType === 'tabla-keywords') {
+        const keyCol = cols.find(c => c.toLowerCase().includes('keyword')) || 'Keyword';
+        const campCol = cols.find(c => { const val = String(rows[0][c]); return val.includes('FB-') || val.includes('TT-') || val.includes('MMT'); }) || cols[1];
+        const searchCol = cols.find(c => c.toLowerCase().includes('search') || c.toLowerCase().includes('impression')) || 'Searches';
+        const clickCol = cols.find(c => c.toLowerCase().includes('click')) || 'Clicks';
+        const ctrCol = cols.find(c => c.toLowerCase().includes('ctr')) || 'CTR';
+        rows.forEach(row => {
+          const cid = row[campCol];
+          if (!cid || cid === '' || typeof cid !== 'string') return;
+          const parts = cid.split('-');
+          if (parts.length < 4) return;
+          if (!campaignMap[cid]) {
+            campaignMap[cid] = {
+              campaign_id: cid, product: parts[2], country: parts[3],
+              platform: parts[0], channel: parts[1], keywords: [],
+              date_added: new Date().toISOString().slice(0, 10)
+            };
+          }
+          let ctrVal = 0;
+          if (row[ctrCol]) { const ctrStr = String(row[ctrCol]).replace('%', '').trim(); ctrVal = parseFloat(ctrStr) || 0; }
+          campaignMap[cid].keywords.push({
+            text: row[keyCol] || '', priority: 'normal',
+            impressions: parseInt(row[searchCol]) || 0, clicks: parseInt(row[clickCol]) || 0,
+            ctr: ctrVal, conversions: 0, cost: 0, cpc: 0
+          });
+        });
+      }
+      const nuevasCampanas = Object.values(campaignMap).map(camp => {
+        camp.total_keywords = camp.keywords.length;
+        camp.high_priority_count = camp.keywords.filter(k => k.priority === 'high').length;
+        return camp;
+      });
 
-    showNotif('📊 Leyendo Excel...', 'info');
+      // MERGE SIMPLE: Agregar solo las que NO existen
+      const idsExistentes = new Set(keywordBank.map(c => c.campaignid));
+      const soloNuevas = nuevasCampanas.filter(c => !idsExistentes.has(c.campaignid));
+      keywordBank = [...keywordBank, ...soloNuevas];
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+      console.log('✅ Agregadas:', soloNuevas.length, '| Total:', keywordBank.length)
+      localStorage.setItem('keywordBank', JSON.stringify(keywordBank));
+      updateBankStats(); populateBankFilters(); renderBankCampaigns();
+      const totalKw = keywordBank.reduce((s,c) => s + c.total_keywords, 0);
+      showNotif(keywordBank.length + ' campañas | ' + totalKw + ' keywords', 'success');
+      document.getElementById('importBankExcel').value = '';
+    
 
-            if (rows.length < 2) {
-                showNotif('❌ Excel vacío o sin datos', 'danger');
-                return;
-            }
-
-            // Detectar columnas
-            const headers = rows[0].map(h => String(h).toLowerCase().trim());
-            const colCampaign = headers.findIndex(h => h.includes('campaign') || h.includes('campaña'));
-            const colKeyword = headers.findIndex(h => h.includes('keyword') || h.includes('palabra'));
-            const colImpressions = headers.findIndex(h => h.includes('impression') || h.includes('impresion') || h.includes('búsqueda'));
-            const colClicks = headers.findIndex(h => h.includes('click') || h.includes('clic'));
-            const colProduct = headers.findIndex(h => h.includes('product') || h.includes('nicho'));
-            const colCountry = headers.findIndex(h => h.includes('country') || h.includes('país') || h.includes('pais'));
-            const colPriority = headers.findIndex(h => h.includes('priority') || h.includes('prioridad'));
-
-            if (colCampaign === -1 || colKeyword === -1) {
-                showNotif('❌ Columnas requeridas: Campaign y Keyword', 'danger');
-                return;
-            }
-
-            // Procesar datos
-            const campaigns = {};
-
-            for (let i = 1; i < rows.length; i++) {
-                const row = rows[i];
-                if (!row || row.length < 2) continue;
-
-                const campaignId = String(row[colCampaign] || '').trim();
-                const keywordText = String(row[colKeyword] || '').trim();
-
-                if (!campaignId || !keywordText) continue;
-
-                if (!campaigns[campaignId]) {
-                    campaigns[campaignId] = {
-                        campaign_id: campaignId,
-                        campaignid: campaignId,
-                        product: colProduct !== -1 ? String(row[colProduct] || '').trim() : 'Sin categoría',
-                        country: colCountry !== -1 ? String(row[colCountry] || '').trim() : 'N/A',
-                        keywords: [],
-                        total_keywords: 0,
-                        importedAt: new Date().toISOString()
-                    };
-                }
-
-                const keyword = {
-                    text: keywordText,
-                    impressions: colImpressions !== -1 ? parseInt(row[colImpressions]) || 0 : 0,
-                    searches: colImpressions !== -1 ? parseInt(row[colImpressions]) || 0 : 0,
-                    clicks: colClicks !== -1 ? parseInt(row[colClicks]) || 0 : 0,
-                    priority: colPriority !== -1 ? String(row[colPriority]).toLowerCase() : 'normal',
-                    edited: false
-                };
-
-                campaigns[campaignId].keywords.push(keyword);
-            }
-
-            // Convertir a array y actualizar
-            keywordBank = Object.values(campaigns);
-            keywordBank.forEach(c => {
-                c.total_keywords = c.keywords.length;
-            });
-
-            localStorage.setItem('keywordBank', JSON.stringify(keywordBank));
-
-            updateBankStats();
-            populateBankFilters();
-            renderBankCampaigns();
-
-            showNotif(`✅ ${keywordBank.length} campañas importadas`, 'success');
-
-            // AUTO-SINCRONIZACIÓN FIREBASE
+        // AUTO-SINCRONIZACIÓN
+        if (keywordBank && keywordBank.length > 0) {
             setTimeout(() => {
                 if (typeof syncBankToFirebase === 'function') {
-                    console.log('🔄 Iniciando sincronización automática...');
                     syncBankToFirebase();
                 }
-            }, 1500);
-
-        } catch (error) {
-            console.error('❌ Error al procesar Excel:', error);
-            showNotif('❌ Error: ' + error.message, 'danger');
+            }, 1000);
         }
-    };
-
-    reader.readAsArrayBuffer(file);
-    event.target.value = '';
+} catch (error) { alert('Error: ' + error.message); console.error(error); }
+  };
+  reader.readAsArrayBuffer(file);
 }
-
 
 function importKeywordBank(event) {
   const file = event.target.files[0]; if (!file) return;
