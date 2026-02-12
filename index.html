@@ -730,7 +730,7 @@
       <div class="stats" style="margin-bottom: 20px;">
         <div class="stat-card"><div class="number" id="bankTotalCampaigns">0</div><div class="label">Campañas</div></div>
         <div class="stat-card"><div class="number" id="bankTotalKeywords">0</div><div class="label">Keywords</div></div>
-        <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"><div class="number" id="bankSelectedCount" style="color: white;">0</div><div class="label" style="color: white;">Seleccionadas</div></div>
+<div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"><div class="number" id="bankSelectedCount" style="color: white;">0</div><div class="label" style="color: white;">Seleccionadas</div></div>
       </div>
       <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
         <button class="btn btn-primary" onclick="document.getElementById('importBankExcel').click()">📊 Importar Excel</button>
@@ -741,11 +741,12 @@
         <button class="btn btn-del" onclick="clearSelectedKeywords()">🗑️ Limpiar</button>
         <button class="btn btn-warning" onclick="clearBankData()">⚠️ Vaciar</button>
       </div>
-      <div class="controls" style="grid-template-columns: 1fr 1fr 1fr 1fr 2fr; margin-bottom: 20px;">
+      <div class="controls" style="grid-template-columns: 1fr 1fr 1fr 1fr 1fr 2fr; margin-bottom: 20px;">
         <div class="control-group"><label>🔍 Buscar</label><input type="text" id="bankSearch" placeholder="Buscar..." oninput="filterKeywordBank()" autocomplete="off"></div>
         <div class="control-group"><label>📦 Nicho</label><select id="bankFilterProduct" onchange="filterKeywordBank()"><option value="">Todos</option></select></div>
         <div class="control-group"><label>🌍 País</label><select id="bankFilterCountry" onchange="filterKeywordBank()"><option value="">Todos</option></select></div>
-        <div class="control-group"><label>⚡ Acciones</label><div style="display: flex; gap: 8px;"><button class="btn btn-success" onclick="copySelectedKeywords()" style="flex: 1; padding: 8px; font-size: 0.9em;">📋 Copiar</button><button class="btn btn-primary" onclick="sendToForm()" style="flex: 1; padding: 8px; font-size: 0.9em;">➡️ A Campaña</button></div></div>
+        <div class="control-group"><label>↕ Plataforma</label><select id="bankSortPlatform" onchange="renderBankCampaigns()"><option value="">Sin orden</option><option value="asc">A → Z</option><option value="desc">Z → A</option></select></div>
+        <div class="control-group"><label>↕ Canal</label><select id="bankSortChannel" onchange="renderBankCampaigns()"><option value="">Sin orden</option><option value="asc">A → Z</option><option value="desc">Z → A</option></select></div><div class="control-group"><label>⚡ Acciones</label><div style="display: flex; gap: 8px;"><button class="btn btn-success" onclick="copySelectedKeywords()" style="flex: 1; padding: 8px; font-size: 0.9em;">📋 Copiar</button><button class="btn btn-primary" onclick="sendToForm()" style="flex: 1; padding: 8px; font-size: 0.9em;">➡️ A Campaña</button></div></div>
       </div>
       <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; min-height: 500px;">
         <div style="border-right: 2px solid #e5e7eb; padding-right: 20px;">
@@ -1494,22 +1495,21 @@ function renderTable() {
     const idF = document.getElementById('filterId').value;
     const chF = document.getElementById('filterChannel').value;
     const countryF = (document.getElementById('filterCountryName')?.value || '').trim();
+
     function mapCountryFilter(val) {
-        if (!val) return '';
-        const s = String(val).trim();
-        if (/^[A-Za-z]{2}$/.test(s)) return s.toUpperCase();
-        const target = s.toLowerCase();
-        const list = (db && db.countries) ? db.countries : [];
-        for (let i=0;i<list.length;i++) {
-            const entry = String(list[i] || '');
-            // Soporta: "ES (España)", "ES España", "ES - España"
-            const m1 = entry.match(/^([A-Za-z]{2})\s*\((.+)\)$/);
-            if (m1 && m1[2].trim().toLowerCase() === target) return m1[1].toUpperCase();
-            const m2 = entry.match(/^([A-Za-z]{2})\s*[-–—]?\s+(.+)$/);
-            if (m2 && m2[2].trim().toLowerCase() === target) return m2[1].toUpperCase();
-            if (entry.toLowerCase() === target) return entry;
-        }
-        return s; // fallback
+      if (!val) return '';
+      const s = String(val).trim();
+      if (/^[A-Za-z]{2}$/.test(s)) return s.toUpperCase();
+      const target = s.toLowerCase();
+      const list = (db && db.countries) ? db.countries : [];
+      for (let i=0;i<list.length;i++) {
+        const entry = String(list[i] || '');
+        const m1 = entry.match(/^([A-Za-z]{2})\s*\((.+)\)$/);
+        if (m1 && m1[2].trim().toLowerCase() === target) return m1[1].toUpperCase();
+        const m2 = entry.match(/^([A-Za-z]{2})\s*[-–—]?\s+(.+)$/);
+        if (m2 && m2[2].trim().toLowerCase() === target) return m2[1].toUpperCase();
+      }
+      return s;
     }
 
 
@@ -2877,7 +2877,8 @@ function openTabInWindow(tabId) {
         'tab-add': '➕ Gestionar Campaña',
         'tab-config': '⚙️ Configuración',
         'tab-catalog': '📡 Catálogo HAV',
-        'tab-analysis': '📊 Análisis'
+        'tab-analysis': '📊 Análisis',
+        'tab-keyword-bank': '🏦 Banco de Keywords'
     };
 
     const tabName = tabNames[tabId] || 'Ventana';
@@ -3424,7 +3425,10 @@ function getFilteredBankCampaigns() {
   const search = (document.getElementById('bankSearch')?.value || '').toLowerCase();
   const product = document.getElementById('bankFilterProduct')?.value || '';
   const country = document.getElementById('bankFilterCountry')?.value || '';
-  return keywordBank.filter(camp => {
+  const sortPlatform = document.getElementById('bankSortPlatform')?.value || '';
+  const sortChannel = document.getElementById('bankSortChannel')?.value || '';
+
+  let result = keywordBank.filter(camp => {
     if (product && camp.product !== product) return false;
     if (country && camp.country !== country) return false;
     if (search) {
@@ -3433,7 +3437,25 @@ function getFilteredBankCampaigns() {
     }
     return true;
   });
+
+  function cmpField(a, b, field, dir) {
+    const av = (a && a[field] ? String(a[field]) : '').toLowerCase();
+    const bv = (b && b[field] ? String(b[field]) : '').toLowerCase();
+    const c = av.localeCompare(bv, 'es');
+    return dir === 'desc' ? -c : c;
+  }
+
+  // Si el usuario eligió ambos, aplicamos plataforma primero y canal como segundo criterio.
+  if (sortPlatform) {
+    result.sort((a, b) => cmpField(a, b, 'platform', sortPlatform) || cmpField(a, b, 'channel', 'asc') || cmpField(a, b, 'campaign_id', 'asc'));
+  }
+  if (sortChannel) {
+    result.sort((a, b) => cmpField(a, b, 'channel', sortChannel) || cmpField(a, b, 'platform', 'asc') || cmpField(a, b, 'campaign_id', 'asc'));
+  }
+
+  return result;
 }
+
 
 function filterKeywordBank() { renderBankCampaigns(); }
 
@@ -3884,6 +3906,7 @@ function showSyncStatus(status) {
                 if (typeof renderTable === 'function') renderTable();
                 if (typeof updateStats === 'function') updateStats();
                 if (typeof refreshEverything === 'function') refreshEverything();
+                if (typeof renderBankCampaigns === 'function') renderBankCampaigns();
             }
         };
 
@@ -3901,6 +3924,7 @@ function showSyncStatus(status) {
         wrapReload('saveMetadataOnly');
         wrapReload('deleteCampaign');
         wrapReload('addOption');
+        wrapReload('syncBankToFirebase');
     } catch(e) {}
 })();
 </script>
