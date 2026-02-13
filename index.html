@@ -552,22 +552,23 @@
             <div class="table-wrapper">
                 <table>
                     <thead>
-                        <tr>
-                            <th onclick="applySort('date')">📅 Fecha</th>
-                            <th onclick="applySort('platform')">Plat.</th>
-                            <th onclick="applySort('channel')">Canal</th>
-                            <th onclick="applySort('product')">Nicho</th>
-                            <th onclick="applySort('id')">ID</th>
-                            <th onclick="applySort('code')">Nombre de Campaña</th>
-                            <th onclick="applySort('language')">Idioma</th>
-                            <th onclick="applySort('country')">País</th>
-                            <th onclick="applySort('keys')">Keys</th>
-                            <th onclick="applySort('article')">Artículo</th>
-                            <th onclick="applySort('url')">Link</th>
-                            <th onclick="applySort('autor')">👤</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
+            <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <th style="padding:15px 10px; text-align:left;" onclick="applySort('date')">Fecha</th>
+                <th style="padding:15px 10px; text-align:left;" onclick="applySort('platform')">Plat.</th>
+                <th style="padding:15px 10px; text-align:left;" onclick="applySort('channel')">Canal</th>
+                <th style="padding:15px 10px; text-align:left;" onclick="applySort('product')">Nicho</th>
+                <th style="padding:15px 10px; text-align:left;" onclick="applySort('id')">ID</th>
+                <th style="padding:15px 10px; text-align:left;" onclick="applySort('code')">Nombre de Campaña</th>
+                <th style="padding:15px 10px; text-align:left; min-width:150px;" onclick="applySort('article')">Headline</th>
+                <th style="padding:15px 10px; text-align:left;" onclick="applySort('language')">Idioma</th>
+                <th style="padding:15px 10px; text-align:left;" onclick="applySort('country')">País</th>
+                <th style="padding:15px 10px; text-align:left;" onclick="applySort('keys')">Keys</th>
+                <th style="padding:15px 10px; text-align:left;" onclick="applySort('article')">Art.</th>
+                <th style="padding:15px 10px; text-align:left;" onclick="applySort('url')">Link</th>
+                <th style="padding:15px 10px; text-align:left;" onclick="applySort('autor')">📝</th>
+                <th style="padding:15px 10px; text-align:left;">Acciones</th>
+            </tr>
+        </thead>
                     <tbody id="campaignList"></tbody>
                 </table>
             <div style="margin:15px 0;text-align:center;">
@@ -1607,7 +1608,29 @@ function renderTable() {
             <td>${c.channel || '-'}</td>
             <td><strong>${getNichoConEmoji(c.product)}</strong></td>
             <td><code>${c.id}</code></td>
-            <td><strong>${c.code}</strong></td> <td>${c.language || '-'}</td>
+            <td><strong>${c.code}</strong></td>
+            <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#059669;font-weight:600;cursor:text;user-select:text;" title="${(() => {
+                const art = c.article || '';
+                if (!art) return 'Sin título';
+                const lines = art.split('\n');
+                for (let i = 0; i < 20; i++) {
+                    const line = (lines[i] || '').trim();
+                    const match = line.match(/^#{1,6}\s+(.+)$/);
+                    if (match) return match[1].replace(/\*\*/g, '').replace(/__/g, '').replace(/\*/g, '').replace(/_/g, '').trim();
+                }
+                return lines[0] ? lines[0].trim() : 'Sin título';
+            })()}">${(() => {
+                const art = c.article || '';
+                if (!art) return '<span style="color:#9ca3af;">Sin título</span>';
+                const lines = art.split('\n');
+                for (let i = 0; i < 20; i++) {
+                    const line = (lines[i] || '').trim();
+                    const match = line.match(/^#{1,6}\s+(.+)$/);
+                    if (match) return match[1].replace(/\*\*/g, '').replace(/__/g, '').replace(/\*/g, '').replace(/_/g, '').trim();
+                }
+                return lines[0] ? lines[0].trim() : '<span style="color:#9ca3af;">Sin título</span>';
+            })()}</td>
+            <td>${c.language || '-'}</td>
             <td>${c.country}</td>
             <td><strong>${c.keywords?.length || 0}</strong></td>
             <td style="text-align: center;">${articleIcon}</td>
@@ -1617,7 +1640,7 @@ function renderTable() {
                 <button class="btn btn-edit" style="padding: 6px 10px;" onclick="editCampaign(${realIndex})">✏️</button>
                 <button class="btn btn-del" style="padding: 6px 10px;" onclick="deleteCampaign(${realIndex})">🗑️</button>
                 <button class="btn" style="padding: 6px 10px; ${c.observaciones && c.observaciones.trim() ? 'background: #ef4444; color: white;' : 'background: #e5e7eb; color: #666;'}" onclick="verObservacion(${realIndex})" title="${c.observaciones && c.observaciones.trim() ? 'Ver observación' : 'Sin observaciones'}">📌</button>
-                <button class="btn" style="padding: 6px 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600;" onclick="abrirModalPromptIA(${realIndex})" title="Generar Prompt IA">🤖</button>
+                
             </td>
         </tr>`;
     }).join('');
@@ -3929,5 +3952,339 @@ function showSyncStatus(status) {
 })();
 </script>
 
+
+
+<script>
+// Vista previa mejorada
+(function () {
+  function ensureViewModal() {
+    if (document.getElementById('viewCampaignModal')) return;
+    if (!document.getElementById('viewModalStyles')) {
+      const st = document.createElement('style');
+      st.id = 'viewModalStyles';
+      st.textContent = `
+        .view-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);z-index:10001;justify-content:center;align-items:center;overflow-y:auto;}
+        .view-modal.active{display:flex;}
+        .view-modal-content{background:#fff;padding:35px;border-radius:16px;max-width:900px;width:95%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+        .view-modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:12px;border-bottom:3px solid #667eea;}
+        .view-modal-header h2{margin:0;color:#667eea;font-size:1.4em;}
+        .view-field{margin-bottom:14px;padding:12px;background:#f9fafb;border-radius:8px;border-left:4px solid #667eea;}
+        .view-field-label{font-weight:700;color:#374151;font-size:.85em;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;}
+        .view-field-value{color:#111827;word-break:break-word;line-height:1.7;}
+        .view-kw-list{list-style:none;padding:0;margin:8px 0 0 0;}
+        .view-kw-list li{padding:8px 12px;margin:4px 0;background:#667eea;color:#fff;border-radius:6px;font-size:.9em;}
+        .view-modal-buttons{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+        .view-article{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;max-height:450px;overflow-y:auto;line-height:1.8;color:#1f2937;}
+      `;
+      document.head.appendChild(st);
+    }
+    const modal = document.createElement('div');
+    modal.id = 'viewCampaignModal';
+    modal.className = 'view-modal';
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) closeViewModal();
+    });
+    modal.innerHTML = `
+      <div class="view-modal-content">
+        <div class="view-modal-header">
+          <h2>👁️ Vista previa</h2>
+          <button class="btn btn-del" id="btnCloseView" style="padding:8px 15px;">✖ Cerrar</button>
+        </div>
+        <div id="viewCampaignContent"></div>
+        <div class="view-modal-buttons">
+          <button class="btn btn-primary" id="btnCloseView2" style="padding:10px 20px;">Cerrar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById('btnCloseView').onclick = closeViewModal;
+    document.getElementById('btnCloseView2').onclick = closeViewModal;
+  }
+
+  let viewingCampaignIndex = -1;
+
+  function renderMD(md) {
+    if (!md) return '';
+    let html = String(md);
+    html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    html = html.replace(/^######\s+(.+)$/gm, '<h6 style="margin:14px 0 8px;color:#374151;font-size:1em;font-weight:600;">$1</h6>');
+    html = html.replace(/^#####\s+(.+)$/gm, '<h5 style="margin:16px 0 8px;color:#374151;font-size:1.1em;font-weight:600;">$1</h5>');
+    html = html.replace(/^####\s+(.+)$/gm, '<h4 style="margin:18px 0 10px;color:#1f2937;font-size:1.2em;font-weight:700;">$1</h4>');
+    html = html.replace(/^###\s+(.+)$/gm, '<h3 style="margin:20px 0 10px;color:#1f2937;font-size:1.3em;font-weight:700;">$1</h3>');
+    html = html.replace(/^##\s+(.+)$/gm, '<h2 style="margin:24px 0 12px;color:#111827;font-size:1.5em;font-weight:700;">$1</h2>');
+    html = html.replace(/^#\s+(.+)$/gm, '<h1 style="margin:28px 0 14px;color:#111827;font-size:1.75em;font-weight:700;">$1</h1>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    html = html.replace(/(?<!\*)\*(?!\*)([^\*\n]+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+    html = html.replace(/(?<!_)_(?!_)([^_\n]+?)(?<!_)_(?!_)/g, '<em>$1</em>');
+    html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank" style="color:#3b82f6;text-decoration:underline;">$1</a>');
+    html = html.replace(/^[\-\*]\s+(.+)$/gm, '###LI###$1###ELI###');
+    html = html.replace(/^\d+\.\s+(.+)$/gm, '###OLI###$1###ELI###');
+    html = html.replace(/^&gt;\s+(.+)$/gm, '<blockquote style="border-left:4px solid #667eea;padding:12px 16px;margin:16px 0;color:#4b5563;background:#f9fafb;border-radius:6px;font-style:italic;">$1</blockquote>');
+    html = html.replace(/`([^`]+)`/g, '<code style="background:#fee2e2;padding:2px 6px;border-radius:4px;font-family:monospace;font-size:0.9em;color:#dc2626;">$1</code>');
+    html = html.replace(/^---$/gm, '<hr style="border:none;border-top:2px solid #e5e7eb;margin:24px 0;">');
+    html = html.replace(/^\*\*\*$/gm, '<hr style="border:none;border-top:2px solid #e5e7eb;margin:24px 0;">');
+    html = html.replace(/(###LI###.+?###ELI###\s*)+/g, function(m) {
+      const items = m.match(/###LI###(.+?)###ELI###/g).map(li => '<li style="margin:6px 0;">' + li.replace(/###LI###|###ELI###/g, '') + '</li>').join('');
+      return '<ul style="margin:14px 0;padding-left:28px;list-style-type:disc;">' + items + '</ul>';
+    });
+    html = html.replace(/(###OLI###.+?###ELI###\s*)+/g, function(m) {
+      const items = m.match(/###OLI###(.+?)###ELI###/g).map(li => '<li style="margin:6px 0;">' + li.replace(/###OLI###|###ELI###/g, '') + '</li>').join('');
+      return '<ol style="margin:14px 0;padding-left:28px;">' + items + '</ol>';
+    });
+    const blocks = html.split(/\n\n+/);
+    html = blocks.map(b => {
+      b = b.trim();
+      if (!b) return '';
+      if (b.startsWith('<h') || b.startsWith('<ul') || b.startsWith('<ol') || b.startsWith('<blockquote') || b.startsWith('<hr')) return b;
+      return '<p style="margin:14px 0;line-height:1.8;">' + b.replace(/\n/g, '<br>') + '</p>';
+    }).filter(b => b).join('');
+    return html;
+  }
+
+  function viewCampaign(idx) {
+    try {
+      ensureViewModal();
+      if (typeof db === 'undefined' || !db || !Array.isArray(db.campaigns)) {
+        alert('Base de datos no disponible.');
+        return;
+      }
+      if (idx < 0 || idx >= db.campaigns.length) {
+        if (typeof showNotif === 'function') showNotif('Campaña no encontrada', 'danger');
+        return;
+      }
+      viewingCampaignIndex = idx;
+      const c = db.campaigns[idx] || {};
+      const kws = Array.isArray(c.keywords) ? c.keywords : [];
+      const kwHtml = kws.length ? '<ul class="view-kw-list">' + kws.map(k => '<li>' + escH(String(k)) + '</li>').join('') + '</ul>' : '<div style="color:#9ca3af;">Sin keywords</div>';
+      const art = (c.article && String(c.article).trim()) ? String(c.article) : '';
+      const artHtml = art ? '<div class="view-article">' + renderMD(art) + '</div>' : '<div style="color:#9ca3af;padding:20px;text-align:center;">Sin artículo</div>';
+      const url = (c.url && String(c.url).trim()) ? String(c.url).trim() : '';
+      const urlHtml = url ? '<a href="' + url + '" target="_blank" style="color:#3b82f6;text-decoration:underline;">' + escH(url) + '</a>' : '<span style="color:#9ca3af;">Sin URL</span>';
+      const html = `
+        <div class="view-field"><div class="view-field-label">🏷️ Nombre</div><div class="view-field-value"><strong>${escH(c.code || '-')}</strong></div></div>
+        <div class="view-field"><div class="view-field-label">🌐 Plataforma / Canal</div><div class="view-field-value">${escH(c.platform || '-')} / ${escH(c.channel || '-')}</div></div>
+        <div class="view-field"><div class="view-field-label">🎯 Nicho</div><div class="view-field-value">${escH(c.product || '-')}</div></div>
+        <div class="view-field"><div class="view-field-label">🆔 ID / 🌍 País / 🗣️ Idioma</div><div class="view-field-value">${escH(c.id || '-')} / ${escH(c.country || '-')} / ${escH(c.language || '-')}</div></div>
+        <div class="view-field"><div class="view-field-label">📅 Fecha / ✍️ Autor</div><div class="view-field-value">${escH(c.date || '-')} / ${escH(c.autor || '-')}</div></div>
+        <div class="view-field"><div class="view-field-label">🔗 URL</div><div class="view-field-value">${urlHtml}</div></div>
+        <div class="view-field"><div class="view-field-label">🔑 Keywords (${kws.length})</div><div class="view-field-value">${kwHtml}</div></div>
+        ${c.observaciones && String(c.observaciones).trim() ? '<div class="view-field"><div class="view-field-label">📝 Observaciones</div><div class="view-field-value">' + escH(c.observaciones) + '</div></div>' : ''}
+        <div class="view-field"><div class="view-field-label">📄 Artículo</div><div class="view-field-value">${artHtml}</div></div>
+      `;
+      document.getElementById('viewCampaignContent').innerHTML = html;
+      document.getElementById('viewCampaignModal').classList.add('active');
+    } catch (e) {
+      console.error(e);
+      alert('Error: ' + (e && e.message ? e.message : e));
+    }
+  }
+
+  function closeViewModal() {
+    const m = document.getElementById('viewCampaignModal');
+    if (m) m.classList.remove('active');
+    viewingCampaignIndex = -1;
+  }
+
+  function escH(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  function hasDraft() {
+    const code = (document.getElementById('inCode') && document.getElementById('inCode').value || '').trim();
+    const kw = (document.getElementById('inKeywords1') && document.getElementById('inKeywords1').value || '').trim();
+    const art = (document.getElementById('inArticle') && document.getElementById('inArticle').value || '').trim();
+    const btnMeta = document.getElementById('btnMetaOnly');
+    const isEditing = btnMeta && btnMeta.style && btnMeta.style.display && btnMeta.style.display !== 'none';
+    if (isEditing) return false;
+    return !!(code || (kw && kw.length > 10) || (art && art.length > 50));
+  }
+
+  function wrapEdit() {
+    if (typeof window.editCampaign !== 'function') return;
+    if (window.editCampaign.__wrapped) return;
+    const orig = window.editCampaign;
+    const wrapped = function (idx) {
+      if (hasDraft()) {
+        const ok = confirm('⚠️ Datos sin guardar.\n¿Descartar y cargar campaña?\n\nOK = descartar');
+        if (!ok) return;
+      }
+      return orig(idx);
+    };
+    wrapped.__wrapped = true;
+    window.editCampaign = wrapped;
+  }
+
+  function injectButtons() {
+    const tbody = document.getElementById('campaignList');
+    if (!tbody) return;
+    tbody.querySelectorAll('tr').forEach(function (tr) {
+      const editBtn = tr.querySelector('button[onclick^="editCampaign("]');
+      if (!editBtn) return;
+      const m = (editBtn.getAttribute('onclick') || '').match(/editCampaign\((\d+)\)/);
+      if (!m) return;
+      const idx = parseInt(m[1], 10);
+      if (Number.isNaN(idx)) return;
+      const actionsCell = editBtn.parentElement;
+      if (actionsCell && !actionsCell.querySelector('button[data-view="1"]')) {
+        const b = document.createElement('button');
+        b.className = 'btn';
+        b.textContent = '👁️';
+        b.title = 'Ver';
+        b.setAttribute('data-view', '1');
+        b.style.cssText = 'padding:6px 10px;background:#3b82f6;color:#fff;margin-right:6px;';
+        b.onclick = function (e) { e.stopPropagation(); viewCampaign(idx); };
+        actionsCell.insertBefore(b, editBtn);
+      }
+      const nameCell = tr.querySelector('td:nth-child(6)');
+      if (nameCell && !nameCell.__bound) {
+        nameCell.style.cursor = 'pointer';
+        nameCell.title = 'Ver';
+        nameCell.addEventListener('click', function (e) {
+          const tag = (e.target && e.target.tagName || '').toLowerCase();
+          if (tag === 'button' || tag === 'select' || tag === 'a' || tag === 'input') return;
+          viewCampaign(idx);
+        });
+        nameCell.__bound = true;
+      }
+    });
+  }
+
+  function wrapRender() {
+    if (typeof window.renderTable !== 'function') return;
+    if (window.renderTable.__wrapped) return;
+    const orig = window.renderTable;
+    const wrapped = function () {
+      const r = orig.apply(this, arguments);
+      setTimeout(injectButtons, 0);
+      return r;
+    };
+    wrapped.__wrapped = true;
+    window.renderTable = wrapped;
+  }
+
+  function init() {
+    ensureViewModal();
+    wrapEdit();
+    wrapRender();
+    setTimeout(injectButtons, 300);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  window.viewCampaign = viewCampaign;
+  window.closeViewModal = closeViewModal;
+})();
+</script>
+
+<style>
+/* CSS FINAL FULL WIDTH + RESIZABLE */
+.table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto;
+    background: #fff;
+    padding: 0 !important;
+    margin: 20px 0 !important;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+table {
+    width: 100% !important;
+    border-collapse: collapse;
+    table-layout: fixed; 
+}
+thead {
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white;
+}
+th, td {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    border: none;
+}
+.resizer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 5px;
+    height: 100%;
+    cursor: col-resize;
+    user-select: none;
+    z-index: 10;
+}
+.resizer:hover, .resizing {
+    background-color: #a5b4fc; 
+    width: 7px;
+}
+</style>
+
+<script>
+// SCRIPT RESIZABLE V3
+(function () {
+    const STORAGE_KEY = 'hav_col_widths_final';
+
+    function initResize() {
+        const table = document.querySelector('#tab-list table');
+        if(!table) return;
+
+        // Cargar anchos
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const ths = table.querySelectorAll('th');
+        ths.forEach((th, i) => {
+            if(saved[i]) th.style.width = saved[i];
+
+            // Crear handle
+            if(!th.querySelector('.resizer')) {
+                const resizer = document.createElement('div');
+                resizer.classList.add('resizer');
+                th.appendChild(resizer);
+
+                let startX, startW;
+
+                const onDown = (e) => {
+                    startX = e.clientX;
+                    startW = th.offsetWidth;
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onUp);
+                    e.preventDefault();
+                };
+
+                const onMove = (e) => {
+                    th.style.width = (startW + (e.clientX - startX)) + 'px';
+                };
+
+                const onUp = () => {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                    const w = [];
+                    table.querySelectorAll('th').forEach(t => w.push(t.style.width));
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(w));
+                };
+
+                resizer.addEventListener('mousedown', onDown);
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', initResize);
+
+    if(typeof window.renderTable === 'function' && !window.renderTable.__resWrapped) {
+        const orig = window.renderTable;
+        window.renderTable = function() {
+            const res = orig.apply(this, arguments);
+            setTimeout(initResize, 100);
+            return res;
+        };
+        window.renderTable.__resWrapped = true;
+    }
+})();
+</script>
 </body>
 </html>
