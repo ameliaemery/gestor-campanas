@@ -1377,7 +1377,7 @@ const nichoEmojis = {
     'cadena': '⛓️', 'oro': '💰', 'joya': '💎', 'iphone': '📱', 'celular': '📱', 
     'tv': '📺', 'televisor': '📺', 'televisores': '📺',
     'sofá': '🛋️', 'sofa': '🛋️', 'mueble': '🪑', 'bici': '🚲', 
-    'pc': '💻', 'colchón': '🛏️', 'auto': '🚗', 'curso': '📚', 'jardín': '🌿',
+    'pc': '💻', 'colchón': '🛏️', 'colchones': '🛏️', 'auto': '🚗', 'curso': '📚', 'jardín': '🌿',
     'aire': '❄️', 'refriger': '🧊', 'generador': '⚡', 'cortacesped': '🌿',
     'escritorio': '🖥️', 'apartamento': '🏢'
 };
@@ -4006,7 +4006,8 @@ function showSyncStatus(status) {
   function renderMD(md) {
     if (!md) return '';
     let html = String(md);
-    html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // Procesar markdown a HTML (SIN escapar HTML primero)
     html = html.replace(/^######\s+(.+)$/gm, '<h6 style="margin:14px 0 8px;color:#374151;font-size:1em;font-weight:600;">$1</h6>');
     html = html.replace(/^#####\s+(.+)$/gm, '<h5 style="margin:16px 0 8px;color:#374151;font-size:1.1em;font-weight:600;">$1</h5>');
     html = html.replace(/^####\s+(.+)$/gm, '<h4 style="margin:18px 0 10px;color:#1f2937;font-size:1.2em;font-weight:700;">$1</h4>');
@@ -4020,25 +4021,23 @@ function showSyncStatus(status) {
     html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank" style="color:#3b82f6;text-decoration:underline;">$1</a>');
     html = html.replace(/^[\-\*]\s+(.+)$/gm, '###LI###$1###ELI###');
     html = html.replace(/^\d+\.\s+(.+)$/gm, '###OLI###$1###ELI###');
-    html = html.replace(/^&gt;\s+(.+)$/gm, '<blockquote style="border-left:4px solid #667eea;padding:12px 16px;margin:16px 0;color:#4b5563;background:#f9fafb;border-radius:6px;font-style:italic;">$1</blockquote>');
+    html = html.replace(/^>\s+(.+)$/gm, '<blockquote style="border-left:4px solid #667eea;padding:12px 16px;margin:16px 0;color:#4b5563;background:#f9fafb;border-radius:6px;font-style:italic;">$1</blockquote>');
     html = html.replace(/`([^`]+)`/g, '<code style="background:#fee2e2;padding:2px 6px;border-radius:4px;font-family:monospace;font-size:0.9em;color:#dc2626;">$1</code>');
     html = html.replace(/^---$/gm, '<hr style="border:none;border-top:2px solid #e5e7eb;margin:24px 0;">');
     html = html.replace(/^\*\*\*$/gm, '<hr style="border:none;border-top:2px solid #e5e7eb;margin:24px 0;">');
+
     html = html.replace(/(###LI###.+?###ELI###\s*)+/g, function(m) {
       const items = m.match(/###LI###(.+?)###ELI###/g).map(li => '<li style="margin:6px 0;">' + li.replace(/###LI###|###ELI###/g, '') + '</li>').join('');
       return '<ul style="margin:14px 0;padding-left:28px;list-style-type:disc;">' + items + '</ul>';
     });
     html = html.replace(/(###OLI###.+?###ELI###\s*)+/g, function(m) {
       const items = m.match(/###OLI###(.+?)###ELI###/g).map(li => '<li style="margin:6px 0;">' + li.replace(/###OLI###|###ELI###/g, '') + '</li>').join('');
-      return '<ol style="margin:14px 0;padding-left:28px;">' + items + '</ol>';
+      return '<ol style="margin:14px 0;padding-left:28px;list-style-type:decimal;">' + items + '</ol>';
     });
-    const blocks = html.split(/\n\n+/);
-    html = blocks.map(b => {
-      b = b.trim();
-      if (!b) return '';
-      if (b.startsWith('<h') || b.startsWith('<ul') || b.startsWith('<ol') || b.startsWith('<blockquote') || b.startsWith('<hr')) return b;
-      return '<p style="margin:14px 0;line-height:1.8;">' + b.replace(/\n/g, '<br>') + '</p>';
-    }).filter(b => b).join('');
+
+    html = html.replace(/\n\n/g, '</p><p style="margin:12px 0;line-height:1.6;color:#374151;">');
+    html = '<p style="margin:12px 0;line-height:1.6;color:#374151;">' + html + '</p>';
+
     return html;
   }
 
