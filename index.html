@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor HAV 2026</title>
+    <title>Gestor de Campañas</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
@@ -121,6 +121,95 @@
         .has-article { color: var(--success); }
         .no-article { color: var(--border); }
         
+        
+        
+        /* ── TEAM BADGES ── */
+        .team-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 0.8em;
+            font-weight: 600;
+            white-space: nowrap;
+            position: relative;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            border: none;
+            min-width: 80px;
+            height: 32px;
+            box-sizing: border-box;
+        }
+        /* Etiquetas fijas — gris oscuro como un label */
+        .team-badge-fixed {
+            background: #4b5563;
+            color: white;
+            cursor: default;
+            box-shadow: none;
+        }
+        /* HAV — verde */
+        .team-badge-hav {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            cursor: pointer;
+        }
+        .team-badge-hav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+        }
+        /* Nombres — morado del gestor */
+        .team-badge-name {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            cursor: pointer;
+        }
+        .team-badge-name:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+        }
+        .team-badge-implname {
+            background: #d1d5db;
+            color: #374151;
+            cursor: pointer;
+        }
+        .team-badge-implname:hover {
+            transform: translateY(-2px);
+            background: #c4c9d4;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .team-badge-implname input.badge-edit-input {
+            border-bottom: 1px solid #374151;
+            color: #374151;
+        }
+        .team-badge input.badge-edit-input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid rgba(255,255,255,0.8);
+            color: white;
+            font-size: 1em;
+            font-weight: 600;
+            outline: none;
+            min-width: 40px;
+            max-width: 180px;
+        }
+
+        /* ── EMOJI PICKER ── */
+        .emoji-btn {
+            background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px;
+            padding: 6px 10px; cursor: pointer; font-size: 1.2em;
+            transition: background 0.2s; flex-shrink: 0;
+        }
+        .emoji-btn:hover { background: #e0e0e0; }
+        .emoji-picker-wrapper {
+            position: absolute; z-index: 99999;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.25); border-radius: 12px;
+            display: none;
+            right: 0; left: auto; top: 40px;
+        }
+        .emoji-picker-wrapper.visible { display: block; }
+        emoji-picker { --border-radius: 12px; }
+
         /* Notificaciones */
         #notification-area { position: fixed; bottom: 20px; right: 20px; z-index: 10000; }
         .notif-box { background: #333; color: white; padding: 15px; border-radius: 8px; margin-top: 10px; animation: slideIn 0.5s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
@@ -471,11 +560,12 @@
 .sync-status.error { background: #fee2e2; color: #dc2626; display: block; }
 </style>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
 </head>
 <body>
 <div id="loginScreen">
     <div class="login-box">
-        <h1>🔒 Gestor HAV 2026</h1>
+        <h1>🔒 Gestor Campañas</h1>
         <p>Sistema Protegido - Acceso Autorizado</p>
 
         <div id="loginError" class="login-error">
@@ -504,12 +594,44 @@
 
     <div id="notification-area"></div>
     <div class="container">
-        <div class="header">
-            <h1>🚀 Gestor de Campañas HAV 2026</h1>
+        <div class="header" style="position:relative;">
+
+            <!-- team cards moved to stat section -->
+
+            <h1>🚀 Gestor de Campañas</h1>
             <p class="subtitle">☁️ Sistema Sincronizado en la Nube</p>
         </div>
 
         <div class="stats">
+
+            <!-- ── TARJETA DE EQUIPO ── -->
+            <div class="stat-card" id="teamCards" style="text-align:left; padding:16px 18px; min-width:200px;">
+
+                <!-- Fila 1: HAV + Nombre -->
+                <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+                    <div class="team-badge team-badge-hav" data-team-id="hav" onclick="editTeamBadge(this)" title="✏️ Editar">
+                        <span>HAV</span>
+                    </div>
+                    <div class="team-badge team-badge-name" data-team-id="adsname" onclick="editTeamBadge(this)" title="✏️ Editar">
+                        <span>Hugo Valdez</span>
+                    </div>
+                </div>
+
+                <!-- Fila 2: Implementador + Nombre -->
+                <div style="display:flex; align-items:center; gap:6px; margin-bottom:12px; flex-wrap:wrap;">
+                    <div class="team-badge team-badge-fixed">
+                        <span>Implementador</span>
+                    </div>
+                    <div class="team-badge team-badge-implname" data-team-id="implname" onclick="editTeamBadge(this)" title="✏️ Editar">
+                        <span>Amelia Valdez</span>
+                    </div>
+                </div>
+
+                <!-- Título abajo como los demás stat-cards -->
+                <div class="label" style="text-align:center;">👥 Equipo</div>
+            </div>
+            <!-- ── FIN TARJETA EQUIPO ── -->
+
             <div class="stat-card">
                 <div class="number" id="totalCampaigns">0</div>
                 <div class="label">📊 Total Campañas</div>
@@ -537,7 +659,7 @@
             <button class="tab-btn" oncontextmenu="openTabInWindow('tab-comp'); return false;" onclick="switchTab('tab-comp')">🔬 Comparador</button>
             <button class="tab-btn" oncontextmenu="openTabInWindow('tab-add'); return false;" onclick="switchTab('tab-add')">➕ Gestionar Campaña</button>
             <button class="tab-btn" oncontextmenu="openTabInWindow('tab-config'); return false;" onclick="switchTab('tab-config')">⚙️ Configuración Global</button>
-            <button class="tab-btn" oncontextmenu="openTabInWindow('tab-catalog'); return false;" onclick="switchTab('tab-catalog')">📡 Catálogo HAV</button>
+            <button class="tab-btn" oncontextmenu="openTabInWindow('tab-catalog'); return false;" onclick="switchTab('tab-catalog')">📡 Catálogo Canal</button>
             <button class="tab-btn" oncontextmenu="openTabInWindow('tab-keyword-bank'); return false;" onclick="switchTab('tab-keyword-bank')">🏦 Banco Keywords</button>
         </div>
 
@@ -682,8 +804,16 @@
 
             <div class="controls">
                 <div class="control-group"><label>➕ Nuevo ID</label><input type="text" id="newIdVal" placeholder=""><button class="btn btn-edit" onclick="addOption('ids', 'newIdVal')">Crear</button></div>
-                <div class="control-group"><label>➕ Nuevo Nicho</label><input type="text" id="newProdName" placeholder="Ej: Escritorio"><button class="btn btn-edit" onclick="addOption('products', 'newProdName')">Crear</button></div>
-                <div class="control-group"><label>➕ Nueva Plataforma</label><select id="newPlatName"><option value="Facebook">Facebook</option><option value="TikTok">TikTok</option><option value="Google">Google</option></select><button class="btn btn-edit" onclick="addOption('platforms', 'newPlatName')">Crear</button></div>
+                <div class="control-group">
+                    <label>➕ Nuevo Nicho</label>
+                    <div style="display:flex; gap:4px; align-items:center; position:relative;">
+                        <input type="text" id="newProdName" placeholder="Ej: 🛋️ Sofa" style="flex:1; min-width:0;">
+                        <button class="emoji-btn" onclick="toggleEmojiPicker('pickerNicho','newProdName')" title="Insertar emoji">😊</button>
+                        <div class="emoji-picker-wrapper" id="pickerNicho" style="top:40px; right:0; left:auto;"></div>
+                    </div>
+                    <button class="btn btn-edit" onclick="addOption('products', 'newProdName')" style="margin-top:6px;">Crear</button>
+                </div>
+                <div class="control-group"><label>➕ Nueva Plataforma</label><input type="text" id="newPlatName" placeholder="Ej: FB, TikTok, Pinterest..." autocomplete="off"><button class="btn btn-edit" onclick="addOption('platforms', 'newPlatName')">Crear</button></div>
                 <div class="control-group"><label>➕ Nuevo Canal</label><input type="text" id="newChanName"><button class="btn btn-edit" onclick="addOption('channels', 'newChanName')">Crear</button></div>
                 <div class="control-group"><label>➕ Nuevo Idioma</label><input type="text" id="newLangName" placeholder="Ej: Alemán"><button class="btn btn-edit" onclick="addOption('languages', 'newLangName')">Crear</button></div>
                 <div class="control-group"><label>➕ Nuevo País</label><input type="text" id="newCountryName" placeholder="Ej: PE (Perú)"><button class="btn btn-edit" onclick="addOption('countries', 'newCountryName')">Crear</button></div>
@@ -699,9 +829,9 @@
         </div>
 
         <div id="tab-catalog" class="tab-content">
-            <h2 style="color: #667eea; margin-bottom: 20px;">📡 Catálogo HAV - Canales en la Nube</h2>
+            <h2 style="color: #667eea; margin-bottom: 20px;">📡 Catálogo Canal - Canales en la Nube</h2>
             <div class="config-section" style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #007bff;">
-                <h3 style="margin-top: 0; color: #007bff;">📦 Gestión del Catálogo HAV</h3>
+                <h3 style="margin-top: 0; color: #007bff;">📦 Gestión del Catálogo Canal</h3>
                 <div style="margin-bottom: 15px;">
                     <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">
                         📥 Importar Catálogo JSON
@@ -760,12 +890,33 @@
     </div>
 
     <div id="editChannelModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="position:relative;">
             <h3>✏️ Editar Canal HAV</h3>
             <div class="control-group"><label>Plataforma</label><select id="modalPlatform"><option value="FB">Facebook (FB)</option><option value="TT">TikTok (TT)</option><option value="GN">Google (GN)</option></select></div>
-            <div class="control-group" style="margin-top: 15px;"><label>Nombre del Canal (sin prefijo)</label><input type="text" id="modalChannelName" placeholder=""></div>
-            <div class="control-group" style="margin-top: 15px;"><label>ID del Canal</label><input type="text" id="modalChannelId" placeholder=""></div>
-            <div class="control-group" style="margin-top: 15px;"><label>Categoría/Grupo</label><input type="text" id="modalChannelGroup" placeholder=""></div>
+
+            <div class="control-group" style="margin-top: 15px;">
+                <label>Nombre del Canal (sin prefijo)</label>
+                <div style="display:flex; gap:4px; align-items:center; position:relative;">
+                    <input type="text" id="modalChannelName" placeholder="" style="flex:1; min-width:0;">
+                    <button class="emoji-btn" onclick="toggleEmojiPicker('pickerChannelName','modalChannelName')" title="Insertar emoji">😊</button>
+                    <div class="emoji-picker-wrapper" id="pickerChannelName" style="top:40px; right:0; left:auto;"></div>
+                </div>
+            </div>
+
+            <div class="control-group" style="margin-top: 15px;">
+                <label>ID del Canal</label>
+                <input type="text" id="modalChannelId" placeholder="">
+            </div>
+
+            <div class="control-group" style="margin-top: 15px;">
+                <label>Categoría/Grupo</label>
+                <div style="display:flex; gap:4px; align-items:center; position:relative;">
+                    <input type="text" id="modalChannelGroup" placeholder="" style="flex:1; min-width:0;">
+                    <button class="emoji-btn" onclick="toggleEmojiPicker('pickerChannelGroup','modalChannelGroup')" title="Insertar emoji">😊</button>
+                    <div class="emoji-picker-wrapper" id="pickerChannelGroup" style="top:40px; right:0; left:auto;"></div>
+                </div>
+            </div>
+
             <div class="modal-buttons"><button class="btn btn-del" onclick="closeChannelModal()">❌ Cancelar</button><button class="btn btn-success" onclick="saveChannelEdit()">💾 Guardar</button></div>
         </div>
     </div>
@@ -793,6 +944,76 @@ try {
 
 const campaignsRef = dbFirebase.collection('campaigns');
 const settingsRef = dbFirebase.collection('settings').doc('globalConfig'); 
+
+const formDraftRef = dbFirebase.collection('settings').doc('formDraft');
+let _draftTimer = null;
+
+function _autoSaveDraft() {
+    clearTimeout(_draftTimer);
+    _draftTimer = setTimeout(async () => {
+        try {
+            const draft = {
+                platform: document.getElementById('inPlatform')?.value || '',
+                channel: document.getElementById('inChannel')?.value || '',
+                language: document.getElementById('inLanguage')?.value || '',
+                product: document.getElementById('inProduct')?.value || '',
+                date: document.getElementById('inDate')?.value || '',
+                id: document.getElementById('inId')?.value || '',
+                code: document.getElementById('inCode')?.value || '',
+                country: document.getElementById('inCountry')?.value || '',
+                keywords1: document.getElementById('inKeywords1')?.value || '',
+                keywords2: document.getElementById('inKeywords2')?.value || '',
+                observaciones: document.getElementById('inObservaciones')?.value || '',
+                article: document.getElementById('inArticle')?.value || '',
+                autor: document.getElementById('inAutor')?.value || '',
+                url: document.getElementById('inUrl')?.value || '',
+                editingIndex: editingIndex,
+                savedAt: new Date().toISOString()
+            };
+            const hasData = draft.code || draft.keywords1 || draft.article || draft.url;
+            if (!hasData) return;
+            localStorage.setItem('gestorFormDraft_v1', JSON.stringify(draft));
+            await formDraftRef.set(draft);
+        } catch (e) { console.warn('Autosave borrador:', e); }
+    }, 1500);
+}
+
+async function _restoreDraft() {
+    try {
+        let d = null;
+        try { const snap = await formDraftRef.get(); if (snap.exists) d = snap.data(); } catch(e) {}
+        if (!d) { const local = localStorage.getItem('gestorFormDraft_v1'); if (local) d = JSON.parse(local); }
+        if (!d) return;
+        const hasData = d.code || d.keywords1 || d.article || d.url;
+        if (!hasData) return;
+        const fecha = d.savedAt ? new Date(d.savedAt).toLocaleString('es-ES') : 'desconocida';
+        const ok = confirm('⚠️ BORRADOR SIN GUARDAR ENCONTRADO\n\n📋 Campaña: "' + (d.code || 'Sin nombre') + '"\n📅 Guardado: ' + fecha + '\n\n¿Deseas restaurar los datos del formulario?');
+        if (!ok) { await _clearDraft(); return; }
+        const sv = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+        sv('inPlatform', d.platform); sv('inChannel', d.channel); sv('inLanguage', d.language);
+        sv('inProduct', d.product); sv('inDate', d.date); sv('inId', d.id);
+        sv('inCode', d.code); sv('inCountry', d.country); sv('inKeywords1', d.keywords1);
+        sv('inKeywords2', d.keywords2); sv('inObservaciones', d.observaciones);
+        sv('inArticle', d.article); sv('inAutor', d.autor); sv('inUrl', d.url);
+        if (typeof d.editingIndex === 'number' && d.editingIndex >= 0) {
+            editingIndex = d.editingIndex;
+            const ft = document.getElementById('formTitle'); if (ft) ft.textContent = '✏️ Editando (restaurado): ' + d.code;
+            const bm = document.getElementById('btnMetaOnly'); if (bm) bm.style.display = 'inline-block';
+        }
+        showNotif('✅ Borrador restaurado desde la nube', 'success');
+    } catch (e) { console.warn('Error restaurando borrador:', e); }
+}
+
+async function _clearDraft() {
+    try { localStorage.removeItem('gestorFormDraft_v1'); await formDraftRef.delete(); } catch (e) {}
+}
+
+function _initDraftAutosave() {
+    const tab = document.getElementById('tab-add');
+    if (!tab) return;
+    tab.addEventListener('input', _autoSaveDraft);
+    tab.addEventListener('change', _autoSaveDraft);
+}
 
 console.log('🔥 Firebase conectado');
 
@@ -1171,7 +1392,7 @@ function borrarCatalogoCompleto() {
             db.havCatalog = {};
             saveGlobalSettings();
             refreshEverything();
-            showNotif('🗑️ Catálogo HAV borrado', 'warning');
+            showNotif('🗑️ Catálogo Canal borrado', 'warning');
         }
     }
 }
@@ -1183,6 +1404,8 @@ function forzarLimpiezaDuplicados() {
 
 function startRealtimeSync() {
     setTimeout(() => { limpiarDuplicadosCatalogo(); }, 3000);
+    _initDraftAutosave();
+    setTimeout(_restoreDraft, 2500);
     showNotif('📡 Conectando a la Nube...', 'info');
 
     // A) Escuchar CAMPAÑAS
@@ -1382,8 +1605,18 @@ const nichoEmojis = {
     'escritorio': '🖥️', 'apartamento': '🏢'
 };
 
+
+// Quita emojis del inicio y cualquier posición para mostrar en dropdowns
+function stripEmoji(str) {
+    if (!str) return '';
+    return str.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\u{FE00}-\u{FEFF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FAFF}]/gu, '').trim();
+}
+
 function getNichoConEmoji(nicho) {
     if (!nicho) return '';
+    // Si el nicho ya tiene emoji propio (agregado por el usuario), no agregar otro
+    const yaTieneEmoji = /[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{1F900}-\u{1FAFF}]/u.test(nicho);
+    if (yaTieneEmoji) return nicho;
     const n = nicho.toLowerCase();
     for (let key in nichoEmojis) { if (n.includes(key)) return nichoEmojis[key] + ' ' + nicho; }
     return nicho;
@@ -1391,7 +1624,16 @@ function getNichoConEmoji(nicho) {
 
 function updateCampPlatform(index, newPlatform) {
     const c = db.campaigns[index];
-    if (c) { c.platform = newPlatform; saveToFirebase(c); }
+    if (c) {
+        const oldPlatform = c.platform;
+        c.platform = newPlatform;
+        // Actualizar prefijo del nombre de campaña para mantener consistencia
+        if (c.code && oldPlatform && c.code.startsWith(oldPlatform + '-')) {
+            c.code = newPlatform + c.code.slice(oldPlatform.length);
+        }
+        saveToFirebase(c);
+        renderTable();
+    }
 }
 
 function switchTab(id) {
@@ -1430,11 +1672,12 @@ function updateOptions() {
     const fill = (id, arr, isFilter) => {
         const el = document.getElementById(id);
         if(!el) return;
-        el.innerHTML = (isFilter ? '<option value="">Todos</option>' : '') + 
-                       (arr || []).map(opt => `<option value="${opt}">${opt}</option>`).join('');
+        el.innerHTML = (isFilter ? '<option value="">Todos</option>' : '') +
+                       (arr || []).map(opt => `<option value="${opt}">${stripEmoji(opt) || opt}</option>`).join('');
     };
 
-    fill('inPlatform', db.platforms); fill('filterPlatform', db.platforms, true);
+    fill('inPlatform', db.platforms);
+    fill('filterPlatform', db.platforms, true);
     fill('inChannel', db.channels); fill('filterChannel', db.channels, true);
     // Aseguramos que siempre use la lista completa si la db falla
     fill('inProduct', db.products.length ? db.products : ALL_NICHOS); 
@@ -1459,8 +1702,9 @@ function updateOptions() {
         const container = document.getElementById(listId);
         if(container && db[type]) {
             container.innerHTML = db[type].map((val, i) => `
-                <li>
+                <li style="position:relative;">
                     <input type="text" class="config-input" value="${val}" id="input_${type}_${i}">
+                    ${type === 'products' ? `<button class="emoji-btn" style="padding:4px 7px;font-size:1em;" onclick="toggleEmojiPicker('pickerEdit_${type}_${i}','input_${type}_${i}')" title="Emoji">😊</button><div class="emoji-picker-wrapper" id="pickerEdit_${type}_${i}" style="top:40px;right:0;"></div>` : ''}
                     <button class="btn btn-save-mini" onclick="updateGlobalItem('${type}', ${i})">💾</button>
                     <button class="btn-del-mini" onclick="delOption('${type}', ${i})">🗑️</button>
                 </li>`).join('');
@@ -1486,7 +1730,58 @@ function delOption(type, index) {
 
 function updateGlobalItem(type, index) {
     const newVal = document.getElementById(`input_${type}_${index}`).value.trim();
-    if(newVal) { db[type][index] = newVal; saveGlobalSettings(); showNotif('✅ Actualizado', 'success'); }
+    if (!newVal) return;
+    const oldVal = db[type][index];
+    db[type][index] = newVal;
+    db[type].sort();
+
+    // Si renombraron una PLATAFORMA → actualizar TODAS las campañas con batch write
+    if (type === 'platforms' && oldVal !== newVal) {
+        renombrarPlataformaEnCampanas(oldVal, newVal);
+    }
+
+    saveGlobalSettings();
+    showNotif('✅ Actualizado', 'success');
+    refreshEverything();
+}
+
+// Actualiza todas las campañas que usan oldPlat → newPlat
+// Usa batch write para que sea UNA sola operación atómica (evita race condition con onSnapshot)
+async function renombrarPlataformaEnCampanas(oldPlat, newPlat) {
+    let updatedCount = 0;
+
+    // 1. Actualizar en memoria PRIMERO (todos los cambios locales)
+    db.campaigns.forEach(c => {
+        if (c.platform === oldPlat) {
+            c.platform = newPlat;
+            if (c.code && c.code.startsWith(oldPlat + '-')) {
+                c.code = newPlat + c.code.slice(oldPlat.length);
+            }
+            updatedCount++;
+        }
+    });
+
+    if (updatedCount === 0) return;
+
+    // 2. Refrescar la lista inmediatamente con los datos locales actualizados
+    renderTable();
+    showNotif('⏳ Actualizando ' + updatedCount + ' campañas en la nube...', 'success');
+
+    // 3. Batch write a Firebase (UNA sola operación, no dispara onSnapshot múltiple)
+    try {
+        const batch = dbFirebase.batch();
+        db.campaigns.forEach(c => {
+            if (c.platform === newPlat && c.firebaseId) {
+                const { firebaseId, ...data } = c;
+                batch.update(campaignsRef.doc(firebaseId), data);
+            }
+        });
+        await batch.commit();
+        showNotif('✅ ' + updatedCount + ' campañas actualizadas → ' + newPlat, 'success');
+    } catch (e) {
+        console.error('Error batch update plataforma:', e);
+        showNotif('⚠️ Error al guardar en nube: ' + e.message, 'danger');
+    }
 }
 
 function renderTable() {
@@ -1600,9 +1895,11 @@ function renderTable() {
         return `<tr>
             <td>${c.date || '-'}</td> <td>
                 <select class="platform-select" onchange="updateCampPlatform(${realIndex}, this.value)">
-                    <option value="FB" ${c.platform === 'FB' ? 'selected' : ''}>Facebook</option>
-                    <option value="TT" ${c.platform === 'TT' ? 'selected' : ''}>TikTok</option>
-                    <option value="GN" ${c.platform === 'GN' ? 'selected' : ''}>Google</option>
+                    ${(() => {
+                        const inList = db.platforms.some(p => p === c.platform);
+                        const extra = (!inList && c.platform) ? `<option value="${c.platform}" selected>${c.platform}</option>` : '';
+                        return extra + db.platforms.map(p => `<option value="${p}" ${c.platform === p ? 'selected' : ''}>${p}</option>`).join('');
+                    })()}
                 </select>
             </td>
             <td>${c.channel || '-'}</td>
@@ -1778,13 +2075,14 @@ function saveCampaign() {
     setTimeout(() => {
         resetForm();
         showNotif('✅ Campaña guardada. Listo para la siguiente.', 'success');
+        _clearDraft();
     }, 500);
 }
 
 function autoCompleteCampaign() {
     const campaignName = document.getElementById('inCode').value.trim();
 
-    // Verificar si la campaña ya existe (para advertencia visual)
+    // Verificar duplicado (visual)
     checkDuplicateCampaign(campaignName);
 
     if (!campaignName) {
@@ -1796,18 +2094,143 @@ function autoCompleteCampaign() {
         document.getElementById('inId').value = '';
         return;
     }
+
+    // Estructura: PLATAFORMA-CANAL-NICHO-PAIS
+    // El PAIS = último segmento. El NICHO = todo lo del medio (puede incluir prefijo de canal).
     const parts = campaignName.split('-');
-    if (parts.length >= 4) {
-        const [platform, channel, product, country] = parts;
-        document.getElementById('inPlatform').value = platform || '';
-        document.getElementById('inChannel').value = channel || '';
-        document.getElementById('inProduct').value = product || '';
-        document.getElementById('inCountry').value = country || '';
-        const languageSelect = document.getElementById('inLanguage');
-        const matchingCampaign = db.campaigns.find(c => c.code === campaignName);
-        if (matchingCampaign && matchingCampaign.language) {
-            languageSelect.value = matchingCampaign.language;
+    if (parts.length < 4) return;
+
+    const platform = parts[0];
+    const channel  = parts[1];
+    const country  = parts[parts.length - 1];
+    const product  = parts.slice(2, parts.length - 1).join('-');  // ej: "VASofa"
+
+    // ── Plataforma ────────────────────────────────────────────────
+    const matchedPlatform = db.platforms.find(p => p === platform)
+        || db.platforms.find(p => p.toLowerCase() === platform.toLowerCase())
+        || platform;
+    document.getElementById('inPlatform').value = matchedPlatform || '';
+
+    // ── Canal ─────────────────────────────────────────────────────
+    document.getElementById('inChannel').value = channel || '';
+
+    // ── Nicho / Producto ──────────────────────────────────────────
+    // Estrategia de búsqueda en db.products:
+    // 1. Coincidencia exacta: "VASofa" → buscar "VASofa" en lista
+    // 2. Sin prefijo de canal: "VASofa" → quitar "VA" → "Sofa" (canal del form o del nombre)
+    // 3. Sin prefijo de canal (parte del nombre): quitar parts[1] → "Sofa"
+    // 4. Case-insensitive de las anteriores
+    function findProduct(key) {
+        return db.products.find(p => p === key)
+            || db.products.find(p => p.toLowerCase() === key.toLowerCase());
+    }
+
+    let matchedProduct = findProduct(product); // intento 1: exacto
+
+    if (!matchedProduct) {
+        // Intento 2: quitar prefijo del canal (puede estar en el nicho: "VASofa" → "Sofa")
+        const channelInForm = document.getElementById('inChannel').value || channel;
+        const prefixesToTry = [channelInForm, channel, parts[1]];
+        for (const prefix of prefixesToTry) {
+            if (prefix && product.toUpperCase().startsWith(prefix.toUpperCase()) && product.length > prefix.length) {
+                const stripped = product.slice(prefix.length);
+                const found = findProduct(stripped);
+                if (found) { matchedProduct = found; break; }
+            }
         }
+    }
+
+    const productEl = document.getElementById('inProduct');
+    if (matchedProduct) {
+        productEl.value = matchedProduct;
+    } else {
+        productEl.value = '';
+        if (product) showNotif('⚠️ Nicho "' + product + '" no está en Configuración Global', 'warning');
+    }
+
+    // ── País ──────────────────────────────────────────────────────
+    document.getElementById('inCountry').value = country || '';
+
+    // ── ID e Idioma: buscar en múltiples fuentes ─────────────────
+    // Prioridad 1: coincidencia exacta en db.campaigns
+    const exactCampaign = db.campaigns.find(c => c.code === campaignName);
+    if (exactCampaign) {
+        if (exactCampaign.id)       document.getElementById('inId').value = exactCampaign.id;
+        if (exactCampaign.language) document.getElementById('inLanguage').value = exactCampaign.language;
+        if (exactCampaign.date)     document.getElementById('inDate').value = exactCampaign.date;
+        if (exactCampaign.autor)    document.getElementById('inAutor').value = exactCampaign.autor;
+        return;
+    }
+
+    // Prioridad 2: coincidencia sin el país en db.campaigns ("FB-HAV-VASofa" → "FB-HAV-VASofa-DE")
+    const nameWithoutCountry = parts.slice(0, -1).join('-');  // "FB-HAV-VASofa"
+    const prefixCampaign = db.campaigns.find(c => c.code.startsWith(nameWithoutCountry + '-'));
+    if (prefixCampaign) {
+        document.getElementById('inId').value = prefixCampaign.id;
+        if (prefixCampaign.language) document.getElementById('inLanguage').value = prefixCampaign.language;
+        return;
+    }
+
+    // Prioridad 3: buscar en el Catálogo Canal
+    // Ej: canal.code = "FB-HAV-VASofa", canal.id = "02334"
+    if (db.havCatalog) {
+        let idFromCatalog = null;
+        for (const grupo in db.havCatalog) {
+            const canales = db.havCatalog[grupo];
+            if (!Array.isArray(canales)) continue;
+
+            // 3a. Exacto: canal.code === "FB-HAV-VASofa"
+            let found = canales.find(c => c.code === nameWithoutCountry);
+
+            // 3b. Case-insensitive exacto
+            if (!found) found = canales.find(c =>
+                c.code.toLowerCase() === nameWithoutCountry.toLowerCase()
+            );
+
+            // 3c. Exacto con país incluido: canal.code === "FB-HAV-VASofa-HU"
+            if (!found) found = canales.find(c => c.code === campaignName);
+
+            if (found && found.id) { idFromCatalog = found.id; break; }
+        }
+
+        if (idFromCatalog) {
+            if (!db.ids.includes(idFromCatalog)) {
+                db.ids.push(idFromCatalog);
+                db.ids.sort();
+                saveGlobalSettings();
+                updateOptions();
+            }
+            document.getElementById('inId').value = idFromCatalog;
+            return;
+        }
+    }
+
+    // Prioridad 4: buscar en el Banco de Keywords por nombre de campaña
+    // keywordBank[i].campaignid puede ser el ID numérico o el nombre de campaña
+    if (keywordBank && keywordBank.length > 0) {
+        // Función para detectar si un valor parece un ID numérico (ej: "00902")
+        const looksLikeId = v => v && /^\d{3,}$/.test(String(v).trim());
+        const bankMatch = keywordBank.find(b => {
+            const names = [b.campaign_id, b.campaignid, b.campaign_name, b.name, b.code].filter(Boolean);
+            return names.some(n => n === campaignName || n === nameWithoutCountry ||
+                                   String(n).startsWith(nameWithoutCountry + '-'));
+        });
+        if (bankMatch) {
+            // Extraer el ID numérico: puede estar en distintos campos
+            const bankId = (looksLikeId(bankMatch.id) ? bankMatch.id : null) ||
+                           (looksLikeId(bankMatch.campaignid) ? bankMatch.campaignid : null) ||
+                           (looksLikeId(bankMatch.campaign_id) ? bankMatch.campaign_id : null);
+            if (bankId) {
+                document.getElementById('inId').value = bankId;
+                return;
+            }
+        }
+    }
+
+    // Prioridad 5: misma plataforma + canal (sugerencia débil como último recurso)
+    const similarCampaign = db.campaigns.find(c => c.platform === matchedPlatform && c.channel === channel);
+    if (similarCampaign && similarCampaign.id) {
+        document.getElementById('inId').value = similarCampaign.id;
     }
 }
 
@@ -1855,6 +2278,7 @@ function saveMetadataOnly() {
     saveToFirebase(c);
     // Mantenerse en el formulario
     setTimeout(() => {
+        _clearDraft();
         resetForm();
         showNotif('✅ Campaña guardada. Listo para la siguiente.', 'success');
     }, 500);
@@ -1868,6 +2292,7 @@ function deleteCampaign(index) {
 }
 
 function resetForm() {
+    _clearDraft();
     editingIndex = -1;
     document.querySelectorAll('#tab-add input, #tab-add select, #tab-add textarea').forEach(el => el.value = '');
     document.getElementById('formTitle').textContent = '➕ Nueva Campaña';
@@ -2212,6 +2637,129 @@ function autoCompleteFromHAV() {
 }
 
 
+
+
+// ── TEAM BADGES — edición inline ────────────────────────────────────────
+function editTeamBadge(badgeEl) {
+    if (badgeEl.querySelector('input')) return; // ya está en modo edición
+    const span = badgeEl.querySelector('span');
+    const currentText = span.textContent;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentText;
+    input.className = 'badge-edit-input';
+    input.size = Math.max(currentText.length, 4);
+    input.style.width = Math.max(currentText.length * 9, 40) + 'px';
+
+    badgeEl.replaceChild(input, span);
+    input.focus();
+    input.select();
+
+    const save = () => {
+        const newText = input.value.trim() || currentText;
+        const newSpan = document.createElement('span');
+        newSpan.textContent = newText;
+        badgeEl.replaceChild(newSpan, input);
+        saveTeamCards();
+    };
+
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { input.blur(); }
+        if (e.key === 'Escape') { input.value = currentText; input.blur(); }
+        // Ajustar ancho dinámico mientras escribe
+        input.style.width = Math.max(input.value.length * 9, 40) + 'px';
+    });
+    input.addEventListener('input', () => {
+        input.style.width = Math.max(input.value.length * 9, 40) + 'px';
+    });
+}
+
+function saveTeamCards() {
+    // Solo guardar los badges EDITABLES (con onclick)
+    const editables = document.querySelectorAll('#teamCards [onclick]');
+    const data = Array.from(editables).map(b => ({
+        id: b.dataset.teamId,
+        text: b.querySelector('span')?.textContent || ''
+    }));
+    localStorage.setItem('gestorTeamCards_v3', JSON.stringify(data));
+}
+
+function loadTeamCards() {
+    // Limpiar versiones viejas
+    localStorage.removeItem('gestorTeamCards_v1');
+    localStorage.removeItem('gestorTeamCards_v2');
+    const saved = localStorage.getItem('gestorTeamCards_v3');
+    if (!saved) return;
+    try {
+        const data = JSON.parse(saved);
+        data.forEach(item => {
+            if (!item.id) return;
+            const badge = document.querySelector('#teamCards [data-team-id="' + item.id + '"]');
+            if (badge) {
+                const span = badge.querySelector('span');
+                if (span) span.textContent = item.text;
+            }
+        });
+    } catch(e) {}
+}
+
+window.addEventListener('load', loadTeamCards);
+
+// ── EMOJI PICKER LOGIC ──────────────────────────────────────────────────
+let _activePickerId = null;
+
+function toggleEmojiPicker(pickerId, targetInputId) {
+    // Si ya hay uno abierto, cerrarlo
+    if (_activePickerId && _activePickerId !== pickerId) {
+        const prev = document.getElementById(_activePickerId);
+        if (prev) { prev.classList.remove('visible'); prev.innerHTML = ''; }
+    }
+
+    const wrapper = document.getElementById(pickerId);
+    if (!wrapper) return;
+
+    if (wrapper.classList.contains('visible')) {
+        wrapper.classList.remove('visible');
+        wrapper.innerHTML = '';
+        _activePickerId = null;
+        return;
+    }
+
+    // Crear el picker si no existe
+    if (!wrapper.querySelector('emoji-picker')) {
+        const picker = document.createElement('emoji-picker');
+        picker.setAttribute('locale', 'en');
+        wrapper.appendChild(picker);
+
+        picker.addEventListener('emoji-click', (e) => {
+            const input = document.getElementById(targetInputId);
+            if (input) {
+                const pos = input.selectionStart ?? input.value.length;
+                input.value = input.value.slice(0, pos) + e.detail.unicode + input.value.slice(pos);
+                input.focus();
+                input.setSelectionRange(pos + e.detail.unicode.length, pos + e.detail.unicode.length);
+            }
+            wrapper.classList.remove('visible');
+            wrapper.innerHTML = '';
+            _activePickerId = null;
+        });
+    }
+
+    wrapper.classList.add('visible');
+    _activePickerId = pickerId;
+}
+
+// Cerrar picker al hacer clic fuera
+document.addEventListener('click', (e) => {
+    if (_activePickerId && !e.target.closest('.emoji-picker-wrapper') && !e.target.closest('.emoji-btn')) {
+        const wrapper = document.getElementById(_activePickerId);
+        if (wrapper) { wrapper.classList.remove('visible'); wrapper.innerHTML = ''; }
+        _activePickerId = null;
+    }
+});
+
 // ========================================================================
 // SISTEMA DE AUTENTICACIÓN Y SEGURIDAD
 // ========================================================================
@@ -2277,8 +2825,8 @@ function logout() {
 
 function checkSession() {
     const auth = localStorage.getItem('gestorHAV_auth');
-    const usuario = localStorage.getItem('gestorHAV_user');
-    const loginTime = localStorage.getItem('gestorHAV_loginTime');
+    const usuario = localStorage.getItem('gestorCampaña_user');
+    const loginTime = localStorage.getItem('gestorCampaña_loginTime');
 
     // Verificar si existe sesión válida
     if (auth && usuario && loginTime && USUARIOS_AUTORIZADOS[usuario]) {
@@ -2427,7 +2975,7 @@ window.onload = function() {
     // Listener para auto-completar al escribir nombre de campaña
     const campoNombre = document.getElementById('inCode');
     if (campoNombre) {
-        campoNombre.addEventListener('input', autoCompleteFromHAV);
+        // autoCompleteFromHAV integrado en autoCompleteCampaign (evitar doble ejecución)
         console.log('✅ Auto-completado activado');
     }
     document.getElementById('inProduct').addEventListener('change', function() {});
@@ -2899,7 +3447,7 @@ function openTabInWindow(tabId) {
         'tab-comp': '🔬 Comparador',
         'tab-add': '➕ Gestionar Campaña',
         'tab-config': '⚙️ Configuración',
-        'tab-catalog': '📡 Catálogo HAV',
+        'tab-catalog': '📡 Catálogo Canal',
         'tab-analysis': '📊 Análisis',
         'tab-keyword-bank': '🏦 Banco de Keywords'
     };
