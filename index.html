@@ -2825,8 +2825,8 @@ function logout() {
 
 function checkSession() {
     const auth = localStorage.getItem('gestorHAV_auth');
-    const usuario = localStorage.getItem('gestorCampaña_user');
-    const loginTime = localStorage.getItem('gestorCampaña_loginTime');
+    const usuario = localStorage.getItem('gestorHAV_user');
+    const loginTime = localStorage.getItem('gestorHAV_loginTime');
 
     // Verificar si existe sesión válida
     if (auth && usuario && loginTime && USUARIOS_AUTORIZADOS[usuario]) {
