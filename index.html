@@ -66,8 +66,10 @@
         }
 
         /* CATÁLOGO HAV */
-        .hav-catalog-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 30px; margin-top: 30px; align-items: start; }
-        .hav-platform-card { border-radius: 12px; padding: 20px; border-left: 6px solid; box-shadow: 0 4px 15px rgba(0,0,0,0.08); background: white; height: 100%; display: flex; flex-direction: column; }
+        .hav-catalog-grid { display: grid; grid-template-columns: repeat(3, 1fr) /* FIX: columnas fijas */; gap: 30px; margin-top: 30px; align-items: start; }
+    @media (max-width: 1100px) { .hav-catalog-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 680px) { .hav-catalog-grid { grid-template-columns: 1fr; } }
+        .hav-platform-card { border-radius: 12px; padding: 20px; border-left: 6px solid; box-shadow: 0 4px 15px rgba(0,0,0,0.08); background: white; height: 100%; display: flex; flex-direction: column;  min-height: 200px; box-sizing: border-box; }
         .hav-platform-card h3 { margin-bottom: 15px; font-size: 1.25em; font-weight: 700; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
         .hav-channels-list { display: flex; flex-direction: column; gap: 12px; max-height: 500px; overflow-y: auto; padding-right: 8px; }
         .hav-channel-item { background: #f8faff; padding: 12px 15px; border-radius: 8px; border: 1px solid #e1e4e8; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.03); transition: transform 0.2s; }
@@ -482,15 +484,22 @@
     overflow-y: auto;
 }
 
-.comp-card .keyword-item {
+.comp-card #bankKeywordsDetail .keyword-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     background: #f9fafb;
-    padding: 8px 12px;
-    margin: 5px 0;
+    padding: 5px 8px;
+    margin: 3px 0;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 13px;
     border-left: 3px solid #3b82f6;
-    word-break: break-word;
 }
+#bankKeywordsDetail .keyword-item input[type=checkbox] { flex: 0 0 20px; width:20px; margin: 0; padding:0; }
+#bankKeywordsDetail .keyword-item .keyword-text        { flex: 1; min-width: 80px; overflow: hidden;
+                                                         text-overflow: ellipsis; white-space: nowrap;
+                                                         padding-right: 8px; }
+#bankKeywordsDetail .keyword-item .keyword-text-input  { flex: 1; min-width: 80px; }
 
 #btnShowModified {
     transition: all 0.3s ease;
@@ -547,7 +556,7 @@
 /* EDICIÓN Y ELIMINACIÓN */
 .keyword-item.editing { border-color: #f59e0b; background: #fffbeb; }
 .keyword-text-input { width: 100%; padding: 8px 12px; border: 2px solid #667eea; border-radius: 6px; font-size: 0.95em; font-weight: 500; }
-.keyword-actions { display: flex; gap: 5px; }
+.keyword-actions { display: flex; gap: 5px; flex-shrink: 0; }
 .btn-mini { padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8em; font-weight: 600; }
 .btn-edit-mini { background: #f59e0b; color: white; }
 .btn-del-mini { background: #ef4444; color: white; }
@@ -558,8 +567,101 @@
 .sync-status.saving { background: #fef3c7; color: #92400e; display: block; }
 .sync-status.saved { background: #d1fae5; color: #065f46; display: block; }
 .sync-status.error { background: #fee2e2; color: #dc2626; display: block; }
+
+/* ── Etiquetas de columnas keywords ── */
+/* ═══ GRID de keywords: header y filas con MISMO template ═══ */
+.kw-col-header, #bankKeywordsDetail .keyword-item {
+  display: grid;
+  grid-template-columns: 1fr 72px 72px 72px 72px 72px 72px;
+  align-items: center;
+  column-gap: 0;
+  box-sizing: border-box;
+  width: 100%;
+}
+.kw-col-header {
+  padding: 6px 24px 6px 8px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 800;
+  user-select: none;
+}
+#bankKeywordsDetail .keyword-item {
+  padding: 5px 8px;
+  background: #f9fafb;
+  border-left: 3px solid #3b82f6;
+  margin: 3px 0;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.kw-col-kw-lbl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  padding-right: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #4f46e5;
+}
+#bankKeywordsDetail .keyword-item .kw-cell-kw {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  padding-right: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+.kw-col-drag {
+  text-align: left;
+  cursor: pointer;
+  padding: 5px 6px;
+  border-radius: 5px;
+  border: 1px solid;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  margin: 0 2px;
+}
+.kw-col-drag:hover { filter: brightness(0.9); }
+.kw-col-drag.drag-over { outline: 2px solid #6366f1; }
+.kw-col-drag.dragging { opacity: .3; }
+.kw-col-drag .sort-arrow { font-size: 11px; }
+.kw-col-drag[data-col=pos]         { background:#e0e7ff; color:#3730a3; border-color:#a5b4fc; }
+.kw-col-drag[data-col=impressions] { background:#dcfce7; color:#166534; border-color:#86efac; }
+.kw-col-drag[data-col=searches]    { background:#fef9c3; color:#854d0e; border-color:#fde047; }
+.kw-col-drag[data-col=clicks]      { background:#ffedd5; color:#9a3412; border-color:#fb923c; }
+.kw-col-drag[data-col=ctr]         { background:#fce7f3; color:#9d174d; border-color:#f9a8d4; }
+.kw-col-drag[data-col=ims]         { background:#e0f2fe; color:#075985; border-color:#7dd3fc; }
+.keyword-metrics { display: contents; }
+.kw-metric-cell {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  padding: 4px 4px;
+  border-radius: 3px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  margin: 0 2px;
+  white-space: nowrap;
+}
 </style>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/xlsx@0.20.3/dist/xlsx.full.min.js"></script>
+    <script>
+    window.addEventListener("load",function(){
+        if(typeof XLSX==="undefined"){var _s=document.createElement("script");_s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";_s.onload=function(){console.log("\u2705 XLSX fallback OK");};document.head.appendChild(_s);}
+    });
+    </script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
 </head>
 <body>
@@ -670,6 +772,7 @@
                 <div class="control-group"><label>🆔 ID Campaña</label><select id="filterId" onchange="renderTable()"></select></div>
                 <div class="control-group"><label>📦 Nicho</label><select id="filterProduct" onchange="renderTable()"></select></div>
                 <div class="control-group"><label>📡 Plataforma</label><select id="filterPlatform" onchange="renderTable()"></select></div>
+                <div class="control-group"><label>🌍 País</label><select id="filterCountryName" onchange="renderTable()"></select></div>
             </div>
             <div class="table-wrapper">
                 <table>
@@ -832,25 +935,31 @@
             <h2 style="color: #667eea; margin-bottom: 20px;">📡 Catálogo Canal - Canales en la Nube</h2>
             <div class="config-section" style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #007bff;">
                 <h3 style="margin-top: 0; color: #007bff;">📦 Gestión del Catálogo Canal</h3>
-                <div style="margin-bottom: 15px;">
-                    <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">
+                <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                    <input type="file" id="importCatalogFile" accept=".json" style="display:none"
+                         onchange="importarCatalogoDesdeInput(event)">
+                    <button onclick="document.getElementById('importCatalogFile').click()"
+                        style="padding:6px 14px;font-size:0.82em;font-weight:600;border:none;border-radius:6px;cursor:pointer;background:#667eea;color:white;">
                         📥 Importar Catálogo JSON
                     </button>
-                    <button class="btn btn-warning" onclick="forzarLimpiezaDuplicados()" style="margin-left: 10px;">
+                    <input type="file" id="importCatalogExcel" accept=".xlsx,.xls,.csv" style="display:none"
+                         onchange="importarCatalogoExcel(event)">
+                    <button onclick="document.getElementById('importCatalogExcel').click()"
+                        style="padding:6px 14px;font-size:0.82em;font-weight:600;border:none;border-radius:6px;cursor:pointer;background:#10b981;color:white;">
+                        📊 Importar Catálogo Excel
+                    </button>
+                    <button onclick="forzarLimpiezaDuplicados()"
+                        style="padding:6px 14px;font-size:0.82em;font-weight:600;border:none;border-radius:6px;cursor:pointer;background:#f59e0b;color:white;">
                         🧹 Eliminar Duplicados
                     </button>
-                    <button class="btn btn-del" onclick="borrarCatalogoCompleto()" style="margin-left: 10px;">
-                        🗑️ Borrar Catálogo Completo
+                    <button onclick="borrarCatalogoCompleto()"
+                        style="padding:6px 14px;font-size:0.82em;font-weight:600;border:none;border-radius:6px;cursor:pointer;background:#ef4444;color:white;">
+                        🗑️ Borrar Todo
                     </button>
                 </div>
-                <p style="margin: 0; font-size: 0.9em; color: #666;">
-                    • <strong>Importar:</strong> Agrega canales desde un archivo JSON<br>
-                    • <strong>Eliminar Duplicados:</strong> Limpia canales repetidos<br>
-                    • <strong>Borrar Completo:</strong> Elimina TODO el catálogo HAV
-                </p>
             </div>
             <div style="margin-bottom: 20px;">
-                <button class="btn btn-primary" onclick="addNewHAVChannel()">➕ Agregar Nuevo Canal</button>
+                <button onclick="addNewHAVChannel()" style="padding:6px 14px;font-size:0.82em;font-weight:600;border:none;border-radius:6px;cursor:pointer;background:#667eea;color:white;">➕ Agregar Canal</button>
             </div>
             <div id="havCatalogContainer" class="hav-catalog-grid"></div>
         </div>
@@ -879,12 +988,12 @@
         <div class="control-group"><label>↕ Plataforma</label><select id="bankSortPlatform" onchange="renderBankCampaigns()"><option value="">Sin orden</option><option value="asc">A → Z</option><option value="desc">Z → A</option></select></div>
         <div class="control-group"><label>↕ Canal</label><select id="bankSortChannel" onchange="renderBankCampaigns()"><option value="">Sin orden</option><option value="asc">A → Z</option><option value="desc">Z → A</option></select></div><div class="control-group"><label>⚡ Acciones</label><div style="display: flex; gap: 8px;"><button class="btn btn-success" onclick="copySelectedKeywords()" style="flex: 1; padding: 8px; font-size: 0.9em;">📋 Copiar</button><button class="btn btn-primary" onclick="sendToForm()" style="flex: 1; padding: 8px; font-size: 0.9em;">➡️ A Campaña</button></div></div>
       </div>
-      <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; min-height: 500px;">
-        <div style="border-right: 2px solid #e5e7eb; padding-right: 20px;">
+      <div id="bankLayout" style="display:flex;gap:0;min-height:500px;position:relative;">
+        <div id="bankPanelLeft" style="width:300px;min-width:150px;max-width:60%;flex-shrink:0;padding-right:12px;overflow:hidden;">
           <h3 style="color: #667eea; margin-bottom: 15px; font-size: 1.1em;">📋 Campañas (<span id="bankFilteredCount">0</span>)</h3>
           <div id="bankCampaignsList" style="max-height: 600px; overflow-y: auto;"><div style="text-align: center; padding: 60px 20px; color: #999;"><div style="font-size: 3em;">📊</div><p>Importa un archivo Excel</p></div></div>
         </div>
-        <div><div id="bankKeywordsDetail" style="background: #f9fafb; padding: 20px; border-radius: 8px; min-height: 600px;"><div style="text-align: center; padding: 100px 20px; color: #999;"><div style="font-size: 3em;">👈</div><p>Selecciona una campaña</p></div></div></div>
+        <div id="bankPanelRight" style="flex:1;min-width:200px;overflow:hidden;"><div id="bankKeywordsDetail" style="background: #f9fafb; padding: 20px; border-radius: 8px; min-height: 600px;"><div style="text-align: center; padding: 100px 20px; color: #999;"><div style="font-size: 3em;">👈</div><p>Selecciona una campaña</p></div></div></div>
       </div>
     </div>
     </div>
@@ -1048,6 +1157,8 @@ let db = JSON.parse(localStorage.getItem('arbitrage_final_v11')) || {
     channels: ['Mundo', 'IH', 'CS', 'HN'],
     products: ALL_NICHOS,
     ids: ['00902', '00903', '00904', '00905', '00908', '00909'],
+    languages: ALL_LANGUAGES, // BUG-05 FIX
+    countries: ['PL', 'DE', 'ES', 'FR', 'IT', 'NL', 'BE', 'PT', 'UK', 'US', 'MX', 'AR', 'BR', 'CL', 'CO', 'PE'], // BUG-05 FIX
     havCatalog: HAV_CATALOG_INITIAL
 };
 
@@ -1057,6 +1168,7 @@ if (!db.products) db.products = ALL_NICHOS;
 if (!db.platforms) db.platforms = ['FB', 'TT', 'GN'];
 if (!db.channels) db.channels = ['Mundo', 'IH', 'CS', 'HN'];
 if (!db.countries) db.countries = ['PL', 'DE', 'ES', 'FR', 'IT', 'NL', 'BE', 'PT', 'UK', 'US', 'MX', 'AR', 'BR', 'CL', 'CO', 'PE'];
+if (!db.languages) db.languages = ALL_LANGUAGES; // BUG-05 FIX
 // ------------------------------------------
 
 let editingIndex = -1;
@@ -1694,6 +1806,7 @@ function updateOptions() {
     }
     fill('filterId', db.ids, true);
     fill('inLanguage', db.languages);
+    fill('filterCountryName', db.countries || [], true);
 
     ['ids', 'products', 'platforms', 'channels', 'languages', 'countries'].forEach(type => {
         let listId = '';
@@ -2324,6 +2437,153 @@ function clearAllBoldTags() {
 }
 
 // ===== IMPORTAR (JSON) =====
+
+// ═══════════════════════════════════════════════════════════════
+// IMPORTAR CATÁLOGO DESDE EXCEL (xlsx)
+// Formato esperado: columnas Plataforma | Nombre Canal | ID | Grupo (opcional)
+// ═══════════════════════════════════════════════════════════════
+function importarCatalogoExcel(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'uint8array' });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+            if (rows.length < 2) {
+                alert('⚠️ El archivo Excel está vacío o no tiene datos.');
+                return;
+            }
+
+            // Detectar encabezados (primera fila)
+            const headers = rows[0].map(h => String(h).trim().toLowerCase());
+            const colPlat   = headers.findIndex(h => h.includes('plat') || h.includes('platform'));
+            const colNombre = headers.findIndex(h => h.includes('nombre') || h.includes('canal') || h.includes('name') || h.includes('code'));
+            const colId     = headers.findIndex(h => h === 'id' || h.includes('id canal') || h.includes('channel id'));
+            const colGrupo  = headers.findIndex(h => h.includes('grupo') || h.includes('group') || h.includes('categoria') || h.includes('categoría'));
+
+            // Si no se detectan columnas, usar posición fija: col 0=Plat, 1=Nombre, 2=ID, 3=Grupo
+            const iPlat   = colPlat   >= 0 ? colPlat   : 0;
+            const iNombre = colNombre >= 0 ? colNombre : 1;
+            const iId     = colId     >= 0 ? colId     : 2;
+            const iGrupo  = colGrupo  >= 0 ? colGrupo  : 3;
+
+            let totalAgregados = 0;
+            let errores = 0;
+
+            rows.slice(1).forEach((row, rowIdx) => {
+                const plat   = String(row[iPlat]  || '').trim().toUpperCase();
+                const nombre = String(row[iNombre] || '').trim();
+                const id     = String(row[iId]    || '').trim();
+                const grupo  = String(row[iGrupo] || '').trim() || 
+                               (plat === 'FB' ? 'MUNDO Meta' : plat === 'TT' ? 'Mundo TikTok' : plat === 'GN' ? 'Google Ads' : 'Otros');
+
+                if (!nombre || !id) { errores++; return; }
+
+                // Validar plataforma
+                const platValida = ['FB','TT','GN'].includes(plat) ? plat : 'FB';
+
+                // Construir code con formato PLAT-HAV-Nombre
+                const prefix = platValida + '-HAV-';
+                const code = nombre.startsWith(prefix) ? nombre : prefix + nombre;
+
+                if (!db.havCatalog[grupo]) db.havCatalog[grupo] = [];
+
+                // Evitar duplicados por ID
+                const existe = db.havCatalog[grupo].some(c => c.id === id);
+                if (!existe) {
+                    db.havCatalog[grupo].push({ code, id, platform: platValida });
+                    if (!db.ids.includes(id)) { db.ids.push(id); }
+                    totalAgregados++;
+                }
+            });
+
+            if (totalAgregados === 0 && errores === 0) {
+                showNotif('⚠️ No se agregaron canales. Puede que todos ya existan.', 'warning');
+            } else {
+                db.ids.sort();
+                saveGlobalSettings();
+                setTimeout(limpiarDuplicadosCatalogo, 300);
+                refreshEverything();
+                showNotif(`✅ Catálogo Excel: ${totalAgregados} canales importados${errores > 0 ? ', ' + errores + ' filas con errores' : ''}`, 'success');
+            }
+        } catch (err) {
+            alert('❌ Error al leer el Excel: ' + err.message + '\n\nVerifica que el archivo tenga las columnas: Plataforma | Nombre Canal | ID | Grupo');
+            console.error(err);
+        }
+    };
+    reader.readAsArrayBuffer(file);
+    event.target.value = '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORTAR CATÁLOGO A EXCEL
+// ═══════════════════════════════════════════════════════════════
+function exportarCatalogoExcel() {
+    if (!db.havCatalog || Object.keys(db.havCatalog).length === 0) {
+        alert('⚠️ El catálogo está vacío. Agrega canales primero.');
+        return;
+    }
+
+    const rows = [['Plataforma', 'Nombre Canal (Code)', 'ID Canal', 'Grupo/Categoría']];
+
+    // Orden: MUNDO Meta primero, luego Mundo TikTok, Google Ads, resto
+    const orderedKeys = ['MUNDO Meta', 'Mundo TikTok', 'Google Ads'];
+    const allKeys = Object.keys(db.havCatalog);
+    const finalOrder = [...orderedKeys, ...allKeys.filter(k => !orderedKeys.includes(k))];
+
+    finalOrder.forEach(grupo => {
+        const canales = db.havCatalog[grupo];
+        if (!canales || !canales.length) return;
+        canales.forEach(ch => {
+            rows.push([ch.platform || '', ch.code || '', ch.id || '', grupo]);
+        });
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+
+    // Estilos de ancho de columna
+    ws['!cols'] = [
+        { wch: 12 }, // Plataforma
+        { wch: 40 }, // Nombre Canal
+        { wch: 16 }, // ID
+        { wch: 25 }, // Grupo
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Catálogo HAV');
+
+    const fileName = `catalogo-HAV-${new Date().toISOString().slice(0,10)}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    showNotif(`📊 Catálogo exportado: ${rows.length - 1} canales`, 'success');
+}
+
+function importarCatalogoDesdeInput(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const imported = JSON.parse(e.target.result);
+            if (detectarCatalogo(imported)) {
+                importarCatalogo(imported);
+                showNotif('Catálogo importado correctamente ✅', 'success');
+            } else {
+                alert('⚠️ El archivo no parece ser un catálogo HAV válido.');
+            }
+        } catch (err) {
+            alert('Error al leer el archivo: ' + err.message);
+            console.error(err);
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
 function importarDatos(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -2400,9 +2660,12 @@ function renderHAVCatalog() {
 
     // ORDEN ESPECÍFICO: PRIMERO MUNDO META, TIKTOK, GOOGLE
     const orderedKeys = ['MUNDO Meta', 'Mundo TikTok', 'Google Ads'];
-    const allKeys = Object.keys(db.havCatalog);
-    // Filtrar los que no están en la lista ordenada y agregarlos al final
-    const finalOrder = [...orderedKeys, ...allKeys.filter(k => !orderedKeys.includes(k))];
+    const allKeys = Object.keys(db.havCatalog).sort(); // FIX: sort() garantiza orden estable
+    // Los 3 principales primero, luego el resto en orden alfabético
+    const finalOrder = [
+        ...orderedKeys.filter(k => allKeys.includes(k)),
+        ...allKeys.filter(k => !orderedKeys.includes(k))
+    ];
 
     finalOrder.forEach(groupName => {
         const channels = db.havCatalog[groupName];
@@ -3780,18 +4043,31 @@ console.log('✅ Módulo IA totalmente editable cargado');
 
 // BANCO DE KEYWORDS
 
-async function importKeywordBankFromExcel(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  showNotif('Leyendo Excel...', 'info');
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, {type: 'array'});
-      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(firstSheet);
-      if (rows.length === 0) { alert('Excel vacío'); return; }
+function importKeywordBankFromExcel(event) {
+  if(typeof XLSX==='undefined'){alert('\u274C Librería Excel no cargada. Recargá (F5).');return;}
+  const file=event.target.files[0];if(!file)return;
+  const isCsv=file.name.toLowerCase().endsWith('.csv');
+  showNotif('Leyendo '+file.name+'...','info');
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      let rows;
+      if(isCsv){
+        const txt=new TextDecoder('utf-8').decode(new Uint8Array(e.target.result));
+        const lns=txt.split(/\r?\n/).filter(function(l){return l.trim();});
+        if(lns.length<2){alert('CSV vacío');return;}
+        const hdrs=lns[0].split(',').map(function(h){return h.trim().replace(/^"|"$/g,'');});
+        rows=lns.slice(1).filter(function(l){return l.trim();}).map(function(line){
+          var vs=line.split(',').map(function(v){return v.trim().replace(/^"|"$/g,'');});
+          var o={};hdrs.forEach(function(h,i){o[h]=vs[i]||'';});return o;
+        });
+      }else{
+        const data=new Uint8Array(e.target.result);
+        const workbook=XLSX.read(data,{type:'array'});
+        const firstSheet=workbook.Sheets[workbook.SheetNames[0]];
+        rows=XLSX.utils.sheet_to_json(firstSheet);
+      }
+      if(!rows||rows.length===0){alert('Archivo vacío');return;}
       const cols = Object.keys(rows[0]);
       let formatType = 'unknown';
       if (cols.includes('campaign_id') && cols.includes('product') && cols.includes('keyword')) {
@@ -3864,10 +4140,10 @@ async function importKeywordBankFromExcel(event) {
       // ================================================================
 
       // Obtener IDs de campañas que YA existen en el banco
-      const existingIds = new Set(keywordBank.map(c => c.campaignid));
+      const existingIds = new Set(keywordBank.map(c => c.campaign_id || c.campaignid));
 
       // Filtrar solo las campañas NUEVAS (que NO existen)
-      const campaignsToAdd = newCampaigns.filter(c => !existingIds.has(c.campaignid));
+      const campaignsToAdd = newCampaigns.filter(c => !existingIds.has(c.campaign_id || c.campaignid));
 
       if (campaignsToAdd.length > 0) {
         // AGREGAR campañas nuevas SIN borrar las existentes
@@ -3887,7 +4163,7 @@ async function importKeywordBankFromExcel(event) {
         let campanasActualizadas = 0;
 
         newCampaigns.forEach(newCamp => {
-          const existing = keywordBank.find(c => c.campaignid === newCamp.campaignid);
+          const existing = keywordBank.find(c => (c.campaign_id||c.campaignid)===(newCamp.campaign_id||newCamp.campaignid));
           if (existing) {
             // Obtener keywords existentes (comparar en minúsculas)
             const existingKwTexts = new Set(existing.keywords.map(k => k.text.toLowerCase()));
@@ -3905,7 +4181,7 @@ async function importKeywordBankFromExcel(event) {
               keywordsAgregadas += newKws.length;
               campanasActualizadas++;
 
-              console.log('📝', newKws.length, 'keywords nuevas agregadas a', existing.campaignid);
+              console.log('📝', newKws.length, 'kws a', existing.campaign_id||existing.campaignid);
             }
           }
         });
@@ -4048,7 +4324,7 @@ function updateCurrentCampaignView() {
   });
   const priof = document.getElementById('bankFilterPriority')?.value || '';
   let fkws = camp.keywords.filter(kw => !priof || kw.priority === priof);
-  let html = '<div style="margin-bottom:20px;border-bottom:2px solid #667eea;padding-bottom:15px;"><h3 style="color:#667eea;margin:0 0 10px 0;">' + camp.campaign_id + '</h3><div style="display:flex;gap:20px;font-size:0.9em;color:#666;"><span>📦 ' + camp.product + '</span><span>🌍 ' + camp.country + '</span><span>📝 ' + fkws.length + ' kws</span></div></div><div style="margin-bottom:15px;display:flex;gap:10px;"><button class="btn btn-success" onclick="selectAllKeywordsFromCampaign()" style="flex:1;padding:8px;font-size:0.85em;">✅ Todas</button><button class="btn btn-warning" onclick="deselectAllKeywordsFromCampaign()" style="flex:1;padding:8px;font-size:0.85em;">❌ Ninguna</button></div><div style="max-height:450px;overflow-y:auto;">';
+  let html = '<div style="margin-bottom:20px;border-bottom:2px solid #667eea;padding-bottom:15px;"><h3 style="color:#667eea;margin:0 0 10px 0;">' + camp.campaign_id + '</h3><div style="display:flex;gap:20px;font-size:0.9em;color:#666;"><span>📦 ' + camp.product + '</span><span>🌍 ' + camp.country + '</span></div></div><div style="margin-bottom:15px;display:flex;gap:10px;"><button class="btn btn-success" onclick="selectAllKeywordsFromCampaign()" style="flex:1;padding:8px;font-size:0.85em;">✅ Todas</button><button class="btn btn-warning" onclick="deselectAllKeywordsFromCampaign()" style="flex:1;padding:8px;font-size:0.85em;">❌ Ninguna</button></div><div style="max-height:450px;overflow-y:auto;scrollbar-gutter:stable;">';
   fkws.forEach(kw => {
     const aidx = camp.keywords.indexOf(kw);
     const sel = selectedKeywords.some(sk => sk.campaignId === camp.campaign_id && sk.text === kw.text);
@@ -4196,8 +4472,6 @@ function updateCurrentCampaignView() {
             <div style="display:flex;gap:20px;font-size:0.9em;color:#666;flex-wrap:wrap;">
                 <span>📦 ${campaign.product}</span>
                 <span>🌍 ${campaign.country}</span>
-                <span>📝 ${campaign.keywords.length} kw</span>
-                <span style="color:#f59e0b;">✏️ ${campaign.keywords.filter(k => k.edited).length} editadas</span>
             </div>
         </div>
         <div style="margin-bottom:15px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
@@ -4209,10 +4483,10 @@ function updateCurrentCampaignView() {
                 <button class="btn-mini" style="background:#667eea;color:white;padding:6px 12px;" onclick="sortKeywordsBy('impressions')" title="Por impresiones">👁️</button>
                 <button class="btn-mini" style="background:#667eea;color:white;padding:6px 12px;" onclick="sortKeywordsBy('clicks')" title="Por clics">🖱️</button>
                 <button class="btn-mini" style="background:#667eea;color:white;padding:6px 12px;" onclick="sortKeywordsBy('alpha')" title="Alfabético">🔤</button>
-                <button class="btn-mini" style="background:#667eea;color:white;padding:6px 12px;" onclick="sortKeywordsBy('priority')" title="Por prioridad">⭐</button>
             </div>
         </div>
-        <div style="max-height:450px;overflow-y:auto;">`;
+        <div id="kwColHeaderRow" class="kw-col-header"></div>
+        <div style="max-height:450px;overflow-y:auto;scrollbar-gutter:stable;">`;
 
     const filterPriority = document.getElementById('bankFilterPriority')?.value;
 
@@ -4226,39 +4500,25 @@ function updateCurrentCampaignView() {
 
         html += `
             <div class="keyword-item ${isSelected ? 'selected' : ''} ${isEditing ? 'editing' : ''}">
-                <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleKeywordSelection(${idx})">`;
+                <div class="kw-cell-kw"><input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleKeywordSelection(${idx})">`;
 
         if (isEditing) {
             html += `<input type="text" class="keyword-text-input" id="kwInput-${idx}" 
                 value="${kw.text.replace(/"/g, '&quot;')}"
                 onkeydown="if(event.key==='Enter'){event.preventDefault();saveKeywordEdit(${idx});}if(event.key==='Escape')cancelKeywordEdit();">`;
         } else {
-            html += `<span class="keyword-text">${kw.text}${kw.edited ? '<span class="keyword-edited-badge">✏️</span>' : ''}</span>`;
+            html += `<span class="keyword-text" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${kw.text}</span>`;
         }
+        html += `</div>`;
 
         html += `
-                <div class="keyword-metrics">
-                    <span class="metric-value">👁️ ${(kw.impressions || kw.searches || 0).toLocaleString()}</span>
-                    <span class="metric-value">🖱️ ${kw.clicks || 0}</span>
-                    <span class="metric-value" style="background:${kw.priority === 'high' ? '#ef4444' : '#6b7280'};color:white;padding:4px 8px;">
-                        
-                    </span>
-                </div>
-                <div class="keyword-actions">`;
-
-        if (isEditing) {
-            html += `<button class="btn-mini btn-save-mini" onclick="saveKeywordEdit(${idx})">💾</button>
-                     <button class="btn-mini btn-cancel-mini" onclick="cancelKeywordEdit()">❌</button>`;
-        } else {
-            html += `<button class="btn-mini btn-edit-mini" onclick="startKeywordEdit(${idx})">✏️</button>
-                     <button class="btn-mini btn-del-mini" onclick="deleteSingleKeyword(${idx})">🗑️</button>`;
-        }
-
-        html += `</div></div>`;
+                <div class="keyword-metrics">${buildKwMetrics(kw)}</div>
+            </div>`;
     });
 
     html += '</div>';
     container.innerHTML = html;
+    renderKwColHeader('kwColHeaderRow');
 }
 
 function startKeywordEdit(idx) {
@@ -4822,7 +5082,7 @@ th, td {
 
     document.addEventListener('DOMContentLoaded', initResize);
 
-    if(typeof window.renderTable === 'function' && !window.renderTable.__resWrapped) {
+    if(typeof window.renderTable === 'function' && !window.renderTable.__resWrapped && !window.renderTable.__wrapped) {
         const orig = window.renderTable;
         window.renderTable = function() {
             const res = orig.apply(this, arguments);
@@ -4831,6 +5091,193 @@ th, td {
         };
         window.renderTable.__resWrapped = true;
     }
+})();
+</script>
+
+<script>
+// ── Etiquetas draggables + sort de keywords ─────────────────────
+(function(){
+    var DEF = ['pos','impressions','searches','clicks','ctr','ims'];
+    var LBL = {pos:'Pos.',impressions:'Impress.',searches:'Search',
+               clicks:'Clicks',ctr:'CTR',ims:'IMS'};
+    // valor numérico para sort
+    var SORT_VAL = {
+        pos:         function(kw){ return parseFloat(kw.position||kw.pos)||9999; },
+        impressions: function(kw){ return parseInt(kw.impressions||kw.searches)||0; },
+        searches:    function(kw){ return parseInt(kw.searches)||0; },
+        clicks:      function(kw){ return parseInt(kw.clicks)||0; },
+        ctr:         function(kw){ return parseFloat(kw.ctr)||0; },
+        ims:         function(kw){ return parseFloat(kw.ims)||0; }
+    };
+
+    try { var s=localStorage.getItem('kwColOrder'); window._kwColOrder=s?JSON.parse(s):DEF.slice(); }
+    catch(e){ window._kwColOrder=DEF.slice(); }
+
+    window._kwSortCol = null;
+    window._kwSortDir = 'desc'; // 'asc' o 'desc'
+
+    // Construye el HTML de métricas para una keyword
+    window.buildKwMetrics = function(kw) {
+        var o = window._kwColOrder || DEF;
+        var v = {
+            pos:         kw.position||kw.pos||'-',
+            impressions: (kw.impressions||kw.searches||0).toLocaleString(),
+            searches:    (kw.searches||0).toLocaleString(),
+            clicks:      (kw.clicks||0).toLocaleString(),
+            ctr:         (function(v){ if(v==null||v===''||v===undefined) return '0%'; var n=parseFloat(v); if(isNaN(n)) return '0%'; if(n>100) n=n/10000; else if(n>1) n=n/100; return Math.round(n*100)+'%'; })(kw.ctr),
+            ims:         kw.ims||0
+        };
+        var h = '';
+        for (var i=0; i<o.length; i++) {
+            h += '<span class="kw-metric-cell" data-col="'+o[i]+'">'+v[o[i]]+'</span>';
+        }
+        return h;
+    };
+
+    // Renderiza el header de columnas
+    window.renderKwColHeader = function(containerId) {
+        var el = document.getElementById(containerId);
+        if (!el) return;
+        var o   = window._kwColOrder || DEF;
+        var sc  = window._kwSortCol;
+        var dir = window._kwSortDir;
+        var h = '<span class="kw-col-kw-lbl">Keyword</span>';
+        for (var i=0; i<o.length; i++) {
+            var col = o[i];
+            var arrow = '';
+            if (sc === col) arrow = '<span class="sort-arrow">'+(dir==='asc'?'↑':'↓')+'</span>';
+            h += '<span class="kw-col-drag" data-col="'+col+'" draggable="true" title="Arrastrar para mover · Clic para ordenar">'
+               + (LBL[col]||col) + arrow + '</span>';
+        }
+        
+        el.innerHTML = h;
+
+        var items = el.querySelectorAll('.kw-col-drag');
+        items.forEach(function(item) {
+            // CLICK = ordenar
+            item.addEventListener('click', function(e) {
+                if (item._wasDragged) { item._wasDragged=false; return; }
+                var col = item.dataset.col;
+                if (window._kwSortCol === col) {
+                    window._kwSortDir = window._kwSortDir === 'desc' ? 'asc' : 'desc';
+                } else {
+                    window._kwSortCol = col;
+                    window._kwSortDir = 'desc';
+                }
+                // Ordenar keywords de la campaña actual
+                var camp = keywordBank[currentBankCampaignIndex];
+                if (!camp) return;
+                var fn = SORT_VAL[col];
+                var d  = window._kwSortDir === 'asc' ? 1 : -1;
+                camp.keywords.sort(function(a,b){ return d*(fn(a)-fn(b)); });
+                if (typeof updateCurrentCampaignView === 'function') updateCurrentCampaignView();
+            });
+            // DRAG = reordenar columnas
+            item.addEventListener('dragstart', function(e) {
+                item._wasDragged = true;
+                e.dataTransfer.effectAllowed='move';
+                e.dataTransfer.setData('text/plain', item.dataset.col);
+                item.classList.add('dragging');
+            });
+            item.addEventListener('dragend', function() {
+                item.classList.remove('dragging');
+                el.querySelectorAll('.kw-col-drag').forEach(function(x){x.classList.remove('drag-over');});
+            });
+            item.addEventListener('dragover', function(e) {
+                e.preventDefault(); item.classList.add('drag-over');
+            });
+            item.addEventListener('dragleave', function() {
+                item.classList.remove('drag-over');
+            });
+            item.addEventListener('drop', function(e) {
+                e.preventDefault(); item.classList.remove('drag-over');
+                var src=e.dataTransfer.getData('text/plain'), tgt=item.dataset.col;
+                if (!src||src===tgt) return;
+                var ord=window._kwColOrder||DEF.slice();
+                var si=ord.indexOf(src), ti=ord.indexOf(tgt);
+                if (si<0||ti<0) return;
+                ord.splice(si,1); ord.splice(ti,0,src);
+                window._kwColOrder=ord;
+                try{localStorage.setItem('kwColOrder',JSON.stringify(ord));}catch(e2){}
+                if (typeof updateCurrentCampaignView==='function') updateCurrentCampaignView();
+            });
+        });
+    };
+})();
+</script>
+
+<script>
+// ── Resizer panel campañas / keywords ────────────────────────────
+(function(){
+    function initBankResizer() {
+        var layout = document.getElementById('bankLayout');
+        var left   = document.getElementById('bankPanelLeft');
+        var right  = document.getElementById('bankPanelRight');
+        if (!layout || !left || !right) {
+            setTimeout(initBankResizer, 300); return;
+        }
+
+        // Crear el divisor
+        var resizer = document.createElement('div');
+        resizer.id = 'bankResizer';
+        resizer.style.cssText = [
+            'width:6px','flex-shrink:0','background:#e2e8f0',
+            'cursor:col-resize','position:relative','border-radius:3px',
+            'transition:background .2s','user-select:none'
+        ].join(';');
+        resizer.title = 'Arrastrar para redimensionar';
+
+        // Línea visual centrada
+        var line = document.createElement('div');
+        line.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);height:30px;width:2px;background:#94a3b8;border-radius:2px;';
+        resizer.appendChild(line);
+
+        // Insertar entre left y right
+        layout.insertBefore(resizer, right);
+
+        // Hover
+        resizer.addEventListener('mouseenter', function(){ resizer.style.background='#c7d2fe'; });
+        resizer.addEventListener('mouseleave', function(){ if(!resizer._drag) resizer.style.background='#e2e8f0'; });
+
+        // Drag
+        resizer.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            resizer._drag = true;
+            resizer.style.background = '#6366f1';
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+
+            var startX   = e.clientX;
+            var startW   = left.getBoundingClientRect().width;
+            var totalW   = layout.getBoundingClientRect().width;
+
+            function onMove(e) {
+                var delta = e.clientX - startX;
+                var newW  = Math.max(150, Math.min(startW + delta, totalW * 0.65));
+                left.style.width = newW + 'px';
+                try { localStorage.setItem('bankPanelLeftW', newW); } catch(err){}
+            }
+            function onUp() {
+                resizer._drag = false;
+                resizer.style.background = '#e2e8f0';
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+            }
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup',   onUp);
+        });
+
+        // Restaurar ancho guardado
+        try {
+            var saved = localStorage.getItem('bankPanelLeftW');
+            if (saved) left.style.width = parseFloat(saved) + 'px';
+        } catch(e) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', initBankResizer);
+    window.addEventListener('load', initBankResizer);
 })();
 </script>
 </body>
