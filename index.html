@@ -572,7 +572,7 @@
 /* ═══ GRID de keywords: header y filas con MISMO template ═══ */
 .kw-col-header, #bankKeywordsDetail .keyword-item {
   display: grid;
-  grid-template-columns: 1fr 72px 72px 72px 72px 72px 72px;
+  grid-template-columns: 1fr 72px 72px 72px 72px 72px 72px 72px;
   align-items: center;
   column-gap: 0;
   box-sizing: border-box;
@@ -641,6 +641,7 @@
 .kw-col-drag[data-col=searches]    { background:#fef9c3; color:#854d0e; border-color:#fde047; }
 .kw-col-drag[data-col=clicks]      { background:#ffedd5; color:#9a3412; border-color:#fb923c; }
 .kw-col-drag[data-col=ctr]         { background:#fce7f3; color:#9d174d; border-color:#f9a8d4; }
+.kw-col-drag[data-col=cls]{background:#fef3c7;color:#92400e;border-color:#fcd34d}
 .kw-col-drag[data-col=ims]         { background:#e0f2fe; color:#075985; border-color:#7dd3fc; }
 .keyword-metrics { display: contents; }
 .kw-metric-cell {
@@ -4098,9 +4099,13 @@ function importKeywordBankFromExcel(event) {
       } else if (formatType === 'tabla-keywords') {
         const keyCol = cols.find(c => c.toLowerCase().includes('keyword')) || 'Keyword';
         const campCol = cols.find(c => { const val = String(rows[0][c]); return val.includes('FB-') || val.includes('TT-') || val.includes('MMT'); }) || cols[1];
-        const searchCol = cols.find(c => c.toLowerCase().includes('search') || c.toLowerCase().includes('impression')) || 'Searches';
-        const clickCol = cols.find(c => c.toLowerCase().includes('click')) || 'Clicks';
-        const ctrCol = cols.find(c => c.toLowerCase().includes('ctr')) || 'CTR';
+        const posCol         = cols.find(c => c.toLowerCase().startsWith('pos'))                                                          || null;
+        const impressionsCol = cols.find(c => c.toLowerCase().includes('impression'))                                                        || null;
+        const searchCol      = cols.find(c => c.toLowerCase().includes('search') && !c.toLowerCase().includes('impression'))                 || null;
+        const clickCol       = cols.find(c => c.toLowerCase().includes('click'))                                                             || 'Clicks';
+        const ctrCol         = cols.find(c => c.toLowerCase() === 'ctr' || c.toLowerCase().includes('ctr') && !c.toLowerCase().includes('cls')) || null;
+        const clsCol         = cols.find(c => c.toLowerCase() === 'cls' || c.toLowerCase().includes('cls') && !c.toLowerCase().includes('ctr')) || null;
+        const imsCol         = cols.find(c => c.toLowerCase() === 'ims')                                                                     || null;
         rows.forEach(row => {
           const cid = row[campCol];
           if (!cid || cid === '' || typeof cid !== 'string') return;
@@ -4113,12 +4118,16 @@ function importKeywordBankFromExcel(event) {
               date_added: new Date().toISOString().slice(0, 10)
             };
           }
-          let ctrVal = 0;
-          if (row[ctrCol]) { const ctrStr = String(row[ctrCol]).replace('%', '').trim(); ctrVal = parseFloat(ctrStr) || 0; }
           campaignMap[cid].keywords.push({
-            text: row[keyCol] || '', priority: 'normal',
-            impressions: parseInt(row[searchCol]) || 0, clicks: parseInt(row[clickCol]) || 0,
-            ctr: ctrVal, conversions: 0, cost: 0, cpc: 0
+            text:        row[keyCol] || '', priority: 'normal',
+            pos:         posCol         ? (parseFloat(row[posCol])                                               || 0) : 0,
+            impressions: impressionsCol ? (parseInt(row[impressionsCol])                                         || 0) : 0,
+            searches:    searchCol      ? (parseInt(row[searchCol])                                              || 0) : 0,
+            clicks:      parseInt(row[clickCol]) || 0,
+            ctr:         ctrCol ? (parseFloat(String(row[ctrCol]||'').replace('%','').replace(',','.')) || 0) : 0,
+            cls:         clsCol ? (parseFloat(String(row[clsCol]||'').replace('%','').replace(',','.')) || 0) : 0,
+            ims:         imsCol         ? (parseFloat(row[imsCol])                                               || 0) : 0,
+            conversions: 0, cost: 0, cpc: 0
           });
         });
       }
@@ -5096,16 +5105,17 @@ th, td {
 <script>
 // ── Etiquetas draggables + sort de keywords ─────────────────────
 (function(){
-    var DEF = ['pos','impressions','searches','clicks','ctr','ims'];
-    var LBL = {pos:'Pos.',impressions:'Impress.',searches:'Search',
-               clicks:'Clicks',ctr:'CTR',ims:'IMS'};
+    var DEF = ['pos','impressions','searches','clicks','ctr','cls','ims'];
+    var LBL = {pos:'Pos.',impressions:'Impress.',searches:'Searches',
+               clicks:'Clicks',ctr:'CTR',cls:'CLS',ims:'IMS'};
     // valor numérico para sort
     var SORT_VAL = {
         pos:         function(kw){ return parseFloat(kw.position||kw.pos)||9999; },
-        impressions: function(kw){ return parseInt(kw.impressions||kw.searches)||0; },
+        impressions: function(kw){ return parseInt(kw.impressions)||0; },
         searches:    function(kw){ return parseInt(kw.searches)||0; },
         clicks:      function(kw){ return parseInt(kw.clicks)||0; },
         ctr:         function(kw){ return parseFloat(kw.ctr)||0; },
+        cls:         function(kw){ return parseFloat(kw.cls)||0; },
         ims:         function(kw){ return parseFloat(kw.ims)||0; }
     };
 
@@ -5120,10 +5130,11 @@ th, td {
         var o = window._kwColOrder || DEF;
         var v = {
             pos:         kw.position||kw.pos||'-',
-            impressions: (kw.impressions||kw.searches||0).toLocaleString(),
+            impressions: (kw.impressions||0).toLocaleString(),
             searches:    (kw.searches||0).toLocaleString(),
             clicks:      (kw.clicks||0).toLocaleString(),
             ctr:         (function(v){ if(v==null||v===''||v===undefined) return '0%'; var n=parseFloat(v); if(isNaN(n)) return '0%'; if(n>100) n=n/10000; else if(n>1) n=n/100; return Math.round(n*100)+'%'; })(kw.ctr),
+            cls:         kw.cls||0,
             ims:         kw.ims||0
         };
         var h = '';
