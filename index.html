@@ -769,10 +769,10 @@
             <div class="controls">
                 <div class="control-group"><label>🔍 Buscar</label><input type="text" id="search" autocomplete="off" onkeyup="renderTable()"></div>
                 <div class="control-group"><label>📺 Canal</label><select id="filterChannel" onchange="renderTable()"></select></div>
-                <div class="control-group"><label>🆔 ID Campaña</label><select id="filterId" onchange="renderTable()"></select></div>
                 <div class="control-group"><label>📦 Nicho</label><select id="filterProduct" onchange="renderTable()"></select></div>
                 <div class="control-group"><label>📡 Plataforma</label><select id="filterPlatform" onchange="renderTable()"></select></div>
-                <div class="control-group"><label>🌍 País</label><select id="filterCountryName" onchange="renderTable()"></select></div>
+                <select id="filterId" style="display:none"></select>
+                <select id="filterCountryName" style="display:none"></select>
             </div>
             <div class="table-wrapper">
                 <table>
@@ -981,10 +981,9 @@
         <button class="btn btn-del" onclick="clearSelectedKeywords()">🗑️ Limpiar</button>
         <button class="btn btn-warning" onclick="clearBankData()">⚠️ Vaciar</button>
       </div>
-      <div class="controls" style="grid-template-columns: 1fr 1fr 1fr 1fr 1fr 2fr; margin-bottom: 20px;">
+      <div class="controls" style="grid-template-columns: 1fr 1fr 1fr 1fr 2fr; margin-bottom: 20px;">
         <div class="control-group"><label>🔍 Buscar</label><input type="text" id="bankSearch" placeholder="Buscar..." oninput="filterKeywordBank()" autocomplete="off"></div>
         <div class="control-group"><label>📦 Nicho</label><select id="bankFilterProduct" onchange="filterKeywordBank()"><option value="">Todos</option></select></div>
-        <div class="control-group"><label>🌍 País</label><select id="bankFilterCountry" onchange="filterKeywordBank()"><option value="">Todos</option></select></div>
         <div class="control-group"><label>↕ Plataforma</label><select id="bankSortPlatform" onchange="renderBankCampaigns()"><option value="">Sin orden</option><option value="asc">A → Z</option><option value="desc">Z → A</option></select></div>
         <div class="control-group"><label>↕ Canal</label><select id="bankSortChannel" onchange="renderBankCampaigns()"><option value="">Sin orden</option><option value="asc">A → Z</option><option value="desc">Z → A</option></select></div><div class="control-group"><label>⚡ Acciones</label><div style="display: flex; gap: 8px;"><button class="btn btn-success" onclick="copySelectedKeywords()" style="flex: 1; padding: 8px; font-size: 0.9em;">📋 Copiar</button><button class="btn btn-primary" onclick="sendToForm()" style="flex: 1; padding: 8px; font-size: 0.9em;">➡️ A Campaña</button></div></div>
       </div>
