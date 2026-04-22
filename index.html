@@ -99,7 +99,7 @@
         .config-list li { padding: 10px; background: white; margin: 8px 0; border-radius: 6px; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .config-input { flex: 1; padding: 8px 12px; border: 2px solid var(--border); border-radius: 6px; font-size: 0.95em; }
         .btn-save-mini { background: var(--success); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
-        .btn-del-mini { background: var(--danger); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+        .config-list .btn-del-mini { background: var(--danger); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; } /* ✅ FIX-08 */
         
         /* === ICONOS LINK === */
         /* Usamos text-shadow y color transparente para FORZAR el color en emojis, funciona en links */
@@ -656,7 +656,35 @@
   margin: 0 2px;
   white-space: nowrap;
 }
-</style>
+
+        /* ✅ FIX-FECHA: Fila recién guardada */
+        .row-just-saved td {
+            animation: highlightRow 3.5s ease forwards;
+        }
+        @keyframes highlightRow {
+            0%   { background: #d1fae5; }
+            70%  { background: #d1fae5; }
+            100% { background: transparent; }
+        }
+        .badge-nueva {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            font-size: 0.7em;
+            font-weight: bold;
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-left: 6px;
+            animation: fadeOutBadge 3.5s ease forwards;
+            vertical-align: middle;
+            letter-spacing: 0.3px;
+        }
+        @keyframes fadeOutBadge {
+            0%   { opacity: 1; transform: scale(1); }
+            60%  { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.8); }
+        }
+        </style>
     <script src="https://unpkg.com/xlsx@0.20.3/dist/xlsx.full.min.js"></script>
     <script>
     window.addEventListener("load",function(){
@@ -696,6 +724,7 @@
 <div id="mainApp">
 
     <div id="notification-area"></div>
+    <div id="syncStatus" class="sync-status"></div><!-- ✅ FIX-04 -->
     <div class="container">
         <div class="header" style="position:relative;">
 
@@ -967,6 +996,17 @@
 
     <!-- TAB BANCO KEYWORDS -->
     <div id="tab-keyword-bank" class="tab-content">
+    <div id="bankHighPriority" style="display:none;">0</div><!-- ✅ FIX-06 -->
+    <div class="controls" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;margin-bottom:18px;padding:15px;background:#f9fafb;border-radius:10px;">
+        <div class="control-group"><label>🌍 País (Banco)</label>
+            <select id="bankFilterCountry" onchange="renderBankCampaigns()"><option value="">Todos</option></select>
+        </div>
+        <div class="control-group"><label>⭐ Prioridad (Banco)</label>
+            <select id="bankFilterPriority" onchange="updateCurrentCampaignView()">
+                <option value="">Todas</option><option value="high">🔥 Alta</option><option value="normal">Normal</option>
+            </select>
+        </div>
+    </div>
       <h2 style="color: #667eea; margin-bottom: 20px;">🏦 Banco de Keywords</h2>
       <div class="stats" style="margin-bottom: 20px;">
         <div class="stat-card"><div class="number" id="bankTotalCampaigns">0</div><div class="label">Campañas</div></div>
@@ -1175,7 +1215,7 @@ let editingIndex = -1;
 let keywordBank = [];
 let selectedKeywords = [];
 let currentBankCampaignIndex = -1;
-let bankSortDirection = 'desc';
+// ✅ FIX-16: bankSortDirection eliminada (redundante, sistema usa window._kwSortDir)
 let originalKeywordOrder = [];;
 let currentSort = { column: 'country', order: 'asc' };
 let currentEditingChannel = null;
@@ -1183,292 +1223,6 @@ let currentEditingChannel = null;
 // ============================================================================
 // 4. LÓGICA DE NUBE (HÍBRIDA PARA PROTECCIÓN DE DATOS)
 // ============================================================================
-    function generarReporte() {
-        if (!db.campaigns.length) {
-            return alert("No hay campañas para generar reporte.");
-        }
-
-        // Obtener campañas filtradas
-        const fs = document.getElementById('search').value.toLowerCase();
-        const fp = document.getElementById('filterPlatform').value;
-        const fc = document.getElementById('filterChannel').value;
-        const fpr = document.getElementById('filterProduct').value;
-        const fi = document.getElementById('filterId').value;
-
-        const camps = db.campaigns.filter(c => {
-            if (fs && !c.code.toLowerCase().includes(fs)) return false;
-            if (fp && fp !== 'Todos' && c.platform !== fp) return false;
-            if (fc && fc !== 'Todos' && c.channel !== fc) return false;
-            if (fpr && fpr !== 'Todos' && c.product !== fpr) return false;
-            if (fi && fi !== 'Todos' && c.id !== fi) return false;
-            return true;
-        });
-
-        if (!camps.length) {
-            return alert("No hay campañas visibles para generar reporte.");
-        }
-
-        function getPlatformName(code) {
-            if (code === 'FB') return 'Facebook';
-            if (code === 'TT') return 'TikTok';
-            if (code === 'GN') return 'Google';
-            return code;
-        }
-
-        function getCountryName(code) {
-            const paises = {
-                'PL': 'Polonia', 'DE': 'Alemania', 'ES': 'España', 'FR': 'Francia',
-                'IT': 'Italia', 'NL': 'Países Bajos', 'BE': 'Bélgica', 'PT': 'Portugal',
-                'UK': 'Reino Unido', 'US': 'Estados Unidos', 'MX': 'México',
-                'AR': 'Argentina', 'BR': 'Brasil', 'CL': 'Chile', 'CO': 'Colombia', 'PE': 'Perú'
-            };
-            return paises[code] || code;
-        }
-
-        function formatDate(fecha) {
-            if (!fecha) return 'Sin fecha';
-            const partes = fecha.split('-');
-            if (partes.length === 3) {
-                return `${partes[2]}/${partes[1]}/${partes[0]}`;
-            }
-            return fecha;
-        }
-
-        let html = `<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reporte de Campañas HAV 2026</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 30px;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 3px solid #667eea;
-        }
-        .header h1 {
-            color: #667eea;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        .header .meta {
-            color: #666;
-            font-size: 1.1em;
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-        .stat-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        .stat-box .number {
-            font-size: 2.5em;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .stat-box .label {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 0.95em;
-        }
-        thead {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        th {
-            padding: 15px 10px;
-            text-align: left;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-        }
-        td {
-            padding: 12px 10px;
-            border-bottom: 1px solid #e5e7eb;
-            vertical-align: top;
-        }
-        tbody tr:nth-child(even) {
-            background: #f9fafb;
-        }
-        tbody tr:hover {
-            background: #eff6ff;
-        }
-        .campaign-name {
-            font-weight: bold;
-            color: #1e40af;
-            font-size: 1.05em;
-        }
-        .nicho {
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        .keywords-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .keywords-list li {
-            padding: 4px 0;
-            border-bottom: 1px dotted #ddd;
-        }
-        .keywords-list li:last-child {
-            border-bottom: none;
-        }
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-        .badge-fb { background: #1877f2; color: white; }
-        .badge-tt { background: #fe2c55; color: white; }
-        .badge-gn { background: #EA4335; color: white; }
-        .print-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 24px;
-            background: #10b981;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-        .print-btn:hover {
-            background: #059669;
-        }
-        @media print {
-            body { background: white; padding: 0; }
-            .print-btn { display: none; }
-            .container { box-shadow: none; }
-        }
-    </style>
-</head>
-<body>
-    <button class="print-btn" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Reporte de Campañas HAV 2026</h1>
-            <div class="meta">
-                <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}</p>
-            </div>
-        </div>
-
-        <div class="stats">
-            <div class="stat-box">
-                <div class="number">${camps.length}</div>
-                <div class="label">Campañas</div>
-            </div>
-            <div class="stat-box">
-                <div class="number">${camps.reduce((sum, c) => sum + (c.keywords?.length || 0), 0)}</div>
-                <div class="label">Keywords Totales</div>
-            </div>
-            <div class="stat-box">
-                <div class="number">${Math.round(camps.reduce((sum, c) => sum + (c.keywords?.length || 0), 0) / camps.length)}</div>
-                <div class="label">Promedio Keywords</div>
-            </div>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 40px;">#</th>
-                    <th style="width: 80px;">Fecha</th>
-                    <th style="width: 100px;">Plataforma</th>
-                    <th style="width: 80px;">Canal</th>
-                    <th style="width: 120px;">Nicho</th>
-                    <th style="width: 80px;">ID</th>
-                    <th style="width: 100px;">País</th>
-                    <th style="width: 80px;">Idioma</th>
-                    <th>Nombre de Campaña</th>
-                    <th style="width: 60px;">Keys</th>
-                    <th>Keywords</th>
-                </tr>
-            </thead>
-            <tbody>`;
-
-        camps.forEach((c, index) => {
-            const platformBadge = c.platform === 'FB' ? 'badge-fb' : c.platform === 'TT' ? 'badge-tt' : 'badge-gn';
-
-            // FILTRAR KEYWORDS: Solo antes de la primera línea vacía
-            let filteredKeywords = c.keywords || [];
-            if (filteredKeywords.length > 0) {
-                const emptyIndex = filteredKeywords.findIndex(k => !k || k.trim() === '');
-                if (emptyIndex !== -1) {
-                    filteredKeywords = filteredKeywords.slice(0, emptyIndex);
-                }
-            }
-
-            const keywordsList = filteredKeywords.length > 0 
-                ? filteredKeywords.map(k => `<li>${k}</li>`).join('') 
-                : '<li style="color: #999;">Sin keywords</li>';
-
-            html += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${formatDate(c.date)}</td>
-                    <td><span class="badge ${platformBadge}">${getPlatformName(c.platform)}</span></td>
-                    <td>${c.channel || '-'}</td>
-                    <td class="nicho">${c.product || '-'}</td>
-                    <td><strong>${c.id || '-'}</strong></td>
-                    <td>${getCountryName(c.country)}</td>
-                    <td>${c.language || '-'}</td>
-                    <td class="campaign-name">${c.code}</td>
-                    <td style="text-align: center;"><strong>${filteredKeywords.length}</strong></td>
-                    <td><ul class="keywords-list">${keywordsList}</ul></td>
-                </tr>`;
-        });
-
-        html += `
-            </tbody>
-        </table>
-    </div>
-
-    <div id="syncStatus" class="sync-status"></div>
-</body>
-</html>`;
-
-        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `reporte-campanas-${new Date().toISOString().slice(0, 10)}.html`;
-        link.click();
-        URL.revokeObjectURL(url);
-
-        showNotif(`✓ Reporte HTML generado con ${camps.length} campañas`, 'success');
-    }
 
 
 
@@ -1570,6 +1324,7 @@ function startRealtimeSync() {
                 db.channels = db.channels || [];
             }
             db.languages = data.languages || ALL_LANGUAGES;
+            db.countries = (data.countries && data.countries.length > 0) ? data.countries : db.countries; // ✅ FIX-05
             db.havCatalog = (data.havCatalog && Object.keys(data.havCatalog).length) ? data.havCatalog : HAV_CATALOG_INITIAL;
             
             refreshEverything();
@@ -1594,83 +1349,6 @@ function exportarCampanas() {
 }
 
 
-function generarReporte() {
-    if (db.campaigns.length === 0) {
-        alert('No hay campañas para generar reporte.');
-        return;
-    }
-
-    // Función para extraer el título de la primera línea del artículo
-    function extraerTitulo(article) {
-        if (!article || !article.trim()) return 'Sin título';
-
-        // Quitar marcadores de markdown
-        let firstLine = article.split('\n')[0].trim();
-
-        // Remover markdown común: #, ##, ###, **, *, etc.
-        firstLine = firstLine.replace(/^#+\s*/g, ''); // Encabezados
-        firstLine = firstLine.replace(/\*\*/g, ''); // Negritas
-        firstLine = firstLine.replace(/\*/g, ''); // Cursivas
-        firstLine = firstLine.replace(/<b>/gi, '').replace(/<\/b>/gi, ''); // Etiquetas HTML
-
-        return firstLine || 'Sin título';
-    }
-
-    // Función para formatear país
-    function formatearPais(countryCode) {
-        const paises = {
-            'PL': 'Polonia', 'DE': 'Alemania', 'ES': 'España', 'FR': 'Francia',
-            'IT': 'Italia', 'NL': 'Países Bajos', 'BE': 'Bélgica', 'PT': 'Portugal',
-            'UK': 'Reino Unido', 'US': 'Estados Unidos', 'MX': 'México',
-            'AR': 'Argentina', 'BR': 'Brasil', 'CL': 'Chile', 'CO': 'Colombia',
-            'PE': 'Perú'
-        };
-        return paises[countryCode] || countryCode;
-    }
-
-    // Función para formatear fecha
-    function formatearFecha(fecha) {
-        if (!fecha) return 'Sin fecha';
-        // Convertir de YYYY-MM-DD a DD/MM/YYYY
-        const partes = fecha.split('-');
-        if (partes.length === 3) {
-            return `${partes[2]}/${partes[1]}/${partes[0]}`;
-        }
-        return fecha;
-    }
-
-    // Generar contenido del reporte
-    let reporte = '═══════════════════════════════════════════════════════════════════\n';
-    reporte += '                    REPORTE DE CAMPAÑAS HAV 2026\n';
-    reporte += '═══════════════════════════════════════════════════════════════════\n\n';
-    reporte += `Total de Campañas: ${db.campaigns.length}\n`;
-    reporte += `Fecha de Generación: ${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}\n\n`;
-    reporte += '═══════════════════════════════════════════════════════════════════\n\n';
-
-    db.campaigns.forEach((c, index) => {
-        reporte += `N°: ${index + 1}\n`;
-        reporte += `TÍTULO: ${extraerTitulo(c.article)}\n`;
-        reporte += `PAÍS: ${formatearPais(c.country)}\n`;
-        reporte += `NOMBRE DE CAMPAÑA: ${c.code}\n`;
-        reporte += `FECHA: ${formatearFecha(c.date)}\n`;
-        reporte += `PLATAFORMA: ${c.platform === 'FB' ? 'Facebook' : c.platform === 'TT' ? 'TikTok' : c.platform === 'GN' ? 'Google' : c.platform}\n`;
-        reporte += `CANAL: ${c.channel || 'N/A'}\n`;
-        reporte += `IDIOMA: ${c.language || 'N/A'}\n`;
-        reporte += `KEYWORDS: ${c.keywords ? c.keywords.length : 0}\n`;
-        reporte += '───────────────────────────────────────────────────────────────────\n\n';
-    });
-
-    // Crear archivo de texto
-    const blob = new Blob([reporte], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `reporte-campanas-${new Date().toISOString().slice(0,10)}.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
-
-    showNotif('📊 Reporte generado y descargado', 'success');
-}
 
 async function saveToFirebase(campaign) {
   try {
@@ -1927,7 +1605,8 @@ function renderTable() {
         (!pF || c.platform === pF) && 
         (!prF || c.product === prF) && 
         (!idF || c.id === idF) &&
-        (!chF || chF === 'Todos' || c.channel === chF)
+        (!chF || chF === 'Todos' || c.channel === chF) &&
+        (!countryF || c.country === countryF) // ✅ FIX-07: filtro por país ahora funciona
     );
 
     filtered.sort((a, b) => {
@@ -1955,7 +1634,18 @@ function renderTable() {
             }
         }
 
-        // 3. Lógica especial para URL/Link (Corrección aplicada)
+        // 3. Lógica especial para Fecha — Date real, más reciente primero
+        if (currentSort.column === 'date') {
+            const dA = a.date ? new Date(a.date).getTime() : 0;
+            const dB = b.date ? new Date(b.date).getTime() : 0;
+            if (dA !== dB) return currentSort.order === 'asc' ? dA - dB : dB - dA;
+            // Desempate por updatedAt (timestamp exacto del guardado)
+            const uA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+            const uB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+            return uB - uA;
+        }
+
+        // 4. Lógica especial para URL/Link (Corrección aplicada)
         if (currentSort.column === 'url') {
             // Convertimos a 1 (tiene link) o 0 (no tiene link)
             const hasLinkA = (a.url && String(a.url).trim().length > 0) ? 1 : 0;
@@ -2005,8 +1695,9 @@ function renderTable() {
             return code;
         };
 
-        return `<tr>
-            <td>${c.date || '-'}</td> <td>
+        const isNewRow = window._lastSavedCode && c.code === window._lastSavedCode;
+        return `<tr class="${isNewRow ? 'row-just-saved' : ''}">
+            <td>${c.date || '-'}${isNewRow ? ' <span class="badge-nueva">✨ NUEVA</span>' : ''}</td> <td>
                 <select class="platform-select" onchange="updateCampPlatform(${realIndex}, this.value)">
                     ${(() => {
                         const inList = db.platforms.some(p => p === c.platform);
@@ -2167,6 +1858,7 @@ function saveCampaign() {
         language: document.getElementById('inLanguage').value,
         keywords: document.getElementById('inKeywords1').value.split('\n').map(k=>k.trim()).filter(k=>k),
         observaciones: document.getElementById('inKeywords2').value,
+        observacionesExtra: document.getElementById('inObservaciones')?.value || '', // ✅ FIX-09
         article: document.getElementById('inArticle').value,
         autor: document.getElementById('inAutor').value,
         url: document.getElementById('inUrl').value,
@@ -2181,14 +1873,18 @@ function saveCampaign() {
         db.campaigns.push(campaign);
     }
 
+    // ✅ FIX-FECHA: Forzar orden fecha desc para que la nueva quede siempre arriba
+    window._lastSavedCode = campaign.code;
+    currentSort = { column: 'date', order: 'desc' };
     renderTable();
+    setTimeout(() => { window._lastSavedCode = null; renderTable(); }, 3500);
     updateStats();
     saveToFirebase(campaign);
     // Mantenerse en el formulario
     setTimeout(() => {
         resetForm();
         showNotif('✅ Campaña guardada. Listo para la siguiente.', 'success');
-        _clearDraft();
+        _clearDraft().catch(e => console.warn('⚠️ draft err:',e)); // ✅ FIX-17
     }, 500);
 }
 
@@ -2344,6 +2040,7 @@ function autoCompleteCampaign() {
     const similarCampaign = db.campaigns.find(c => c.platform === matchedPlatform && c.channel === channel);
     if (similarCampaign && similarCampaign.id) {
         document.getElementById('inId').value = similarCampaign.id;
+        return; // ✅ FIX-19
     }
 }
 
@@ -2391,7 +2088,7 @@ function saveMetadataOnly() {
     saveToFirebase(c);
     // Mantenerse en el formulario
     setTimeout(() => {
-        _clearDraft();
+        _clearDraft().catch(e => console.warn('⚠️ draft err:',e)); // ✅ FIX-17
         resetForm();
         showNotif('✅ Campaña guardada. Listo para la siguiente.', 'success');
     }, 500);
@@ -2405,7 +2102,7 @@ function deleteCampaign(index) {
 }
 
 function resetForm() {
-    _clearDraft();
+    _clearDraft().catch(e => console.warn('⚠️ draft err:',e)); // ✅ FIX-17
     editingIndex = -1;
     document.querySelectorAll('#tab-add input, #tab-add select, #tab-add textarea').forEach(el => el.value = '');
     document.getElementById('formTitle').textContent = '➕ Nueva Campaña';
@@ -3227,13 +2924,14 @@ function renderTableFiltered(campaigns) {
             '<a href="' + c.url + '" target="_blank" class="' + urlClass + '" title="Ir a: ' + c.url + '">🔗</a>' :
             '<span class="' + urlClass + '" title="Sin Link">🔗</span>';
 
-        return '<tr style="background: #fff3cd;"><td>' + (c.date || '-') + '</td><td><select class="platform-select" onchange="updateCampPlatform(' + realIndex + ', this.value)"><option value="FB" ' + (c.platform === 'FB' ? 'selected' : '') + '>Facebook</option><option value="TT" ' + (c.platform === 'TT' ? 'selected' : '') + '>TikTok</option><option value="GN" ' + (c.platform === 'GN' ? 'selected' : '') + '>Google</option></select></td><td>' + (c.channel || '-') + '</td><td><strong>' + getNichoConEmoji(c.product) + '</strong></td><td><code>' + c.id + '</code></td><td><strong>' + c.code + '</strong></td><td>' + (c.language || '-') + '</td><td>' + c.country + '</td><td><strong>' + (c.keywords?.length || 0) + '</strong></td><td style="text-align: center;">' + articleIcon + '</td><td style="text-align: center;">' + urlIcon + '</td><td style="text-align: center; font-weight: bold; color: var(--primary);">' + (c.autor || '-') + '</td><td><button class="btn btn-edit" style="padding: 6px 10px;" onclick="editCampaign(' + realIndex + ')">✏️</button><button class="btn btn-del" style="padding: 6px 10px;" onclick="deleteCampaign(' + realIndex + ')">🗑️</button><button class="btn" style="padding: 6px 10px; ' + (c.observaciones && c.observaciones.trim() ? 'background: #ef4444; color: white;' : 'background: #e5e7eb; color: #666;') + '" onclick="verObservacion(' + realIndex + ')">📌</button></td></tr>';
+        return '<tr style="background: #fff3cd;"><td>' + (c.date || '-') + '</td><td><select class="platform-select" onchange="updateCampPlatform(' + realIndex + ', this.value)"><option value="FB" ' + (c.platform === 'FB' ? 'selected' : '') + '>Facebook</option><option value="TT" ' + (c.platform === 'TT' ? 'selected' : '') + '>TikTok</option><option value="GN" ' + (c.platform === 'GN' ? 'selected' : '') + '>Google</option></select></td><td>' + (c.channel || '-') + '</td><td><strong>' + getNichoConEmoji(c.product) + '</strong></td><td><code>' + c.id + '</code></td><td><strong>' + c.code + '</strong></td><td>' + ((c.article ? c.article.split('\n')[0].replace(/^#+\s*/g,'').replace(/\*\*/g,'').trim().substring(0,60) : '-')) + '</td><!-- ✅ FIX-10 --><td>' + (c.language || '-') + '</td><td>' + c.country + '</td><td><strong>' + (c.keywords?.length || 0) + '</strong></td><td style="text-align: center;">' + articleIcon + '</td><td style="text-align: center;">' + urlIcon + '</td><td style="text-align: center; font-weight: bold; color: var(--primary);">' + (c.autor || '-') + '</td><td><button class="btn btn-edit" style="padding: 6px 10px;" onclick="editCampaign(' + realIndex + ')">✏️</button><button class="btn btn-del" style="padding: 6px 10px;" onclick="deleteCampaign(' + realIndex + ')">🗑️</button><button class="btn" style="padding: 6px 10px; ' + (c.observaciones && c.observaciones.trim() ? 'background: #ef4444; color: white;' : 'background: #e5e7eb; color: #666;') + '" onclick="verObservacion(' + realIndex + ')">📌</button></td></tr>';
     }).join('');
 }
 
 
 window.onload = function() {
     startRealtimeSync();
+    setTimeout(() => { if (typeof loadBankFromFirebase === 'function') loadBankFromFirebase(); }, 3000); // ✅ FIX-12
 
     // Listener para auto-completar al escribir nombre de campaña
     const campoNombre = document.getElementById('inCode');
@@ -3498,8 +3196,19 @@ async function generarReporte() {
     }
 
     function generarReporteExcel() {
+        // ✅ FIX-13: Usa SheetJS (XLSX real) en lugar de HTML disfrazado de .xls
         if (!db.campaigns.length) {
             return alert("No hay campañas para generar reporte.");
+        }
+
+        // Asegurar que XLSX esté cargado antes de continuar
+        if (typeof XLSX === 'undefined') {
+            showNotif('⏳ Cargando librería Excel, intenta de nuevo en 3 segundos...', 'warning');
+            var s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+            s.onload = function() { showNotif('✅ Librería lista, vuelve a hacer click en Exportar Excel', 'success'); };
+            document.head.appendChild(s);
+            return;
         }
 
         // Función para extraer el título del artículo
@@ -3510,18 +3219,18 @@ async function generarReporte() {
             return t.replace(/^#+\s*/g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/<\/?b>/gi,'').replace(/<\/?strong>/gi,'').trim() || 'Sin título';
         }
 
-        // Obtener filtros actuales - MISMA LÓGICA QUE renderTable()
+        // Obtener filtros actuales
         const q = document.getElementById('search').value.toLowerCase();
         const pF = document.getElementById('filterPlatform').value;
         const prF = document.getElementById('filterProduct').value;
         const idF = document.getElementById('filterId').value;
         const chF = document.getElementById('filterChannel').value;
 
-        // Filtrar campañas - EXACTAMENTE IGUAL QUE renderTable()
-        const camps = db.campaigns.filter(c => 
+        // Filtrar campañas
+        const camps = db.campaigns.filter(c =>
             (c.code.toLowerCase().includes(q) || c.id.includes(q) || c.country.toLowerCase().includes(q)) &&
-            (!pF || c.platform === pF) && 
-            (!prF || c.product === prF) && 
+            (!pF || c.platform === pF) &&
+            (!prF || c.product === prF) &&
             (!idF || c.id === idF) &&
             (!chF || chF === 'Todos' || c.channel === chF)
         );
@@ -3530,37 +3239,47 @@ async function generarReporte() {
             return alert("No hay campañas visibles con los filtros aplicados.");
         }
 
-        // Generar nombre del archivo según filtros
+        // Generar nombre del archivo
         let nom = "reporte";
-        if (chF && chF!=="Todos") nom += "-"+chF;
-        if (prF) nom += "-"+prF;
-        if (pF) nom += "-"+pF;
-        if (idF) nom += "-ID"+idF;
-        if (q) nom += "-"+q;
-        if (nom==="reporte") nom="reporte-completo";
+        if (chF && chF !== "Todos") nom += "-" + chF;
+        if (prF) nom += "-" + prF;
+        if (pF) nom += "-" + pF;
+        if (idF) nom += "-ID" + idF;
+        if (q) nom += "-" + q;
+        if (nom === "reporte") nom = "reporte-completo";
 
-        // Generar HTML Excel SIN columna de keywords
-        let h = '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"><style>table{border-collapse:collapse}th{background:#4472C4;color:white;font-weight:bold;border:1px solid black;padding:8px}td{border:1px solid black;padding:8px}</style></head><body><table><tr><th>No</th><th>TÍTULO</th><th>PAÍS</th><th>ETIQUETA</th><th>FECHA</th></tr>';
+        // Construir datos como array de objetos para SheetJS
+        const filas = camps.map((c, i) => ({
+            'No':        i + 1,
+            'Título':    extraerTitulo(c.article),
+            'País':      c.country || 'NA',
+            'Plataforma': c.platform || 'NA',
+            'Canal':     c.channel || 'NA',
+            'Etiqueta':  c.code || '',
+            'ID Campaña': c.id || '',
+            'Producto':  c.product || '',
+            'Idioma':    c.language || '',
+            'Fecha':     c.date ? c.date.split('-').reverse().join('/') : 'Sin fecha',
+            'Keywords':  c.keywords ? c.keywords.length : 0,
+            'Observaciones': c.observaciones || ''
+        }));
 
-        camps.forEach((c,i) => {
-            const f = c.date ? c.date.split('-').reverse().join('/') : 'Sin fecha';
-            h += `<tr><td>${i+1}</td><td>${extraerTitulo(c.article)}</td><td>${c.country||'NA'}</td><td>${c.code}</td><td>${f}</td></tr>`;
-        });
+        // Crear workbook y worksheet con SheetJS
+        const ws = XLSX.utils.json_to_sheet(filas);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Campañas');
 
-        h += '</table></body></html>';
+        // Estilo de ancho de columnas automático
+        const colWidths = Object.keys(filas[0]).map(key => ({
+            wch: Math.max(key.length, ...filas.map(r => String(r[key] || '').length), 10)
+        }));
+        ws['!cols'] = colWidths;
 
-        // Descargar como .xls
-        const blob = new Blob([h], {type:'application/vnd.ms-excel;charset=utf-8'});
-        const url = URL.createObjectURL(blob);
-        const lnk = document.createElement('a');
-        lnk.href = url;
-        lnk.download = `${nom}-${new Date().toISOString().slice(0,10)}.xls`;
-        document.body.appendChild(lnk);
-        lnk.click();
-        document.body.removeChild(lnk);
-        URL.revokeObjectURL(url);
+        // Descargar como .xlsx real
+        const fileName = `${nom}-${new Date().toISOString().slice(0,10)}.xlsx`;
+        XLSX.writeFile(wb, fileName);
 
-        showNotif(`✓ ${camps.length} campañas exportadas a Excel (sin keywords)`, 'success');
+        showNotif(`✅ ${camps.length} campañas exportadas a Excel real (.xlsx)`, 'success');
     }
 
 
@@ -3687,13 +3406,13 @@ function clearModifiedHistory() {
 document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        saveToCloud();
+        saveCampaign(); // ✅ FIX-02
         showNotif('💾 Guardando con Ctrl+S...', 'success');
     }
 
     if ((e.ctrlKey || e.metaKey) && e.key === 'g') {
         e.preventDefault();
-        saveToCloud();
+        saveCampaign(); // ✅ FIX-02
         showNotif('💾 Guardando con Ctrl+G...', 'success');
     }
 });
@@ -3711,7 +3430,7 @@ function openTabInWindow(tabId) {
         'tab-add': '➕ Gestionar Campaña',
         'tab-config': '⚙️ Configuración',
         'tab-catalog': '📡 Catálogo Canal',
-        'tab-analysis': '📊 Análisis',
+        // ✅ FIX-18: tab-analysis eliminado (no existe en el HTML)
         'tab-keyword-bank': '🏦 Banco de Keywords'
     };
 
@@ -4321,27 +4040,7 @@ function showBankCampaignDetail(idx) {
   updateCurrentCampaignView();
 }
 
-function updateCurrentCampaignView() {
-  if (currentBankCampaignIndex < 0) return;
-  const camp = keywordBank[currentBankCampaignIndex];
-  const cont = document.getElementById('bankKeywordsDetail'); if (!cont) return;
-  document.querySelectorAll('.bank-campaign-card').forEach((card, i) => {
-    const filtered = getFilteredBankCampaigns();
-    const realIdx = keywordBank.indexOf(filtered[i]);
-    card.classList.toggle('active', realIdx === currentBankCampaignIndex);
-  });
-  const priof = document.getElementById('bankFilterPriority')?.value || '';
-  let fkws = camp.keywords.filter(kw => !priof || kw.priority === priof);
-  let html = '<div style="margin-bottom:20px;border-bottom:2px solid #667eea;padding-bottom:15px;"><h3 style="color:#667eea;margin:0 0 10px 0;">' + camp.campaign_id + '</h3><div style="display:flex;gap:20px;font-size:0.9em;color:#666;"><span>📦 ' + camp.product + '</span><span>🌍 ' + camp.country + '</span></div></div><div style="margin-bottom:15px;display:flex;gap:10px;"><button class="btn btn-success" onclick="selectAllKeywordsFromCampaign()" style="flex:1;padding:8px;font-size:0.85em;">✅ Todas</button><button class="btn btn-warning" onclick="deselectAllKeywordsFromCampaign()" style="flex:1;padding:8px;font-size:0.85em;">❌ Ninguna</button></div><div style="max-height:450px;overflow-y:auto;scrollbar-gutter:stable;">';
-  fkws.forEach(kw => {
-    const aidx = camp.keywords.indexOf(kw);
-    const sel = selectedKeywords.some(sk => sk.campaignId === camp.campaign_id && sk.text === kw.text);
-    const pcls = kw.priority === 'high' ? 'priority-high' : 'priority-normal';
-    const plbl = kw.priority === 'high' ? '🔥 ALTA' : 'NORMAL';
-    html += '<div class="keyword-item ' + (sel?'selected':'') + '" id="kw-' + currentBankCampaignIndex + '-' + aidx + '"><input type="checkbox" ' + (sel?'checked':'') + ' onchange="toggleKeywordSelection(' + aidx + ')"><span class="keyword-text">' + kw.text + '</span><span class="keyword-priority ' + pcls + '">' + plbl + '</span><div class="keyword-metrics"><span class="metric-value">👁️ ' + kw.impressions.toLocaleString() + '</span><span class="metric-value">🖱️ ' + kw.clicks + '</span><span class="metric-value">📊 ' + kw.ctr.toFixed(2) + '%</span></div></div>';
-  });
-  html += '</div>'; cont.innerHTML = html;
-}
+// ✅ FIX-03a: primera UCV eliminada (fusionada)
 
 function toggleKeywordSelection(kwIdx) {
   const camp = keywordBank[currentBankCampaignIndex]; const kw = camp.keywords[kwIdx];
@@ -4467,12 +4166,17 @@ function sortKeywordsBy(criteria) {
     showNotif(msgs[criteria], 'info');
 }
 
-// REDEFINIR updateCurrentCampaignView
-const _origUpdate = updateCurrentCampaignView;
+// ✅ FIX-03b: UCV consolidada
 function updateCurrentCampaignView() {
     if (currentBankCampaignIndex < 0) return;
     const campaign = keywordBank[currentBankCampaignIndex];
     const container = document.getElementById('bankKeywordsDetail');
+    // ✅ FIX-03c: marcar tarjeta activa
+    document.querySelectorAll('.bank-campaign-card').forEach((card, i) => {
+        const filtered = getFilteredBankCampaigns();
+        const realIdx = keywordBank.indexOf(filtered[i]);
+        card.classList.toggle('active', realIdx === currentBankCampaignIndex);
+    });
 
     let html = `
         <div style="margin-bottom:20px;border-bottom:2px solid #667eea;padding-bottom:15px;">
@@ -4910,7 +4614,7 @@ function showSyncStatus(status) {
     const kw = (document.getElementById('inKeywords1') && document.getElementById('inKeywords1').value || '').trim();
     const art = (document.getElementById('inArticle') && document.getElementById('inArticle').value || '').trim();
     const btnMeta = document.getElementById('btnMetaOnly');
-    const isEditing = btnMeta && btnMeta.style && btnMeta.style.display && btnMeta.style.display !== 'none';
+    const isEditing = btnMeta && window.getComputedStyle(btnMeta).display !== 'none'; // ✅ FIX-20
     if (isEditing) return false;
     return !!(code || (kw && kw.length > 10) || (art && art.length > 50));
   }
