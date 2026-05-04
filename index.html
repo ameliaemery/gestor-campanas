@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Campañas</title>
+    <meta name="description" content="Sistema de gestión de campañas publicitarias HAV - Sincronizado en la nube">
+    <meta name="theme-color" content="#667eea">
+    <!-- Revisión de seguridad/accesibilidad aplicada el 2025-05 (ver changelog.md) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
@@ -75,7 +78,7 @@
         .hav-channel-item { background: #f8faff; padding: 12px 15px; border-radius: 8px; border: 1px solid #e1e4e8; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.03); transition: transform 0.2s; }
         .hav-channel-item:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
         .hav-channel-name { font-weight: 600; font-size: 0.85em; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .hav-channel-id { font-size: 0.75em; color: #888; }
+        .hav-channel-id { font-size: 0.75em; color: #6b7280; }  /* Antes #888 (3.5:1) → ahora 4.7:1 WCAG AA */
         
         /* BOTONES CATÁLOGO */
         .hav-btn-group { display: flex; gap: 3px; }
@@ -121,7 +124,7 @@
         .article-indicator { font-size: 1.3em; cursor: pointer; transition: transform 0.3s; }
         .article-indicator:hover { transform: scale(1.3); }
         .has-article { color: var(--success); }
-        .no-article { color: var(--border); }
+        .no-article { color: #9ca3af; }  /* Antes var(--border) #e5e7eb (1.6:1) → ahora 4.5:1 WCAG AA */
         
         
         
@@ -719,11 +722,11 @@
     </div>
 </div>
 
-<button class="logout-btn" onclick="logout()" style="display: none;" id="logoutBtn">🚪 Cerrar Sesión</button>
+<button type="button" class="logout-btn" onclick="logout()" style="display: none;" id="logoutBtn" aria-label="Cerrar sesión y salir del gestor">🚪 Cerrar Sesión</button>
 
 <div id="mainApp">
 
-    <div id="notification-area"></div>
+    <div id="notification-area" aria-live="polite" aria-atomic="false" role="status"></div>
     <div id="syncStatus" class="sync-status"></div><!-- ✅ FIX-04 -->
     <div class="container">
         <div class="header" style="position:relative;">
@@ -772,11 +775,11 @@
                 <div class="number" id="totalKeywords">0</div>
                 <div class="label">🔑 Keywords Totales</div>
             </div>
-            <div class="stat-card clickable" onclick="showKeywordAnalysis()" title="Click para análisis">
+            <div class="stat-card clickable" onclick="showKeywordAnalysis()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showKeywordAnalysis();}" title="Click para análisis" role="button" tabindex="0" aria-label="Ver análisis de keywords">
                 <div class="number" id="filteredCount">0</div>
                 <div class="label">🔍 Campañas Filtro</div>
             </div>
-            <div class="stat-card clickable" onclick="filterByArticleStatus()" title="Click para filtrar">
+            <div class="stat-card clickable" onclick="filterByArticleStatus()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filterByArticleStatus();}" title="Click para filtrar" role="button" tabindex="0" aria-label="Filtrar campañas por estado de artículo">
                 <div class="number" id="totalArticles">0</div>
                 <div class="label">📝 Con Artículo 🔍</div>
             </div>
@@ -786,16 +789,16 @@
             </div>
         </div>
 
-        <div class="tabs">
-            <button class="tab-btn active" oncontextmenu="openTabInWindow('tab-list'); return false;" onclick="switchTab('tab-list')">📋 Lista de Campañas</button>
-            <button class="tab-btn" oncontextmenu="openTabInWindow('tab-comp'); return false;" onclick="switchTab('tab-comp')">🔬 Comparador</button>
-            <button class="tab-btn" oncontextmenu="openTabInWindow('tab-add'); return false;" onclick="switchTab('tab-add')">➕ Gestionar Campaña</button>
-            <button class="tab-btn" oncontextmenu="openTabInWindow('tab-config'); return false;" onclick="switchTab('tab-config')">⚙️ Configuración Global</button>
-            <button class="tab-btn" oncontextmenu="openTabInWindow('tab-catalog'); return false;" onclick="switchTab('tab-catalog')">📡 Catálogo Canal</button>
-            <button class="tab-btn" oncontextmenu="openTabInWindow('tab-keyword-bank'); return false;" onclick="switchTab('tab-keyword-bank')">🏦 Banco Keywords</button>
+        <div class="tabs" role="tablist" aria-label="Secciones del gestor">
+            <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-list" tabindex="0" oncontextmenu="openTabInWindow('tab-list'); return false;" onclick="switchTab('tab-list')">📋 Lista de Campañas</button>
+            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-comp" tabindex="-1" oncontextmenu="openTabInWindow('tab-comp'); return false;" onclick="switchTab('tab-comp')">🔬 Comparador</button>
+            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-add" tabindex="-1" oncontextmenu="openTabInWindow('tab-add'); return false;" onclick="switchTab('tab-add')">➕ Gestionar Campaña</button>
+            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-config" tabindex="-1" oncontextmenu="openTabInWindow('tab-config'); return false;" onclick="switchTab('tab-config')">⚙️ Configuración Global</button>
+            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-catalog" tabindex="-1" oncontextmenu="openTabInWindow('tab-catalog'); return false;" onclick="switchTab('tab-catalog')">📡 Catálogo Canal</button>
+            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-keyword-bank" tabindex="-1" oncontextmenu="openTabInWindow('tab-keyword-bank'); return false;" onclick="switchTab('tab-keyword-bank')">🏦 Banco Keywords</button>
         </div>
 
-        <div id="tab-list" class="tab-content active">
+        <div id="tab-list" class="tab-content active" role="tabpanel" aria-label="Contenido de pestaña" tabindex="0">
             <div class="controls">
                 <div class="control-group"><label>🔍 Buscar</label><input type="text" id="search" autocomplete="off" onkeyup="renderTable()"></div>
                 <div class="control-group"><label>📺 Canal</label><select id="filterChannel" onchange="renderTable()"></select></div>
@@ -808,20 +811,20 @@
                 <table>
                     <thead>
             <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                <th style="padding:15px 10px; text-align:left;" onclick="applySort('date')">Fecha</th>
-                <th style="padding:15px 10px; text-align:left;" onclick="applySort('platform')">Plat.</th>
-                <th style="padding:15px 10px; text-align:left;" onclick="applySort('channel')">Canal</th>
-                <th style="padding:15px 10px; text-align:left;" onclick="applySort('product')">Nicho</th>
-                <th style="padding:15px 10px; text-align:left;" onclick="applySort('id')">ID</th>
-                <th style="padding:15px 10px; text-align:left;" onclick="applySort('code')">Nombre de Campaña</th>
+                <th scope="col" style="padding:15px 10px; text-align:left;" onclick="applySort('date')" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applySort('date');}">Fecha</th>
+                <th scope="col" style="padding:15px 10px; text-align:left;" onclick="applySort('platform')" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applySort('platform');}">Plat.</th>
+                <th scope="col" style="padding:15px 10px; text-align:left;" onclick="applySort('channel')" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applySort('channel');}">Canal</th>
+                <th scope="col" style="padding:15px 10px; text-align:left;" onclick="applySort('product')" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applySort('product');}">Nicho</th>
+                <th scope="col" style="padding:15px 10px; text-align:left;" onclick="applySort('id')" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applySort('id');}">ID</th>
+                <th scope="col" style="padding:15px 10px; text-align:left;" onclick="applySort('code')" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applySort('code');}">Nombre de Campaña</th>
                 <th style="padding:15px 10px; text-align:left; min-width:150px;" onclick="applySort('article')">Headline</th>
-                <th style="padding:15px 10px; text-align:left;" onclick="applySort('language')">Idioma</th>
-                <th style="padding:15px 10px; text-align:left;" onclick="applySort('country')">País</th>
-                <th style="padding:15px 10px; text-align:left;" onclick="applySort('keys')">Keys</th>
-                <th style="padding:15px 10px; text-align:left;" onclick="applySort('article')">Art.</th>
-                <th style="padding:15px 10px; text-align:left;" onclick="applySort('url')">Link</th>
-                <th style="padding:15px 10px; text-align:left;" onclick="applySort('autor')">📝</th>
-                <th style="padding:15px 10px; text-align:left;">Acciones</th>
+                <th scope="col" style="padding:15px 10px; text-align:left;" onclick="applySort('language')" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applySort('language');}">Idioma</th>
+                <th scope="col" style="padding:15px 10px; text-align:left;" onclick="applySort('country')" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applySort('country');}">País</th>
+                <th scope="col" style="padding:15px 10px; text-align:left;" onclick="applySort('keys')" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applySort('keys');}">Keys</th>
+                <th scope="col" style="padding:15px 10px; text-align:left;" onclick="applySort('article')" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applySort('article');}">Art.</th>
+                <th scope="col" style="padding:15px 10px; text-align:left;" onclick="applySort('url')" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applySort('url');}">Link</th>
+                <th scope="col" style="padding:15px 10px; text-align:left;" onclick="applySort('autor')" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applySort('autor');}">📝</th>
+                <th scope="col" style="padding:15px 10px; text-align:left;">Acciones</th>
             </tr>
         </thead>
                     <tbody id="campaignList"></tbody>
@@ -835,7 +838,7 @@
 </div>
         </div>
 
-        <div id="tab-comp" class="tab-content">
+        <div id="tab-comp" class="tab-content" role="tabpanel" aria-label="Contenido de pestaña" tabindex="0">
             <h2>Analizar 3 Campañas Simultáneamente</h2>
             <div class="controls" style="margin-top: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
                 <div class="control-group">
@@ -858,12 +861,12 @@
             <div id="compResults" class="comparator-grid"></div>
         </div>
 
-        <div id="tab-add" class="tab-content">
+        <div id="tab-add" class="tab-content" role="tabpanel" aria-label="Contenido de pestaña" tabindex="0">
             <h2 id="formTitle">Gestionar Campaña</h2>
             <div class="controls" style="grid-template-columns: repeat(4, 1fr); margin-top: 15px;">
                 <div class="control-group"><label>Plataforma</label><select id="inPlatform"></select></div>
                 <div class="control-group"><label>Canal</label><select id="inChannel"></select></div>
-                <datalist id="adManagerList"><option value="HAV"><option value="Otro"></datalist>
+                <datalist id="adManagerList"><option value="HAV"></option><option value="Otro"></option></datalist>
                 <div class="control-group"><label>Idioma</label><select id="inLanguage"><option value="">Seleccionar idioma...</option></select></div>
                 <div class="control-group"><label>Nicho/Producto</label><select id="inProduct"></select></div>
             </div>
@@ -931,7 +934,7 @@
             </div>
         </div>
 
-        <div id="tab-config" class="tab-content">
+        <div id="tab-config" class="tab-content" role="tabpanel" aria-label="Contenido de pestaña" tabindex="0">
             <h2>Configuración Global (Sincronizada)</h2>
             
 
@@ -961,7 +964,7 @@
             </div>
         </div>
 
-        <div id="tab-catalog" class="tab-content">
+        <div id="tab-catalog" class="tab-content" role="tabpanel" aria-label="Contenido de pestaña" tabindex="0">
             <h2 style="color: #667eea; margin-bottom: 20px;">📡 Catálogo Canal - Canales en la Nube</h2>
             <div class="config-section" style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #007bff;">
                 <h3 style="margin-top: 0; color: #007bff;">📦 Gestión del Catálogo Canal</h3>
@@ -995,7 +998,7 @@
         </div>
 
     <!-- TAB BANCO KEYWORDS -->
-    <div id="tab-keyword-bank" class="tab-content">
+    <div id="tab-keyword-bank" class="tab-content" role="tabpanel" aria-label="Contenido de pestaña" tabindex="0">
     <div id="bankHighPriority" style="display:none;">0</div><!-- ✅ FIX-06 -->
     <div class="controls" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;margin-bottom:18px;padding:15px;background:#f9fafb;border-radius:10px;">
         <div class="control-group"><label>🌍 País (Banco)</label>
@@ -1038,9 +1041,9 @@
     </div>
     </div>
 
-    <div id="editChannelModal" class="modal">
+    <div id="editChannelModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="editChannelModalTitle" aria-hidden="true">
         <div class="modal-content" style="position:relative;">
-            <h3>✏️ Editar Canal HAV</h3>
+            <h3 id="editChannelModalTitle">✏️ Editar Canal HAV</h3>
             <div class="control-group"><label>Plataforma</label><select id="modalPlatform"><option value="FB">Facebook (FB)</option><option value="TT">TikTok (TT)</option><option value="GN">Google (GN)</option></select></div>
 
             <div class="control-group" style="margin-top: 15px;">
@@ -1071,6 +1074,39 @@
     </div>
 
 <script>
+// ============================================================================
+// HELPERS DE SEGURIDAD (inyectados por revisión 2025-05)
+// - escH(): escapa todo (texto plano)
+// - sanitizeHTML(): permite SOLO <b>, <strong>, <i>, <em>, <br> y escapa el resto
+// - safeUrl(): valida URLs (bloquea javascript:, data:, etc.)
+// ============================================================================
+window.escH = function(s) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
+window.sanitizeHTML = function(s) {
+    if (s === null || s === undefined) return '';
+    // 1. Escapar todo primero
+    var escaped = window.escH(s);
+    // 2. Re-permitir SOLO etiquetas seguras de formato visual
+    escaped = escaped.replace(/&lt;(\/?)(b|strong|i|em|br)\s*\/?&gt;/gi, '<$1$2>');
+    return escaped;
+};
+
+window.safeUrl = function(u) {
+    if (!u) return '';
+    var s = String(u).trim();
+    // Bloquear esquemas peligrosos
+    if (/^(javascript|data|vbscript|file):/i.test(s)) return '';
+    return s;
+};
+
 // ============================================================================
 // 1. CONFIGURACIÓN FIREBASE
 // ============================================================================
@@ -1463,7 +1499,7 @@ function updateOptions() {
         const el = document.getElementById(id);
         if(!el) return;
         el.innerHTML = (isFilter ? '<option value="">Todos</option>' : '') +
-                       (arr || []).map(opt => `<option value="${opt}">${stripEmoji(opt) || opt}</option>`).join('');
+                       (arr || []).map(opt => `<option value="${escH(opt)}">${escH(stripEmoji(opt) || opt)}</option>`).join('');
     };
 
     fill('inPlatform', db.platforms);
@@ -1494,10 +1530,10 @@ function updateOptions() {
         if(container && db[type]) {
             container.innerHTML = db[type].map((val, i) => `
                 <li style="position:relative;">
-                    <input type="text" class="config-input" value="${val}" id="input_${type}_${i}">
-                    ${type === 'products' ? `<button class="emoji-btn" style="padding:4px 7px;font-size:1em;" onclick="toggleEmojiPicker('pickerEdit_${type}_${i}','input_${type}_${i}')" title="Emoji">😊</button><div class="emoji-picker-wrapper" id="pickerEdit_${type}_${i}" style="top:40px;right:0;"></div>` : ''}
-                    <button class="btn btn-save-mini" onclick="updateGlobalItem('${type}', ${i})">💾</button>
-                    <button class="btn-del-mini" onclick="delOption('${type}', ${i})">🗑️</button>
+                    <input type="text" class="config-input" value="${escH(val)}" id="input_${type}_${i}" aria-label="Editar ${escH(type)}">
+                    ${type === 'products' ? `<button type="button" class="emoji-btn" style="padding:4px 7px;font-size:1em;" onclick="toggleEmojiPicker('pickerEdit_${type}_${i}','input_${type}_${i}')" title="Emoji" aria-label="Insertar emoji">😊</button><div class="emoji-picker-wrapper" id="pickerEdit_${type}_${i}" style="top:40px;right:0;"></div>` : ''}
+                    <button type="button" class="btn btn-save-mini" onclick="updateGlobalItem('${type}', ${i})" aria-label="Guardar cambios">💾</button>
+                    <button type="button" class="btn-del-mini" onclick="delOption('${type}', ${i})" aria-label="Eliminar">🗑️</button>
                 </li>`).join('');
         }
     });
@@ -1684,8 +1720,8 @@ function renderTable() {
 
         // Si hay URL, usamos <a> para ir al link. Si no, usamos <span>.
         const urlIcon = hasUrl
-            ? `<a href="${c.url}" target="_blank" class="${urlClass}" title="Ir a: ${c.url}">🔗</a>`
-            : `<span class="${urlClass}" title="Sin Link">🔗</span>`;
+            ? `<a href="${escH(safeUrl(c.url))}" target="_blank" rel="noopener noreferrer" class="${urlClass}" title="Ir a: ${escH(c.url)}" aria-label="Abrir enlace de la campaña">🔗</a>`
+            : `<span class="${urlClass}" title="Sin Link" aria-label="Sin enlace">🔗</span>`;
 
         // 3. SELECCIÓN DE NOMBRE DE PLATAFORMA (NO ABREVIADO)
         const getPlatName = (code) => {
@@ -1697,20 +1733,20 @@ function renderTable() {
 
         const isNewRow = window._lastSavedCode && c.code === window._lastSavedCode;
         return `<tr class="${isNewRow ? 'row-just-saved' : ''}">
-            <td>${c.date || '-'}${isNewRow ? ' <span class="badge-nueva">✨ NUEVA</span>' : ''}</td> <td>
-                <select class="platform-select" onchange="updateCampPlatform(${realIndex}, this.value)">
+            <td>${escH(c.date || '-')}${isNewRow ? ' <span class="badge-nueva">✨ NUEVA</span>' : ''}</td> <td>
+                <select class="platform-select" aria-label="Cambiar plataforma de campaña" onchange="updateCampPlatform(${realIndex}, this.value)">
                     ${(() => {
                         const inList = db.platforms.some(p => p === c.platform);
-                        const extra = (!inList && c.platform) ? `<option value="${c.platform}" selected>${c.platform}</option>` : '';
-                        return extra + db.platforms.map(p => `<option value="${p}" ${c.platform === p ? 'selected' : ''}>${p}</option>`).join('');
+                        const extra = (!inList && c.platform) ? `<option value="${escH(c.platform)}" selected>${escH(c.platform)}</option>` : '';
+                        return extra + db.platforms.map(p => `<option value="${escH(p)}" ${c.platform === p ? 'selected' : ''}>${escH(p)}</option>`).join('');
                     })()}
                 </select>
             </td>
-            <td>${c.channel || '-'}</td>
-            <td><strong>${getNichoConEmoji(c.product)}</strong></td>
-            <td><code>${c.id}</code></td>
-            <td><strong>${c.code}</strong></td>
-            <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#059669;font-weight:600;cursor:text;user-select:text;" title="${(() => {
+            <td>${escH(c.channel || '-')}</td>
+            <td><strong>${escH(getNichoConEmoji(c.product))}</strong></td>
+            <td><code>${escH(c.id)}</code></td>
+            <td><strong>${sanitizeHTML(c.code)}</strong></td>
+            <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#059669;font-weight:600;cursor:text;user-select:text;" title="${escH((() => {
                 const art = c.article || '';
                 if (!art) return 'Sin título';
                 const lines = art.split('\n');
@@ -1720,27 +1756,27 @@ function renderTable() {
                     if (match) return match[1].replace(/\*\*/g, '').replace(/__/g, '').replace(/\*/g, '').replace(/_/g, '').trim();
                 }
                 return lines[0] ? lines[0].trim() : 'Sin título';
-            })()}">${(() => {
+            })())}">${(() => {
                 const art = c.article || '';
                 if (!art) return '<span style="color:#9ca3af;">Sin título</span>';
                 const lines = art.split('\n');
                 for (let i = 0; i < 20; i++) {
                     const line = (lines[i] || '').trim();
                     const match = line.match(/^#{1,6}\s+(.+)$/);
-                    if (match) return match[1].replace(/\*\*/g, '').replace(/__/g, '').replace(/\*/g, '').replace(/_/g, '').trim();
+                    if (match) return escH(match[1].replace(/\*\*/g, '').replace(/__/g, '').replace(/\*/g, '').replace(/_/g, '').trim());
                 }
-                return lines[0] ? lines[0].trim() : '<span style="color:#9ca3af;">Sin título</span>';
+                return lines[0] ? escH(lines[0].trim()) : '<span style="color:#9ca3af;">Sin título</span>';
             })()}</td>
-            <td>${c.language || '-'}</td>
-            <td>${c.country}</td>
+            <td>${escH(c.language || '-')}</td>
+            <td>${escH(c.country)}</td>
             <td><strong>${c.keywords?.length || 0}</strong></td>
             <td style="text-align: center;">${articleIcon}</td>
             <td style="text-align: center;">${urlIcon}</td>
-            <td style="text-align: center; font-weight: bold; color: var(--primary);">${c.autor || '-'}</td>
+            <td style="text-align: center; font-weight: bold; color: var(--primary);">${escH(c.autor || '-')}</td>
             <td>
-                <button class="btn btn-edit" style="padding: 6px 10px;" onclick="editCampaign(${realIndex})">✏️</button>
-                <button class="btn btn-del" style="padding: 6px 10px;" onclick="deleteCampaign(${realIndex})">🗑️</button>
-                <button class="btn" style="padding: 6px 10px; ${c.observaciones && c.observaciones.trim() ? 'background: #ef4444; color: white;' : 'background: #e5e7eb; color: #666;'}" onclick="verObservacion(${realIndex})" title="${c.observaciones && c.observaciones.trim() ? 'Ver observación' : 'Sin observaciones'}">📌</button>
+                <button type="button" class="btn btn-edit" style="padding: 6px 10px;" aria-label="Editar campaña" onclick="editCampaign(${realIndex})">✏️</button>
+                <button type="button" class="btn btn-del" style="padding: 6px 10px;" aria-label="Eliminar campaña" onclick="deleteCampaign(${realIndex})">🗑️</button>
+                <button type="button" class="btn" style="padding: 6px 10px; ${c.observaciones && c.observaciones.trim() ? 'background: #ef4444; color: white;' : 'background: #e5e7eb; color: #666;'}" onclick="verObservacion(${realIndex})" aria-label="${c.observaciones && c.observaciones.trim() ? 'Ver observación' : 'Sin observaciones'}" title="${c.observaciones && c.observaciones.trim() ? 'Ver observación' : 'Sin observaciones'}">📌</button>
                 
             </td>
         </tr>`;
@@ -2370,21 +2406,27 @@ function renderHAVCatalog() {
         const plat = channels[0].platform || 'FB';
         const style = platforms[plat] || platforms['FB'];
         
+        const groupNameEsc = groupName.replace(/'/g, "&#039;").replace(/"/g, '&quot;');
+        const groupNameJs = groupName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         html += `<div class="hav-platform-card" style="border-left-color: ${style.color}; background: ${style.bg}">
-            <h3 style="color:${style.color}">${groupName}</h3>
+            <h3 style="color:${style.color}">${escH(groupName)}</h3>
             <div class="hav-channels-list">
-                ${channels.map((ch, idx) => `
+                ${channels.map((ch, idx) => {
+                    const codeJs = String(ch.code).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                    const idJs   = String(ch.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                    return `
                 <div class="hav-channel-item">
                     <div class="hav-channel-info">
-                        <div class="hav-channel-name">${ch.code}</div>
-                        <div class="hav-channel-id">${ch.id}</div>
+                        <div class="hav-channel-name">${escH(ch.code)}</div>
+                        <div class="hav-channel-id">${escH(ch.id)}</div>
                     </div>
                     <div class="hav-btn-group">
-                        <button class="btn-mini btn-copy-mini" onclick="navigator.clipboard.writeText('${ch.code} | ${ch.id}');showNotif('Copiado','success')">📋</button>
-                        <button class="btn-mini btn-edit-mini" onclick="editHAVChannel('${groupName}', ${idx})">✏️</button>
-                        <button class="btn-mini btn-del-mini" onclick="deleteHAVChannel('${groupName}', ${idx})">🗑️</button>
+                        <button type="button" class="btn-mini btn-copy-mini" aria-label="Copiar ${escH(ch.code)} y ${escH(ch.id)}" onclick="navigator.clipboard.writeText('${codeJs} | ${idJs}');showNotif('Copiado','success')">📋</button>
+                        <button type="button" class="btn-mini btn-edit-mini" aria-label="Editar canal" onclick="editHAVChannel('${groupNameJs}', ${idx})">✏️</button>
+                        <button type="button" class="btn-mini btn-del-mini" aria-label="Eliminar canal" onclick="deleteHAVChannel('${groupNameJs}', ${idx})">🗑️</button>
                     </div>
-                </div>`).join('')}
+                </div>`;
+                }).join('')}
             </div>
         </div>`;
     });
@@ -2465,7 +2507,7 @@ function updateCompSelects() {
             .sort((a, b) => a.name.localeCompare(b.name));
 
         datalist.innerHTML = sortedCampaigns
-            .map(c => `<option value="${c.name}">${c.name}</option>`)
+            .map(c => `<option value="${escH(c.name)}">${escH(c.name)}</option>`)
             .join('');
     });
 
@@ -2502,11 +2544,11 @@ function runTripleComparison() {
 
     resultsDiv.innerHTML = campaigns.map(c => `
         <div class="comp-card">
-            <h3>${c.code}</h3>
-            <div class="metric"><strong>País:</strong><span>${c.country}</span></div>
-            <div class="metric"><strong>ID:</strong><span>${c.id}</span></div>
+            <h3>${sanitizeHTML(c.code)}</h3>
+            <div class="metric"><strong>País:</strong><span>${escH(c.country)}</span></div>
+            <div class="metric"><strong>ID:</strong><span>${escH(c.id)}</span></div>
             <div class="metric"><strong>Keywords:</strong><span>${c.keywords.length}</span></div>
-            <div class="keyword-list">${c.keywords.map(k=>`<div class="keyword-item">${k}</div>`).join('')}</div>
+            <div class="keyword-list">${c.keywords.map(k=>`<div class="keyword-item">${sanitizeHTML(String(k))}</div>`).join('')}</div>
         </div>`).join('');
 }
 
@@ -2518,8 +2560,10 @@ function clearComparison() {
 }
 
 
-// ===== AUTO-COMPLETAR DESDE CATÁLOGO HAV =====
-function autoCompleteFromHAV() {
+// ===== AUTO-COMPLETAR DESDE CATÁLOGO HAV (función huérfana - 2025-05) =====
+// NOTA: esta función no se invoca desde ningún listener. Su lógica está integrada
+// en autoCompleteCampaign(). Se mantiene aquí como referencia histórica únicamente.
+function _autoCompleteFromHAV_DEPRECATED() {
     const nombreCampana = document.getElementById('inCode').value.trim();
 
     if (nombreCampana.length < 5) return; // Esperar a que escriba algo significativo
@@ -2598,6 +2642,31 @@ function autoCompleteFromHAV() {
 
 
 
+
+// ============================================================================
+// FIX-13g (2025-05): Cerrar modales con tecla Escape
+// ============================================================================
+document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    // Modales conocidos. Si hay alguno visible, cerrarlo y prevenir propagación.
+    const modalsToCheck = [
+        { id: 'editChannelModal', closer: typeof closeChannelModal === 'function' ? closeChannelModal : null, activeClass: 'active' },
+        { id: 'analysisModal', closer: typeof closeAnalysisModal === 'function' ? closeAnalysisModal : null, activeClass: 'active' },
+        { id: 'viewCampaignModal', closer: typeof closeViewModal === 'function' ? closeViewModal : null, activeClass: 'active' }
+    ];
+    for (const m of modalsToCheck) {
+        const el = document.getElementById(m.id);
+        if (!el) continue;
+        const isVisible = m.activeClass
+            ? el.classList.contains(m.activeClass)
+            : (el.style.display && el.style.display !== 'none');
+        if (isVisible && m.closer) {
+            e.stopPropagation();
+            m.closer();
+            return;
+        }
+    }
+});
 
 // ── TEAM BADGES — edición inline ────────────────────────────────────────
 function editTeamBadge(badgeEl) {
@@ -2739,7 +2808,7 @@ function handleLogin(event) {
     if (USUARIOS_AUTORIZADOS[usuario] && USUARIOS_AUTORIZADOS[usuario] === password) {
         // Login exitoso
         const timestamp = Date.now();
-        localStorage.setItem('gestorHAV_auth', btoa(usuario + ':' + timestamp));
+        localStorage.setItem('gestorHAV_auth', btoa(unescape(encodeURIComponent(usuario + ':' + timestamp))));  // FIX UTF-8
         localStorage.setItem('gestorHAV_user', usuario);
         localStorage.setItem('gestorHAV_loginTime', timestamp);
 
@@ -2809,14 +2878,9 @@ function checkSession() {
     }
 }
 
-// Verificar sesión automáticamente al cargar
-document.addEventListener('DOMContentLoaded', function() {
-    checkSession();
-});
-
-// También verificar al cargar el script
+// Verificar sesión al cargar (un solo entry point, sin duplicados)
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', checkSession);
+    document.addEventListener('DOMContentLoaded', checkSession, { once: true });
 } else {
     checkSession();
 }
@@ -2921,10 +2985,11 @@ function renderTableFiltered(campaigns) {
         const hasUrl = (c.url && String(c.url).trim().length > 0);
         const urlClass = hasUrl ? 'url-active' : 'url-inactive';
         const urlIcon = hasUrl ?
-            '<a href="' + c.url + '" target="_blank" class="' + urlClass + '" title="Ir a: ' + c.url + '">🔗</a>' :
-            '<span class="' + urlClass + '" title="Sin Link">🔗</span>';
+            '<a href="' + escH(safeUrl(c.url)) + '" target="_blank" rel="noopener noreferrer" class="' + urlClass + '" title="Ir a: ' + escH(c.url) + '" aria-label="Abrir enlace">🔗</a>' :
+            '<span class="' + urlClass + '" title="Sin Link" aria-label="Sin enlace">🔗</span>';
 
-        return '<tr style="background: #fff3cd;"><td>' + (c.date || '-') + '</td><td><select class="platform-select" onchange="updateCampPlatform(' + realIndex + ', this.value)"><option value="FB" ' + (c.platform === 'FB' ? 'selected' : '') + '>Facebook</option><option value="TT" ' + (c.platform === 'TT' ? 'selected' : '') + '>TikTok</option><option value="GN" ' + (c.platform === 'GN' ? 'selected' : '') + '>Google</option></select></td><td>' + (c.channel || '-') + '</td><td><strong>' + getNichoConEmoji(c.product) + '</strong></td><td><code>' + c.id + '</code></td><td><strong>' + c.code + '</strong></td><td>' + ((c.article ? c.article.split('\n')[0].replace(/^#+\s*/g,'').replace(/\*\*/g,'').trim().substring(0,60) : '-')) + '</td><!-- ✅ FIX-10 --><td>' + (c.language || '-') + '</td><td>' + c.country + '</td><td><strong>' + (c.keywords?.length || 0) + '</strong></td><td style="text-align: center;">' + articleIcon + '</td><td style="text-align: center;">' + urlIcon + '</td><td style="text-align: center; font-weight: bold; color: var(--primary);">' + (c.autor || '-') + '</td><td><button class="btn btn-edit" style="padding: 6px 10px;" onclick="editCampaign(' + realIndex + ')">✏️</button><button class="btn btn-del" style="padding: 6px 10px;" onclick="deleteCampaign(' + realIndex + ')">🗑️</button><button class="btn" style="padding: 6px 10px; ' + (c.observaciones && c.observaciones.trim() ? 'background: #ef4444; color: white;' : 'background: #e5e7eb; color: #666;') + '" onclick="verObservacion(' + realIndex + ')">📌</button></td></tr>';
+        const headlineFiltered = c.article ? c.article.split('\n')[0].replace(/^#+\s*/g,'').replace(/\*\*/g,'').trim().substring(0,60) : '-';
+        return '<tr style="background: #fff3cd;"><td>' + escH(c.date || '-') + '</td><td><select class="platform-select" aria-label="Cambiar plataforma" onchange="updateCampPlatform(' + realIndex + ', this.value)"><option value="FB" ' + (c.platform === 'FB' ? 'selected' : '') + '>Facebook</option><option value="TT" ' + (c.platform === 'TT' ? 'selected' : '') + '>TikTok</option><option value="GN" ' + (c.platform === 'GN' ? 'selected' : '') + '>Google</option></select></td><td>' + escH(c.channel || '-') + '</td><td><strong>' + escH(getNichoConEmoji(c.product)) + '</strong></td><td><code>' + escH(c.id) + '</code></td><td><strong>' + sanitizeHTML(c.code) + '</strong></td><td>' + escH(headlineFiltered) + '</td><td>' + escH(c.language || '-') + '</td><td>' + escH(c.country) + '</td><td><strong>' + (c.keywords?.length || 0) + '</strong></td><td style="text-align: center;">' + articleIcon + '</td><td style="text-align: center;">' + urlIcon + '</td><td style="text-align: center; font-weight: bold; color: var(--primary);">' + escH(c.autor || '-') + '</td><td><button type="button" class="btn btn-edit" style="padding: 6px 10px;" aria-label="Editar campaña" onclick="editCampaign(' + realIndex + ')">✏️</button><button type="button" class="btn btn-del" style="padding: 6px 10px;" aria-label="Eliminar campaña" onclick="deleteCampaign(' + realIndex + ')">🗑️</button><button type="button" class="btn" style="padding: 6px 10px; ' + (c.observaciones && c.observaciones.trim() ? 'background: #ef4444; color: white;' : 'background: #e5e7eb; color: #666;') + '" aria-label="Ver observaciones" onclick="verObservacion(' + realIndex + ')">📌</button></td></tr>';
     }).join('');
 }
 
@@ -3402,19 +3467,45 @@ function clearModifiedHistory() {
     }
 }
 
-// ===== ATAJOS DE TECLADO =====
+// ===== ATAJOS DE TECLADO (mejorado 2025-05) =====
+// Ctrl+S y Ctrl+G guardan la campaña en edición.
+// Reglas:
+//  1. Solo se activan si la pestaña activa es "Gestionar Campaña" (tab-add)
+//  2. En otras pestañas, avisan amablemente y no interfieren con el navegador
+//  3. No mienten: el "Guardando..." solo aparece si realmente intenta guardar
 document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    // Detectar combinación Ctrl/Cmd + S o + G
+    const isSaveShortcut = (e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.key === 'g' || e.key === 'G');
+    if (!isSaveShortcut) return;
+
+    // Verificar que la pestaña activa sea "Gestionar Campaña"
+    const tabAdd = document.getElementById('tab-add');
+    const isOnAddTab = tabAdd && tabAdd.classList.contains('active');
+
+    if (!isOnAddTab) {
+        // En otra pestaña: prevenimos el atajo del navegador (Ctrl+S = guardar página)
+        // y mostramos un aviso suave. No llamamos a saveCampaign.
         e.preventDefault();
-        saveCampaign(); // ✅ FIX-02
-        showNotif('💾 Guardando con Ctrl+S...', 'success');
+        showNotif('💡 El guardado rápido solo funciona en "Gestionar Campaña"', 'info');
+        return;
     }
 
-    if ((e.ctrlKey || e.metaKey) && e.key === 'g') {
-        e.preventDefault();
-        saveCampaign(); // ✅ FIX-02
-        showNotif('💾 Guardando con Ctrl+G...', 'success');
+    // Estamos en la pestaña correcta: prevenir el atajo del navegador y guardar
+    e.preventDefault();
+
+    // Validación previa mínima: si los campos clave están vacíos, no llamamos
+    // a saveCampaign (que mostraría alert). Mejor un mensaje breve.
+    const code = (document.getElementById('inCode')?.value || '').trim();
+    if (!code) {
+        showNotif('⚠️ Falta el nombre de la campaña', 'error');
+        document.getElementById('inCode')?.focus();
+        return;
     }
+
+    // Todo OK: guardar. saveCampaign() ya muestra su propia notificación
+    // de éxito/error, así que no duplicamos mensajes.
+    showNotif('💾 Guardando…', 'info');
+    saveCampaign();
 });
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -3461,9 +3552,9 @@ if (typeof document !== 'undefined') {
 </script>
 
 
-    <div id="analysisModal" class="analysis-modal" onclick="if(event.target === this) closeAnalysisModal()">
+    <div id="analysisModal" class="analysis-modal" onclick="if(event.target === this) closeAnalysisModal()" role="dialog" aria-modal="true" aria-labelledby="analysisModalTitle" aria-hidden="true">
         <div class="analysis-content">
-            <div class="analysis-header">📊 Análisis Detallado de Keywords</div>
+            <div class="analysis-header" id="analysisModalTitle">📊 Análisis Detallado de Keywords</div>
             <div id="analysisBody"></div>
             <div style="margin-top: 25px; text-align: right;">
                 <button class="btn btn-primary" onclick="closeAnalysisModal()">✅ Cerrar</button>
@@ -3472,294 +3563,7 @@ if (typeof document !== 'undefined') {
     </div>
 
 </div>
-<!-- ========================================== -->
-<!-- MÓDULO GENERADOR DE PROMPTS IA - TOTALMENTE EDITABLE -->
-<!-- ========================================== -->
-<div id="modalPromptIA" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
-  <div style="background:white; padding:30px; max-width:800px; width:92%; border-radius:16px; max-height:92vh; overflow-y:auto; box-shadow: 0 20px 60px rgba(0,0,0,0.4);">
-
-    <div style="text-align:center; margin-bottom:25px;">
-      <h2 style="margin:0; color:#2563eb; font-size:26px;">🤖 Generador de Prompts IA</h2>
-      <p style="color:#6b7280; font-size:14px; margin:8px 0 0 0;">Datos auto-completados - <strong style="color:#10b981;">Puedes modificar todo lo que quieras</strong></p>
-    </div>
-
-    <!-- Grid de 2 columnas -->
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
-
-      <div>
-        <label style="font-weight:600; font-size:13px; display:block; margin-bottom:5px; color:#374151;">🌍 País Objetivo:</label>
-        <input id="ia_pais" type="text" style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:8px; font-size:14px; transition:border 0.3s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e5e7eb'">
-      </div>
-
-      <div>
-        <label style="font-weight:600; font-size:13px; display:block; margin-bottom:5px; color:#374151;">🗣️ Idioma Nativo:</label>
-        <input id="ia_idioma" type="text" style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:8px; font-size:14px; transition:border 0.3s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e5e7eb'">
-      </div>
-
-    </div>
-
-    <!-- Campo completo de nicho -->
-    <div style="margin-bottom:15px;">
-      <label style="font-weight:600; font-size:13px; display:block; margin-bottom:5px; color:#374151;">📦 Nicho / Producto:</label>
-      <input id="ia_nicho" type="text" style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:8px; font-size:14px; transition:border 0.3s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e5e7eb'">
-    </div>
-
-    <!-- Campo completo H1 -->
-    <div style="margin-bottom:15px;">
-      <label style="font-weight:600; font-size:13px; display:block; margin-bottom:5px; color:#374151;">🎯 Keyword Principal (H1):</label>
-      <input id="ia_h1" type="text" style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:8px; font-size:14px; transition:border 0.3s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e5e7eb'">
-    </div>
-
-    <!-- Keywords EDITABLES -->
-    <div style="margin-bottom:20px;">
-      <label style="font-weight:600; font-size:13px; display:block; margin-bottom:5px; color:#374151;">🔑 Keywords (Editable - borra las que no quieras):</label>
-      <textarea id="ia_keywords" style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:8px; font-size:13px; height:140px; font-family:inherit; resize:vertical; line-height:1.6; transition:border 0.3s;" placeholder="keyword1&#10;keyword2&#10;keyword3&#10;...puedes borrar o agregar líneas" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
-      <small style="color:#10b981; font-size:11px; display:block; margin-top:4px;">✏️ Puedes borrar, editar o agregar keywords. Una por línea. Solo para tu referencia (no van en el prompt).</small>
-    </div>
-
-    <!-- Divisor visual -->
-    <div style="border-top:2px dashed #e5e7eb; margin:20px 0;"></div>
-
-    <!-- Botones con estilo mejorado -->
-    <div style="display:flex; gap:10px; margin-bottom:20px;">
-      <button onclick="generarPromptMagnifico()" style="flex:1; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white; border:none; padding:12px 20px; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(16,185,129,0.3); transition:all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(16,185,129,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(16,185,129,0.3)'">
-        ✨ Generar Prompt
-      </button>
-      <button onclick="copiarPromptIA()" style="flex:1; background:linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color:white; border:none; padding:12px 20px; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(59,130,246,0.3); transition:all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(59,130,246,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(59,130,246,0.3)'">
-        📋 Copiar Prompt
-      </button>
-      <button onclick="cerrarModalPromptIA()" style="background:#6b7280; color:white; border:none; padding:12px 20px; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; transition:all 0.3s;" onmouseover="this.style.background='#4b5563'" onmouseout="this.style.background='#6b7280'">
-        ❌ Cerrar
-      </button>
-    </div>
-
-    <!-- Área de prompt generado -->
-    <div>
-      <label style="font-weight:600; font-size:13px; display:block; margin-bottom:5px; color:#374151;">📄 Prompt Generado:</label>
-      <textarea id="ia_prompt_generado" style="width:100%; padding:12px; border:2px solid #e5e7eb; border-radius:8px; font-size:12px; height:300px; font-family:'Courier New', monospace; background:#f9fafb; resize:vertical; line-height:1.5;"></textarea>
-    </div>
-
-  </div>
-</div>
-
 <script>
-// ============================================
-// GENERADOR DE PROMPTS IA - TOTALMENTE EDITABLE
-// ============================================
-
-// Mapeo de países (ISO a nombre completo)
-const paisesMap = {
-  'AE': 'Emiratos Árabes Unidos', 'ES': 'España', 'MX': 'México', 'AR': 'Argentina',
-  'CL': 'Chile', 'CO': 'Colombia', 'PE': 'Perú', 'BR': 'Brasil', 'US': 'Estados Unidos',
-  'GB': 'Reino Unido', 'FR': 'Francia', 'DE': 'Alemania', 'IT': 'Italia', 'PT': 'Portugal',
-  'PL': 'Polonia', 'NL': 'Países Bajos', 'BE': 'Bélgica', 'SE': 'Suecia', 'NO': 'Noruega',
-  'DK': 'Dinamarca', 'FI': 'Finlandia', 'CH': 'Suiza', 'AT': 'Austria', 'IE': 'Irlanda',
-  'CA': 'Canadá', 'AU': 'Australia', 'NZ': 'Nueva Zelanda', 'SG': 'Singapur', 'HK': 'Hong Kong',
-  'JP': 'Japón', 'KR': 'Corea del Sur', 'IN': 'India', 'ZA': 'Sudáfrica', 'TR': 'Turquía',
-  'RU': 'Rusia', 'UA': 'Ucrania', 'EG': 'Egipto', 'SA': 'Arabia Saudita', 'QA': 'Qatar',
-  'KW': 'Kuwait', 'OM': 'Omán', 'BH': 'Baréin', 'IL': 'Israel', 'TH': 'Tailandia',
-  'MY': 'Malasia', 'ID': 'Indonesia', 'PH': 'Filipinas', 'VN': 'Vietnam', 'PK': 'Pakistán',
-  'BD': 'Bangladesh', 'NG': 'Nigeria', 'KE': 'Kenia', 'GH': 'Ghana', 'UY': 'Uruguay',
-  'PY': 'Paraguay', 'BO': 'Bolivia', 'EC': 'Ecuador', 'VE': 'Venezuela', 'CR': 'Costa Rica',
-  'PA': 'Panamá', 'DO': 'República Dominicana', 'PR': 'Puerto Rico', 'GT': 'Guatemala',
-  'HN': 'Honduras', 'SV': 'El Salvador', 'NI': 'Nicaragua', 'CU': 'Cuba', 'JM': 'Jamaica',
-  'TT': 'Trinidad y Tobago', 'BS': 'Bahamas', 'BB': 'Barbados'
-};
-
-// Mapeo de idiomas
-const idiomasMap = {
-  'es': 'Español', 'en': 'Inglés', 'pt': 'Portugués', 'fr': 'Francés', 'de': 'Alemán',
-  'it': 'Italiano', 'pl': 'Polaco', 'nl': 'Holandés', 'sv': 'Sueco', 'no': 'Noruego',
-  'da': 'Danés', 'fi': 'Finlandés', 'ru': 'Ruso', 'ar': 'Árabe', 'tr': 'Turco',
-  'ja': 'Japonés', 'ko': 'Coreano', 'zh': 'Chino', 'hi': 'Hindi', 'th': 'Tailandés',
-  'vi': 'Vietnamita', 'id': 'Indonesio', 'ms': 'Malayo', 'he': 'Hebreo'
-};
-
-function convertirPaisCompleto(pais) {
-  if (pais && pais.length === 2) {
-    return paisesMap[pais.toUpperCase()] || pais;
-  }
-  return pais;
-}
-
-function convertirIdiomaCompleto(idioma) {
-  if (idioma && idioma.length === 2) {
-    return idiomasMap[idioma.toLowerCase()] || idioma;
-  }
-  return idioma;
-}
-
-function abrirModalPromptIA(campaniaIndex) {
-  console.log('🎨 Abriendo modal editable para campaña:', campaniaIndex);
-
-  if (typeof db === 'undefined' || !db.campaigns || !Array.isArray(db.campaigns)) {
-    alert('⚠️ No hay campañas cargadas. Espera unos segundos.');
-    return;
-  }
-
-  if (campaniaIndex < 0 || campaniaIndex >= db.campaigns.length) {
-    alert('❌ Índice de campaña inválido: ' + campaniaIndex);
-    return;
-  }
-
-  const campania = db.campaigns[campaniaIndex];
-
-  if (!campania) {
-    alert('❌ No se pudo acceder a la campaña');
-    return;
-  }
-
-  console.log('✅ Campaña cargada:', campania);
-
-  // Convertir país e idioma
-  const paisRaw = campania.pais || campania.country || '';
-  const idiomaRaw = campania.idioma || campania.language || '';
-
-  const paisCompleto = convertirPaisCompleto(paisRaw);
-  const idiomaCompleto = convertirIdiomaCompleto(idiomaRaw);
-
-  // Procesar keywords UNA POR LÍNEA
-  let keywordsTexto = '';
-  if (campania.keywords) {
-    if (typeof campania.keywords === 'string') {
-      keywordsTexto = campania.keywords.split(',').map(k => k.trim()).filter(k => k).join('\n');
-    } else if (Array.isArray(campania.keywords)) {
-      keywordsTexto = campania.keywords.map(k => String(k).trim()).filter(k => k).join('\n');
-    }
-  }
-
-  console.log('Keywords procesadas (editables):', keywordsTexto);
-
-  // Rellenar todos los campos (TODOS EDITABLES)
-  document.getElementById('ia_pais').value = paisCompleto;
-  document.getElementById('ia_idioma').value = idiomaCompleto;
-  document.getElementById('ia_nicho').value = campania.nicho || campania.product || '';
-  document.getElementById('ia_h1').value = campania.nombre || campania.name || '';
-  document.getElementById('ia_keywords').value = keywordsTexto;
-  document.getElementById('ia_prompt_generado').value = '';
-
-  document.getElementById('modalPromptIA').style.display = 'flex';
-  console.log('✅ Modal editable abierto - puedes modificar todo');
-}
-
-function cerrarModalPromptIA() {
-  document.getElementById('modalPromptIA').style.display = 'none';
-}
-
-function generarPromptMagnifico() {
-  const pais = document.getElementById('ia_pais').value.trim();
-  const idioma = document.getElementById('ia_idioma').value.trim();
-  const nicho = document.getElementById('ia_nicho').value.trim();
-  const h1 = document.getElementById('ia_h1').value.trim();
-
-  if (!pais || !idioma || !nicho || !h1) {
-    alert('⚠️ Por favor completa todos los campos obligatorios');
-    return;
-  }
-
-  // PROMPT EXACTO
-  const prompt = `Actúa como un experto redactor de artículos advertorial RSOC con 15 años de experiencia en redes sociales.
-Necesito crear un artículo 100% compliant con las políticas publicitarias para ${pais} en idioma ${idioma} (Nativo).
-
-🛑 **MANDATO DE EJECUCIÓN OBLIGATORIO**:
-Tu misión es hacer **EXACTAMENTE LO QUE PIDO**, respetando longitudes, negritas y asegurando una traducción perfecta.
-
-⛔ **REGLA DE TRADUCCIÓN**: El input contiene textos en ESPAÑOL que sirven como PLANTILLAS. TRADÚCELOS fielmente al ${idioma} y adáptalos al país ${pais}. NO escribas nada en español en el resultado final.
-
-
----
-### 📏 REGLAS DE FORMATO Y EXTENSIÓN (OBLIGATORIO)
-
-**1. Longitud:** Mínimo 1200 palabras, Máximo 1500 palabras.
-**2. Uso de Negritas:** ÚNICAMENTE en Título H1, Subtítulos H2, la PRIMERA vez que aparece la Keyword Principal y menciones de Keywords Secundarias.
-**3. Párrafos:** 2 a 3 párrafos por H2. Longitud de 6 a 8 renglones visuales por párrafo de forma consistente.
-**4. Las palabras de los Títulos principales (H1), siembre deben ir en Mayúsculas las primeras letras, tanto en el titulo principal (H1), como de los títulos  secundarios (H2), es "obligatorio"
-
----
-### 🛡️ TONO Y COMPLIANCE (OBLIGATORIO)
-
-- **Tono General:** Neutral e informativo.
-- **Estilo de Escritura:** CERO lenguaje de venta agresiva.
-- **Resultados:** NO garantizar aprobaciones ni resultados.
-- **Anonimato:** NO mencionar marcas reales, financieras,  bancos específicos ni precios concretos.
-- **Pagos:** NO mencionar métodos de pago específicos (tarjetas, plataformas financieras).
-- **Publicidad:** NO mencionar anunciantes ni ofertas comerciales directas.
-
----
-### 🏗️ ESTRUCTURA Y CONTENIDO
-
-**1. TÍTULO PRINCIPAL (H1)**
-Instrucción: Utiliza OBLIGATORIAMENTE esta información para el título: "${h1}".
-Acción: Tradúcela al ${idioma} de forma atractiva pero profesional.
-Formato: # **[Texto Traducido]**
-
-**2. INTRODUCCIÓN**
-Instrucción: Traduce este párrafo maestro al ${idioma}:
-"En ${pais}, algunas tiendas y plataformas ofrecen planes para **Comprar un ${nicho}**. La disponibilidad, el costo y los requisitos varían según el proveedor, el producto y el tipo de financiamiento, y siempre están sujetos a evaluaciones de elegibilidad y asequibilidad. Este artículo explica cómo funciona, los términos comunes, qué revisar antes de decidir y qué buscar para evitar costos inesperados."
-
-**3. DISCLAIMER INICIAL**
-Instrucción: Traduce al ${idioma} y ponlo en cursiva:
-*"Solo para fines informativos; esto no constituye asesoramiento financiero. No se garantiza la aprobación. Por favor, consulte los términos y condiciones oficiales del proveedor al realizar la compra."*
-
-**4. DESARROLLO (H2)**
-Instrucción: Desarrolla los siguientes puntos (traducidos). Usa el separador (---) antes de cada H2.
-   - [Genera 4 subtítulos H2 traducidos y relevantes para el nicho]
-
-**5. CONCLUSIÓN (H2)**
-Formato:
----
-## **[Conclusión Traducida]**
-Contenido: Párrafo de cierre en ${idioma}.
-
-**7. DISCLAIMER FINAL**
-Instrucción: Traduce al ${idioma} y ponlo en cursiva:
-*"La información compartida en este artículo está vigente al momento de su publicación. Para obtener información más actualizada, investigue por su cuenta."*
----
-**8. FUENTES Y REFERENCIAS (H2)**
-Instrucción: Genera un H2 titulado "Fuentes" (Traducido).
-⚠️ Lista 5 fuentes de autoridad REAL en ${pais} (Bancos, Ministerios, Entidades de Consumidores).
-
-¡Escribe el artículo en formato editabl.md!`;
-
-  document.getElementById('ia_prompt_generado').value = prompt;
-  document.getElementById('ia_prompt_generado').scrollIntoView({behavior: 'smooth', block: 'nearest'});
-
-  console.log('✅ Prompt generado exitosamente');
-
-  if (typeof showNotif === 'function') {
-    showNotif('✅ Prompt generado correctamente', 'success');
-  }
-}
-
-function copiarPromptIA() {
-  const textarea = document.getElementById('ia_prompt_generado');
-
-  if (!textarea.value.trim()) {
-    alert('⚠️ Primero genera el prompt haciendo clic en "✨ Generar Prompt"');
-    return;
-  }
-
-  textarea.select();
-  textarea.setSelectionRange(0, 99999);
-
-  try {
-    document.execCommand('copy');
-    console.log('✅ Prompt copiado al portapapeles');
-
-    if (typeof showNotif === 'function') {
-      showNotif('✅ Prompt copiado al portapapeles', 'success');
-    }
-
-    alert('✅ ¡Prompt copiado exitosamente!\n\n📋 Ahora pégalo en Qwen o Perplexity (Ctrl+V)');
-  } catch (err) {
-    console.error('❌ Error al copiar:', err);
-    alert('⚠️ Error al copiar automáticamente.\n\nSelecciona el texto manualmente y copia con Ctrl+C');
-  }
-}
-
-console.log('✅ Módulo IA totalmente editable cargado');
-
-
 // BANCO DE KEYWORDS
 
 function importKeywordBankFromExcel(event) {
@@ -4538,7 +4342,7 @@ function showSyncStatus(status) {
     html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
     html = html.replace(/(?<!\*)\*(?!\*)([^\*\n]+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
     html = html.replace(/(?<!_)_(?!_)([^_\n]+?)(?<!_)_(?!_)/g, '<em>$1</em>');
-    html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank" style="color:#3b82f6;text-decoration:underline;">$1</a>');
+    html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#3b82f6;text-decoration:underline;">$1</a>');
     html = html.replace(/^[\-\*]\s+(.+)$/gm, '###LI###$1###ELI###');
     html = html.replace(/^\d+\.\s+(.+)$/gm, '###OLI###$1###ELI###');
     html = html.replace(/^>\s+(.+)$/gm, '<blockquote style="border-left:4px solid #667eea;padding:12px 16px;margin:16px 0;color:#4b5563;background:#f9fafb;border-radius:6px;font-style:italic;">$1</blockquote>');
@@ -4579,7 +4383,7 @@ function showSyncStatus(status) {
       const art = (c.article && String(c.article).trim()) ? String(c.article) : '';
       const artHtml = art ? '<div class="view-article">' + renderMD(art) + '</div>' : '<div style="color:#9ca3af;padding:20px;text-align:center;">Sin artículo</div>';
       const url = (c.url && String(c.url).trim()) ? String(c.url).trim() : '';
-      const urlHtml = url ? '<a href="' + url + '" target="_blank" style="color:#3b82f6;text-decoration:underline;">' + escH(url) + '</a>' : '<span style="color:#9ca3af;">Sin URL</span>';
+      const urlHtml = url ? '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="color:#3b82f6;text-decoration:underline;">' + escH(url) + '</a>' : '<span style="color:#9ca3af;">Sin URL</span>';
       const html = `
         <div class="view-field"><div class="view-field-label">🏷️ Nombre</div><div class="view-field-value"><strong>${escH(c.code || '-')}</strong></div></div>
         <div class="view-field"><div class="view-field-label">🌐 Plataforma / Canal</div><div class="view-field-value">${escH(c.platform || '-')} / ${escH(c.channel || '-')}</div></div>
