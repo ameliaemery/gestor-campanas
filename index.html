@@ -882,9 +882,16 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
                     <div>
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                            <button class="btn btn-bold" onclick="boldSelectedText()" style="padding: 6px 10px; font-size: 0.85em;"><b>B</b> Negrita</button>
-                            <button class="btn btn-clear-tags" onclick="clearAllBoldTags()" style="padding: 6px 10px; font-size: 0.85em;">🗑️ Limpiar Negritas</button>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; position: relative;">
+                            <button class="btn btn-text-case" onclick="toggleCaseMenu()" style="padding: 6px 12px; font-size: 0.85em; background: var(--primary); color: white; display: flex; align-items: center; gap: 5px;" title="Transformar texto">
+                                🔡 Transformar <span style="font-size:0.8em;">▼</span>
+                            </button>
+                            <div id="caseMenuDropdown" style="display:none; position:absolute; top:36px; left:0; background:white; border:1px solid #ddd; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.15); z-index:999; min-width:230px; overflow:hidden;">
+                                <button onclick="applyCaseTransform('lower')" style="display:block; width:100%; text-align:left; padding:10px 16px; border:none; background:none; cursor:pointer; font-size:0.9em; border-bottom:1px solid #f0f0f0;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">🔡 minúsculas</button>
+                                <button onclick="applyCaseTransform('upper')" style="display:block; width:100%; text-align:left; padding:10px 16px; border:none; background:none; cursor:pointer; font-size:0.9em; border-bottom:1px solid #f0f0f0;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">🔠 MAYÚSCULAS</button>
+                                <button onclick="applyCaseTransform('title')" style="display:block; width:100%; text-align:left; padding:10px 16px; border:none; background:none; cursor:pointer; font-size:0.9em; border-bottom:1px solid #f0f0f0;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">🔤 Poner en Mayúsculas Cada Palabra</button>
+                                <button onclick="applyCaseTransform('toggle')" style="display:block; width:100%; text-align:left; padding:10px 16px; border:none; background:none; cursor:pointer; font-size:0.9em;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">🔁 Alternar May/min</button>
+                            </div>
                         </div>
                         <textarea id="inKeywords1" rows="20" style="width: 100%; height: 400px; resize: vertical;"></textarea>
                     </div>
@@ -2152,22 +2159,40 @@ function resetForm() {
     }
 }
 
-function boldSelectedText() {
-    const ta = document.getElementById('inKeywords1') || document.getElementById('inKeywords2');
-    if (!ta) return;
-    const start = ta.selectionStart;
-    const end = ta.selectionEnd;
-    if (start === end) return;
-    ta.value = ta.value.substring(0, start) + '<b>' + ta.value.substring(start, end) + '</b>' + ta.value.substring(end);
-    const newPos = start + '<b>'.length + (end - start) + '</b>'.length;
-    ta.focus();
-    ta.setSelectionRange(newPos, newPos);
+
+
+
+// ===== TRANSFORMAR TEXTO KEYWORDS =====
+function toggleCaseMenu() {
+    const menu = document.getElementById('caseMenuDropdown');
+    if (!menu) return;
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
 }
-function clearAllBoldTags() {
-    const ta = document.getElementById('inKeywords1') || document.getElementById('inKeywords2');
+function applyCaseTransform(type) {
+    const ta = document.getElementById('inKeywords1');
     if (!ta) return;
-    ta.value = ta.value.replace(/<\/?b>/gi, '');
+    const lines = ta.value.split('\n');
+    const transformed = lines.map(function(line) {
+        if (type === 'lower') return line.toLowerCase();
+        if (type === 'upper') return line.toUpperCase();
+        if (type === 'title') return line.replace(/\w\S*/g, function(w) {
+            return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+        });
+        if (type === 'toggle') return line.split('').map(function(c, i) {
+            return i % 2 === 0 ? c.toUpperCase() : c.toLowerCase();
+        }).join('');
+        return line;
+    });
+    ta.value = transformed.join('\n');
+    document.getElementById('caseMenuDropdown').style.display = 'none';
 }
+document.addEventListener('click', function(e) {
+    const menu = document.getElementById('caseMenuDropdown');
+    if (!menu) return;
+    if (!e.target.closest('.btn-text-case') && !e.target.closest('#caseMenuDropdown')) {
+        menu.style.display = 'none';
+    }
+});
 
 // ===== IMPORTAR (JSON) =====
 
