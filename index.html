@@ -687,6 +687,26 @@
             60%  { opacity: 1; transform: scale(1); }
             100% { opacity: 0; transform: scale(0.8); }
         }
+
+        /* === BIBLIOTECA DE KEYWORDS === */
+        .kw-color-dot{display:inline-block;width:12px;height:12px;border-radius:50%;flex-shrink:0;border:1.5px solid rgba(0,0,0,0.18);vertical-align:middle;margin-right:5px;}
+        .kw-color-dot.verde{background:#22c55e;} .kw-color-dot.amarillo{background:#eab308;}
+        .kw-color-dot.azul{background:#3b82f6;}  .kw-color-dot.rojo{background:#ef4444;}
+        .kw-color-dot.none{background:#d1d5db;}
+        #kwLibTable{width:100%;border-collapse:collapse;font-size:.93em;}
+        #kwLibTable th{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:10px 12px;text-align:left;}
+        #kwLibTable td{padding:8px 12px;border-bottom:1px solid #e5e7eb;vertical-align:middle;}
+        #kwLibTable tr:hover td{background:#f3f4f6;}
+        .del-kw-row{background:#ef4444;color:#fff;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:.8em;}
+        .del-kw-row:hover{background:#dc2626;}
+        .edit-kw-row{background:#667eea;color:#fff;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:.8em;}
+        .edit-kw-row:hover{background:#5a6fd6;}
+        .kw-lib-toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;align-items:center;}
+        .kw-lib-empty{text-align:center;padding:60px 20px;color:#9ca3af;font-size:1.05em;}
+        .view-kw-list li{display:flex;align-items:center;gap:6px;}
+        #kwLibTable thead th[data-col]:hover{background:linear-gradient(135deg,#5a6fd6,#6a3f9a);opacity:.9;}
+        #kwLibTable thead th{position:relative;}
+        .sort-icon{font-size:.75em;margin-left:3px;color:rgba(255,255,255,.8);}
         </style>
     <script src="https://unpkg.com/xlsx@0.20.3/dist/xlsx.full.min.js"></script>
     <script>
@@ -796,6 +816,7 @@
             <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-config" tabindex="-1" oncontextmenu="openTabInWindow('tab-config'); return false;" onclick="switchTab('tab-config')">⚙️ Configuración Global</button>
             <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-catalog" tabindex="-1" oncontextmenu="openTabInWindow('tab-catalog'); return false;" onclick="switchTab('tab-catalog')">📡 Catálogo Canal</button>
             <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-keyword-bank" tabindex="-1" oncontextmenu="openTabInWindow('tab-keyword-bank'); return false;" onclick="switchTab('tab-keyword-bank')">🏦 Banco Keywords</button>
+            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-kw-library" tabindex="-1" onclick="switchTab('tab-kw-library')">📚 Biblioteca Keywords</button>
         </div>
 
         <div id="tab-list" class="tab-content active" role="tabpanel" aria-label="Contenido de pestaña" tabindex="0">
@@ -1472,15 +1493,15 @@ function updateCampPlatform(index, newPlatform) {
 function switchTab(id) {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    document.querySelector(`[onclick="switchTab('${id}')"]`).classList.add('active');
-    if(id === 'tab-comp') updateCompSelects();
-    if(id === 'tab-catalog') renderHAVCatalog();
-    
-    // FIX: Al volver a la lista, SIEMPRE renderizar para quitar filtros "Modificados"
-    if (id === 'tab-list') {
-        renderTable();
-    }
+    var _el = document.getElementById(id);
+    if (_el) _el.classList.add('active');
+    var _btn = document.querySelector('[aria-controls="' + id + '"]') ||
+               document.querySelector('[onclick*="' + id + '"]');
+    if (_btn) _btn.classList.add('active');
+    if (id === 'tab-comp') updateCompSelects();
+    if (id === 'tab-catalog') renderHAVCatalog();
+    if (id === 'tab-kw-library' && typeof kwLibRender === 'function') kwLibRender();
+    if (id === 'tab-list') renderTable();
 }
 
 function updateStats(filteredCampaigns = null) {
@@ -3547,7 +3568,8 @@ function openTabInWindow(tabId) {
         'tab-config': '⚙️ Configuración',
         'tab-catalog': '📡 Catálogo Canal',
         // ✅ FIX-18: tab-analysis eliminado (no existe en el HTML)
-        'tab-keyword-bank': '🏦 Banco de Keywords'
+        'tab-keyword-bank': '🏦 Banco de Keywords',
+        'tab-kw-library': '📚 Biblioteca Keywords'
     };
 
     const tabName = tabNames[tabId] || 'Ventana';
@@ -4321,7 +4343,7 @@ function showSyncStatus(status) {
         .view-field-label{font-weight:700;color:#374151;font-size:.85em;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;}
         .view-field-value{color:#111827;word-break:break-word;line-height:1.7;}
         .view-kw-list{list-style:none;padding:0;margin:8px 0 0 0;}
-        .view-kw-list li{padding:8px 12px;margin:4px 0;background:#667eea;color:#fff;border-radius:6px;font-size:.9em;}
+        .view-kw-list li{padding:8px 12px;margin:4px 0;background:#667eea;color:#fff;border-radius:6px;font-size:.9em;display:flex;align-items:center;gap:7px;} .view-kw-list li .kw-color-dot{border:2px solid rgba(255,255,255,0.85);width:13px;height:13px;flex-shrink:0;}
         .view-modal-buttons{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
         .view-article{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;max-height:450px;overflow-y:auto;line-height:1.8;color:#1f2937;}
       `;
@@ -4404,7 +4426,20 @@ function showSyncStatus(status) {
       viewingCampaignIndex = idx;
       const c = db.campaigns[idx] || {};
       const kws = Array.isArray(c.keywords) ? c.keywords : [];
-      const kwHtml = kws.length ? '<ul class="view-kw-list">' + kws.map(k => '<li>' + escH(String(k)) + '</li>').join('') + '</ul>' : '<div style="color:#9ca3af;">Sin keywords</div>';
+      // Reload defensivo por si kwLibrary no cargó aún
+      if (typeof kwLibLoad === 'function' && (!Array.isArray(window.kwLibrary) || window.kwLibrary.length === 0)) kwLibLoad();
+      // Construir Map de lookup normalizado desde kwLibrary (robusto a espacios/mayúsculas/saltos)
+      function _normKw(s){ return String(s||'').toLowerCase().replace(/[\s\u00a0\r\n]+/g,' ').trim(); }
+      const _kwMap = new Map();
+      (window.kwLibrary||[]).forEach(function(e){
+        if(e && e.keyword) _kwMap.set(_normKw(e.keyword), (e.color||'').toLowerCase().trim());
+      });
+      const kwHtml = kws.length ? '<ul class="view-kw-list">' + kws.map(k => {
+        const _ks = String(k);
+        const _col = _kwMap.get(_normKw(_ks)) || '';
+        const _dot = (_col && _col!=='none') ? '<span class="kw-color-dot '+_col+'" title="'+_col.charAt(0).toUpperCase()+_col.slice(1)+'"></span>' : '';
+        return '<li>'+_dot+escH(_ks)+'</li>';
+      }).join('') + '</ul>' : '<div style="color:#9ca3af;">Sin keywords</div>';
       const art = (c.article && String(c.article).trim()) ? String(c.article) : '';
       const artHtml = art ? '<div class="view-article">' + renderMD(art) + '</div>' : '<div style="color:#9ca3af;padding:20px;text-align:center;">Sin artículo</div>';
       const url = (c.url && String(c.url).trim()) ? String(c.url).trim() : '';
@@ -4823,5 +4858,324 @@ th, td {
     window.addEventListener('load', initBankResizer);
 })();
 </script>
+
+    <!-- ===== BIBLIOTECA DE KEYWORDS ===== -->
+    <div id="tab-kw-library" class="tab-content" role="tabpanel" tabindex="0">
+        <h2 style="color:#667eea;margin-bottom:16px;">📚 Biblioteca de Keywords</h2>
+
+
+        <!-- Toolbar -->
+        <div class="kw-lib-toolbar">
+            <label class="btn btn-primary" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin:0;">
+                📊 Importar Excel
+                <input type="file" id="kwLibExcelInput" accept=".xlsx,.xls" style="display:none;" onchange="kwLibImportExcel(this)">
+            </label>
+            <label class="btn btn-success" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin:0;">
+                📄 Importar JSON
+                <input type="file" id="kwLibJsonInput" accept=".json" style="display:none;" onchange="kwLibImportJson(this)">
+            </label>
+            <button class="btn btn-warning" onclick="kwLibRemoveDuplicates()">🔁 Eliminar Duplicados</button>
+            <button class="btn btn-del" onclick="kwLibClearAll()">🗑️ Borrar Todos</button>
+            <span id="kwLibCount" style="margin-left:auto;font-weight:700;color:#667eea;"></span>
+        </div>
+        <!-- Barra de búsqueda -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <div style="position:relative;flex:1;">
+                <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af;pointer-events:none;">🔍</span>
+                <input id="kwLibSearch" type="text" placeholder="Buscar por nicho, país, keyword o color... ej: -PL o Cortacesped"
+                    style="width:100%;padding:9px 12px 9px 34px;border:1.5px solid #d1d5db;border-radius:8px;font-size:.93em;outline:none;transition:border-color .2s;"
+                    oninput="kwLibRender()"
+                    onfocus="this.style.borderColor='#667eea'"
+                    onblur="this.style.borderColor='#d1d5db'">
+            </div>
+            <button onclick="document.getElementById('kwLibSearch').value='';kwLibRender();"
+                style="padding:9px 14px;background:#f3f4f6;border:1.5px solid #d1d5db;border-radius:8px;cursor:pointer;font-size:.85em;color:#6b7280;white-space:nowrap;">
+                ✕ Limpiar
+            </button>
+            <span id="kwLibSearchCount" style="font-size:.85em;color:#9ca3af;white-space:nowrap;"></span>
+        </div>
+        <!-- Tabla -->
+        <div style="overflow-x:auto;max-height:560px;overflow-y:auto;border-radius:8px;border:1px solid #e5e7eb;">
+            <table id="kwLibTable">
+                <thead id="kwLibThead">
+                <tr id="kwLibHeaderRow">
+                    <th data-col="nicho" style="width:120px;cursor:pointer;user-select:none;white-space:nowrap;" onclick="kwLibSort('nicho')">Nicho<span class="sort-icon"></span></th>
+                    <th data-col="pais" style="width:80px;cursor:pointer;user-select:none;white-space:nowrap;" onclick="kwLibSort('pais')">País<span class="sort-icon"></span></th>
+                    <th data-col="keyword" style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="kwLibSort('keyword')">Keyword (Original)<span class="sort-icon"></span></th>
+                    <th data-col="color" style="width:80px;cursor:pointer;user-select:none;white-space:nowrap;text-align:center;" onclick="kwLibSort('color')">Color<span class="sort-icon"></span></th>
+                    <th style="width:70px;text-align:center;">Editar</th>
+                    <th style="width:80px;">Eliminar</th>
+                </tr>
+                </thead>
+                <tbody id="kwLibTbody">
+                    <tr><td colspan="6" class="kw-lib-empty">Sin keywords cargadas. Importa un archivo Excel o JSON.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- ===== FIN BIBLIOTECA ===== -->
+
+
+<script>
+// ===== BIBLIOTECA DE KEYWORDS =====
+var KW_LIB_STORAGE = 'gestorHAV_kwLibrary_v1';
+var _kwSortCol = null, _kwSortDir = 1;
+var _kwDragSrcIdx = null;
+
+function kwLibLoad(){
+    try {
+        var s = localStorage.getItem(KW_LIB_STORAGE);
+        var parsed = s ? JSON.parse(s) : [];
+        window.kwLibrary = Array.isArray(parsed) ? parsed : [];
+    } catch(e){ window.kwLibrary = window.kwLibrary || []; }
+}
+
+if (!Array.isArray(window.kwLibrary) || window.kwLibrary.length === 0) kwLibLoad();
+
+document.addEventListener('DOMContentLoaded', function(){
+    kwLibLoad();
+    kwLibRender();
+});
+
+function kwLibSave(){
+    try { localStorage.setItem(KW_LIB_STORAGE, JSON.stringify(window.kwLibrary)); } catch(e){}
+}
+
+function _escapeRegex(s){
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function _hlText(raw, terms){
+    if (!terms || !terms.length) return escH(raw);
+    var result = escH(raw);
+    for (var i=0; i<terms.length; i++){
+        try {
+            var re = new RegExp('(' + _escapeRegex(terms[i]) + ')', 'gi');
+            result = result.replace(re, '<mark style="background:#fef08a;border-radius:2px;padding:0 1px;">$1</mark>');
+        } catch(e){}
+    }
+    return result;
+}
+
+function kwLibRender() {
+    var tbody     = document.getElementById('kwLibTbody');
+    var countEl   = document.getElementById('kwLibCount');
+    var searchEl  = document.getElementById('kwLibSearch');
+    var scountEl  = document.getElementById('kwLibSearchCount');
+    if (!tbody) return;
+
+    var ths = document.querySelectorAll('#kwLibTable thead th[data-col]');
+    ths.forEach(function(th){
+        var si = th.querySelector('.sort-icon');
+        if (si) si.textContent = (th.dataset.col === _kwSortCol) ? (_kwSortDir===1 ? ' ▲' : ' ▼') : '';
+    });
+
+    var lib = window.kwLibrary;
+    if (!lib || !lib.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="kw-lib-empty">Sin keywords cargadas. Importa un archivo Excel o JSON.</td></tr>';
+        if (countEl)  countEl.textContent  = '';
+        if (scountEl) scountEl.textContent = '';
+        return;
+    }
+
+    var query = searchEl ? searchEl.value.trim().toLowerCase() : '';
+    var filtered = lib.slice();
+    if (query) {
+        var terms = query.split(/\s+/).filter(function(t){ return t.length > 0; });
+        filtered = filtered.filter(function(item){
+            var hay = [item.nicho||'', item.pais||item.país||'', item.keyword||'', item.color||''].join(' ').toLowerCase();
+            return terms.every(function(t){ return hay.indexOf(t) !== -1; });
+        });
+    }
+
+    var sorted = filtered.slice();
+    if (_kwSortCol) {
+        sorted.sort(function(a,b){
+            var va=(a[_kwSortCol]||'').toLowerCase(), vb=(b[_kwSortCol]||'').toLowerCase();
+            return va < vb ? -_kwSortDir : va > vb ? _kwSortDir : 0;
+        });
+    }
+
+    if (countEl)  countEl.textContent  = lib.length + ' keyword' + (lib.length!==1?'s':'');
+    if (scountEl) scountEl.textContent = query ? (sorted.length + ' resultado' + (sorted.length!==1?'s':'') + ' de ' + lib.length) : '';
+
+    if (!sorted.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="kw-lib-empty">Sin resultados para &ldquo;' + escH(query) + '&rdquo;</td></tr>';
+        return;
+    }
+
+    var clabel = {verde:'Verde', amarillo:'Amarillo', azul:'Azul', rojo:'Rojo'};
+    var hlTerms = query ? query.split(/\s+/).filter(function(t){ return t.length>0; }) : [];
+    var h = '';
+
+    for (var i=0; i<sorted.length; i++){
+        var origIdx = lib.indexOf(sorted[i]);
+        var c = (sorted[i].color||'').toLowerCase().trim();
+        h += '<tr draggable="true" ondragstart="kwLibDragStart(event,' + origIdx + ')" ondragover="kwLibDragOver(event)" ondrop="kwLibDrop(event,' + origIdx + ')" style="cursor:grab;">'
+           + '<td>' + _hlText(sorted[i].nicho||'', hlTerms) + '</td>'
+           + '<td>' + _hlText(sorted[i].pais||sorted[i].país||'', hlTerms) + '</td>'
+           + '<td style="font-weight:600;">' + _hlText(sorted[i].keyword||'', hlTerms) + '</td>'
+           + '<td style="text-align:center;"><span class="kw-color-dot ' + c + '" title="' + (clabel[c]||escH(sorted[i].color||'')) + '" style="width:16px;height:16px;"></span></td>'
+           + '<td style="text-align:center;"><button class="edit-kw-row" onclick="kwLibEditRow(' + origIdx + ')">&#9998;</button></td>'
+           + '<td><button class="del-kw-row" onclick="kwLibDeleteRow(' + origIdx + ')">&#x1F5D1;</button></td>'
+           + '</tr>';
+    }
+    tbody.innerHTML = h;
+}
+
+function kwLibSort(col){
+    _kwSortCol = (_kwSortCol===col && _kwSortDir===-1) ? null : col;
+    _kwSortDir = (_kwSortCol===col && _kwSortDir===1) ? -1 : 1;
+    if (!_kwSortCol) _kwSortDir = 1;
+    kwLibRender();
+}
+
+function kwLibDragStart(e, idx){ _kwDragSrcIdx=idx; e.dataTransfer.effectAllowed='move'; }
+function kwLibDragOver(e){ e.preventDefault(); e.dataTransfer.dropEffect='move'; }
+function kwLibDrop(e, targetIdx){
+    e.preventDefault();
+    if (_kwDragSrcIdx===null || _kwDragSrcIdx===targetIdx) return;
+    var item = window.kwLibrary.splice(_kwDragSrcIdx,1)[0];
+    window.kwLibrary.splice(targetIdx,0,item);
+    _kwDragSrcIdx = null;
+    kwLibSave(); kwLibRender();
+}
+
+function kwLibEditRow(i){
+    var item = window.kwLibrary[i];
+    if (!item) return;
+    var ex = document.getElementById('kwLibEditModal');
+    if (ex) ex.remove();
+    var colors = ['verde','amarillo','azul','rojo'];
+    var opts = colors.map(function(c){
+        return '<option value="'+c+'"'+(item.color===c?' selected':'')+'>'+c.charAt(0).toUpperCase()+c.slice(1)+'</option>';
+    }).join('');
+    var modal = document.createElement('div');
+    modal.id = 'kwLibEditModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    modal.innerHTML = '<div style="background:#fff;border-radius:12px;padding:28px 32px;width:420px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.3);">'
+        + '<h3 style="margin-bottom:18px;color:#667eea;font-size:1.1em;">&#9998; Editar Keyword</h3>'
+        + '<div style="display:grid;gap:12px;">'
+        + '<div><label style="font-size:.85em;font-weight:600;color:#374151;display:block;margin-bottom:4px;">Nicho</label>'
+        + '<input id="kwEditNicho" type="text" value="'+escH(item.nicho||'')+'" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:.9em;"></div>'
+        + '<div><label style="font-size:.85em;font-weight:600;color:#374151;display:block;margin-bottom:4px;">Pa&iacute;s</label>'
+        + '<input id="kwEditPais" type="text" value="'+escH(item.pais||item.país||'')+'" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:.9em;"></div>'
+        + '<div><label style="font-size:.85em;font-weight:600;color:#374151;display:block;margin-bottom:4px;">Keyword (Original)</label>'
+        + '<input id="kwEditKw" type="text" value="'+escH(item.keyword||'')+'" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:.9em;"></div>'
+        + '<div><label style="font-size:.85em;font-weight:600;color:#374151;display:block;margin-bottom:4px;">Color</label>'
+        + '<select id="kwEditColor" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:.9em;">'+opts+'</select></div>'
+        + '</div>'
+        + '<div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">'
+        + '<button onclick="document.getElementById(\'kwLibEditModal\').remove()" style="padding:8px 18px;border:1px solid #d1d5db;background:#fff;border-radius:6px;cursor:pointer;font-size:.9em;">Cancelar</button>'
+        + '<button onclick="kwLibSaveEdit('+i+')" style="padding:8px 18px;background:#667eea;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9em;">&#128190; Guardar</button>'
+        + '</div></div>';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+}
+
+function kwLibSaveEdit(i){
+    var kw    = document.getElementById('kwEditKw').value.trim();
+    var nicho = document.getElementById('kwEditNicho').value.trim();
+    var pais  = document.getElementById('kwEditPais').value.trim();
+    var color = document.getElementById('kwEditColor').value;
+    if (!kw){ alert('La keyword no puede estar vac\u00eda.'); return; }
+    window.kwLibrary[i] = { nicho:nicho, pais:pais, keyword:kw, color:color };
+    kwLibSave(); kwLibRender();
+    document.getElementById('kwLibEditModal').remove();
+    if (typeof showNotif==='function') showNotif('Keyword actualizada \u2705','success');
+}
+
+function kwLibDeleteRow(i){
+    window.kwLibrary.splice(i,1);
+    kwLibSave(); kwLibRender();
+    if (typeof showNotif==='function') showNotif('Keyword eliminada','info');
+}
+
+function kwLibRemoveDuplicates(){
+    var before=window.kwLibrary.length, seen={};
+    window.kwLibrary = window.kwLibrary.filter(function(x){
+        var k=x.keyword.toLowerCase().trim();
+        if (seen[k]) return false; seen[k]=true; return true;
+    });
+    var removed = before - window.kwLibrary.length;
+    kwLibSave(); kwLibRender();
+    if (typeof showNotif==='function') showNotif(removed>0 ? removed+' duplicado(s) eliminado(s)' : 'Sin duplicados encontrados','success');
+}
+
+function kwLibClearAll(){
+    if (!confirm('¿Borrar toda la biblioteca? Los datos guardados también se eliminarán.')) return;
+    window.kwLibrary = [];
+    kwLibSave(); kwLibRender();
+    if (typeof showNotif==='function') showNotif('Biblioteca borrada','warning');
+}
+
+function _kwFindCol(obj, cols){
+    var ks = Object.keys(obj);
+    for (var c=0; c<cols.length; c++)
+        for (var k=0; k<ks.length; k++)
+            if (ks[k].toLowerCase().trim()===cols[c]) return obj[ks[k]];
+    return '';
+}
+
+function _kwNorm(rows){
+    var CKW = ['keyword','kw','palabra','palabraclave','palabra clave','key','keyword (original)'];
+    var CCL = ['color','colour','nivel','level','semaforo','semáforo'];
+    var CNI = ['nicho','niche','producto','product','category'];
+    var CPA = ['pais','país','country','iso','region'];
+    var r = [];
+    for (var i=0; i<rows.length; i++){
+        var kw  = String(_kwFindCol(rows[i], CKW)||'').trim();
+        var col = String(_kwFindCol(rows[i], CCL)||'').toLowerCase().trim();
+        var ni  = String(_kwFindCol(rows[i], CNI)||'').trim();
+        var pa  = String(_kwFindCol(rows[i], CPA)||'').trim();
+        if (kw) r.push({nicho:ni, pais:pa, keyword:kw, color:col});
+    }
+    return r;
+}
+
+function kwLibImportExcel(input){
+    var file = input.files[0]; if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+        try {
+            if (typeof XLSX === 'undefined') { alert('La librería XLSX no está cargada. Recarga la página e intenta de nuevo.'); input.value=''; return; }
+            var wb   = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+            var ws   = wb.Sheets[wb.SheetNames[0]];
+            var rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+            var norm = _kwNorm(rows);
+            if (!norm.length){ alert('Sin filas válidas.\n\nVerificá que el archivo tenga columnas:\nkeyword (o kw) | color | nicho | pais'); input.value=''; return; }
+            window.kwLibrary = window.kwLibrary.concat(norm);
+            kwLibSave(); kwLibRender();
+            if (typeof showNotif==='function') showNotif(norm.length+' keywords importadas desde Excel \u2705','success');
+        } catch(err){ alert('Error al leer Excel:\n' + err.message); }
+        input.value='';
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function kwLibImportJson(input){
+    var file = input.files[0]; if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+        try {
+            var p = JSON.parse(e.target.result);
+            if (!Array.isArray(p)){
+                var ks = Object.keys(p);
+                for (var i=0; i<ks.length; i++) if (Array.isArray(p[ks[i]])){ p=p[ks[i]]; break; }
+                if (!Array.isArray(p)) p=[];
+            }
+            var norm = _kwNorm(p);
+            if (!norm.length){ alert('Sin entradas válidas.\n\nEl JSON debe ser un array de objetos con:\nkeyword | color | nicho | pais'); input.value=''; return; }
+            window.kwLibrary = window.kwLibrary.concat(norm);
+            kwLibSave(); kwLibRender();
+            if (typeof showNotif==='function') showNotif(norm.length+' keywords importadas desde JSON \u2705','success');
+        } catch(err){ alert('Error al leer JSON:\n' + err.message); }
+        input.value='';
+    };
+    reader.readAsText(file);
+}
+</script>
+</script>
+
 </body>
 </html>
